@@ -28,15 +28,11 @@
   - [ ] SubTask 4.4: 创建 /workspace/web/src/app/api/sandbox/[id]/resume/route.ts — POST（恢复沙箱）
   - [ ] SubTask 4.5: 创建 /workspace/web/src/app/api/sandbox/[id]/snapshot/route.ts — POST（创建快照）
 
-- [ ] Task 5: 前端权限确认增强与沙箱面板
+- [ ] Task 5: 前端权限确认增强
   - [ ] SubTask 5.1: 修改 /workspace/web/src/components/chat/tool-confirm-dialog.tsx — 增强确认弹窗：区分高风险（黄色标签）和沙箱外执行（红色边框+警告），显示执行环境标签，沙箱外执行不提供"始终允许"
   - [ ] SubTask 5.2: 创建 /workspace/web/src/components/chat/auto-approve-toast.tsx — 低风险操作自动放行提示（轻量 toast，3 秒消失）
   - [ ] SubTask 5.3: 修改 /workspace/web/src/hooks/use-chat.ts — 集成权限分级：处理 risk_level 字段，低风险自动放行+toast，高风险弹出确认，沙箱外执行弹出特殊确认
-  - [ ] SubTask 5.4: 创建 /workspace/web/src/components/sandbox/sandbox-indicator.tsx — 沙箱状态指示器（显示在顶栏）
-  - [ ] SubTask 5.5: 创建 /workspace/web/src/components/sandbox/sandbox-panel.tsx — 沙箱管理面板（状态详情、操作按钮、资源信息）
-  - [ ] SubTask 5.6: 创建 /workspace/web/src/hooks/use-sandbox.ts — 沙箱管理 hook
-  - [ ] SubTask 5.7: 修改 /workspace/web/src/components/layout/topbar.tsx — 集成沙箱状态指示器
-  - [ ] SubTask 5.8: 修改 /workspace/web/src/components/layout/chat-layout.tsx — 集成沙箱面板和自动放行 toast
+  - [ ] SubTask 5.4: 修改 /workspace/web/src/components/layout/chat-layout.tsx — 集成自动放行 toast
 
 - [ ] Task 6: 配置、设置页面与验证
   - [ ] SubTask 6.1: 更新 /workspace/web/.env.example — 添加沙箱相关环境变量模板
@@ -49,7 +45,7 @@
 - [Task 1] depends on nothing — 权限分级可独立开发
 - [Task 3] depends on [Task 1] + [Task 2] — 工具适配需要权限分级和 SandboxManager
 - [Task 4] depends on [Task 2] — API 路由需要 SandboxManager
-- [Task 5] depends on [Task 3] + [Task 4] — 前端依赖后端权限分级和沙箱 API
+- [Task 5] depends on [Task 3] — 前端依赖后端权限分级
 - [Task 6] depends on [Task 1-5] — 配置和验证依赖所有功能完成
 
 # 可并行的任务
