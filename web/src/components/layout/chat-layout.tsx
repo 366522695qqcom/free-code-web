@@ -7,6 +7,7 @@ import { Topbar } from "./topbar";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatArea } from "@/components/chat-area";
 import { ToolConfirmDialog } from "@/components/chat/tool-confirm-dialog";
+import { AutoApproveToastContainer } from "@/components/chat/auto-approve-toast";
 import { CostTracker } from "@/components/chat/cost-tracker";
 import { useSessions } from "@/hooks/use-sessions";
 import { useChat } from "@/hooks/use-chat";
@@ -53,6 +54,8 @@ export function ChatLayout() {
     pendingConfirmation,
     confirmTool,
     usage,
+    autoApproveToasts,
+    removeAutoApproveToast,
   } = useChat(currentSessionId);
 
   const handleSelectSession = useCallback(
@@ -297,6 +300,11 @@ export function ChatLayout() {
 
         {/* Input area */}
         <div className="relative">
+          {/* Auto-approve toasts */}
+          <AutoApproveToastContainer
+            toasts={autoApproveToasts}
+            onRemove={removeAutoApproveToast}
+          />
           <ChatInput
             onSend={handleSend}
             onStop={stopStreaming}

@@ -11,6 +11,7 @@ import fg from "fast-glob";
 import { readFile, stat } from "fs/promises";
 import { existsSync } from "fs";
 import type { ToolExecutor, ToolResult } from "./registry";
+import type { Sandbox } from '@vercel/sandbox';
 
 const WORK_DIR = process.env.WORK_DIR || process.cwd();
 
@@ -35,6 +36,7 @@ export const globTool: ToolExecutor = {
     required: ["pattern"],
   },
   requiresConfirmation: false,
+  sandboxCapable: true,
 
   async execute(params: Record<string, unknown>): Promise<ToolResult> {
     const pattern = params.pattern as string;
@@ -70,6 +72,48 @@ export const globTool: ToolExecutor = {
       return {
         output: "",
         error: `Glob search failed: ${message}`,
+        exitCode: 1,
+      };
+    }
+  },
+
+  async executeInSandbox(params: Record<string, unknown>, sandbox: Sandbox): Promise<ToolResult> {
+    const pattern = params.pattern as string;
+    const basePath = (params.path as string) || '/vercel/sandbox';
+
+    if (!pattern) {
+      return { output: '', error: 'pattern is required', exitCode: 1 };
+    }
+
+    try {
+      const result = await sandbox.runCommand({ cmd: 'find', args: [basePath, '-name', pattern, '-type', 'f'], cwd: basePath });
+      const stdout = await result.stdout();
+      const stderr = await result.stderr();
+
+      if (result.exitCode !== 0 && !stdout) {
+        return {
+          output: '',
+          error: stderr || `find command failed with exit code ${result.exitCode}`,
+          exitCode: result.exitCode,
+        };
+      }
+
+      // Filter out common ignored directories
+      const lines = stdout
+        .split('\n')
+        .filter((line: string) => line.trim() !== '')
+        .filter((line: string) => !line.includes('node_modules') && !line.includes('/.git/') && !line.includes('/.next/'));
+
+      if (lines.length === 0) {
+        return { output: 'No files found matching the pattern.' };
+      }
+
+      return { output: lines.join('\n') };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        output: '',
+        error: `Sandbox glob search failed: ${message}`,
         exitCode: 1,
       };
     }
@@ -238,6 +282,7 @@ export const grepTool: ToolExecutor = {
     required: ["pattern"],
   },
   requiresConfirmation: false,
+  sandboxCapable: true,
 
   async execute(params: Record<string, unknown>): Promise<ToolResult> {
     const pattern = params.pattern as string;
@@ -297,5 +342,58 @@ export const grepTool: ToolExecutor = {
       ignoreCase,
       maxResults,
     });
+  },
+
+  async executeInSandbox(params: Record<string, unknown>, sandbox: Sandbox): Promise<ToolResult> {
+    const pattern = params.pattern as string;
+    const searchPath = (params.path as string) || '/vercel/sandbox';
+    const ignoreCase = (params.ignore_case as boolean) || false;
+    const maxResults = (params.max_results as number) || 100;
+
+    if (!pattern) {
+      return { output: '', error: 'pattern is required', exitCode: 1 };
+    }
+
+    try {
+      const args = [pattern, searchPath, '--line-number', '--no-heading', '--color', 'never'];
+      if (ignoreCase) args.push('-i');
+      if (maxResults) args.push('--max-count', String(maxResults));
+
+      const result = await sandbox.runCommand({ cmd: 'rg', args, cwd: searchPath });
+      const stdout = await result.stdout();
+      const stderr = await result.stderr();
+
+      // rg returns exit code 1 when no matches found
+      if (result.exitCode === 1 && !stdout) {
+        return { output: 'No matches found.' };
+      }
+
+      if (result.exitCode !== 0 && result.exitCode !== 1 && !stdout) {
+        return {
+          output: '',
+          error: stderr || `rg command failed with exit code ${result.exitCode}`,
+          exitCode: result.exitCode,
+        };
+      }
+
+      let output = stdout.trim();
+      if (maxResults) {
+        const lines = output.split('\n');
+        if (lines.length > maxResults) {
+          output =
+            lines.slice(0, maxResults).join('\n') +
+            `\n... and ${lines.length - maxResults} more matches`;
+        }
+      }
+
+      return { output };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        output: '',
+        error: `Sandbox grep search failed: ${message}`,
+        exitCode: 1,
+      };
+    }
   },
 };

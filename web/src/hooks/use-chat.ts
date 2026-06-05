@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useRef } from "react";
 import { connectSSE } from "@/lib/sse";
-import type { ChatMessage, ChatResponseEvent, ToolConfirmation, Usage } from "@/types";
+import type { ChatMessage, ChatResponseEvent, ToolConfirmation, Usage, RiskLevel } from "@/types";
+import type { AutoApproveToastData } from "@/components/chat/auto-approve-toast";
 
 export interface ContentBlock {
   type: "text" | "thinking" | "tool_use" | "tool_result";
@@ -37,8 +38,67 @@ interface UseChatReturn {
   setMessages: (messages: EnhancedMessage[]) => void;
   pendingConfirmation: ToolConfirmation | null;
   autoApprovedTools: Set<string>;
-  confirmTool: (toolUseId: string, approved: boolean, alwaysAllow?: boolean) => void;
+  confirmTool: (toolCallId: string, approved: boolean, alwaysAllow?: boolean) => void;
   usage: Usage;
+  autoApproveToasts: AutoApproveToastData[];
+  removeAutoApproveToast: (id: string) => void;
+}
+
+/**
+ * Transform raw SSE event data into a ChatResponseEvent using the SSE event type.
+ * The backend emits events with separate `event` and `data` fields:
+ *   event: tool_confirmation_needed
+ *   data: {"tool_use_id":"...","name":"...","input":{...},"riskLevel":"high","sandboxEnabled":true}
+ *
+ * This function normalizes the data into the ChatResponseEvent discriminated union.
+ */
+function normalizeSSEEvent(eventType: string, rawData: Record<string, unknown>): ChatResponseEvent | null {
+  switch (eventType) {
+    case "text":
+      return { type: "text", content: String(rawData.text || rawData.content || "") };
+    case "thinking":
+      return { type: "thinking", content: String(rawData.thinking || rawData.text || rawData.content || "") };
+    case "tool_use": {
+      const id = String(rawData.id || "");
+      const name = String(rawData.name || "");
+      const input = (rawData.input as Record<string, unknown>) || {};
+      return { type: "tool_use", toolUse: { id, name, input } };
+    }
+    case "tool_result": {
+      const toolUseId = String(rawData.tool_use_id || rawData.toolUseId || "");
+      const content = String(rawData.content || "");
+      const isError = Boolean(rawData.is_error || rawData.isError);
+      return { type: "tool_result", toolUse: { id: toolUseId }, content, isError };
+    }
+    case "tool_confirmation_needed": {
+      return {
+        type: "tool_confirmation_needed",
+        tool_use_id: String(rawData.tool_use_id || rawData.toolUseId || ""),
+        name: String(rawData.name || ""),
+        input: (rawData.input as Record<string, unknown>) || {},
+        riskLevel: (rawData.riskLevel as RiskLevel) || "high",
+        sandboxEnabled: Boolean(rawData.sandboxEnabled),
+        reason: String(rawData.reason || ""),
+      };
+    }
+    case "usage": {
+      const usage = rawData.usage || rawData;
+      return {
+        type: "usage",
+        usage: {
+          inputTokens: Number((usage as Record<string, unknown>).inputTokens || 0),
+          outputTokens: Number((usage as Record<string, unknown>).outputTokens || 0),
+          cost: Number((usage as Record<string, unknown>).cost || 0),
+        },
+      };
+    }
+    case "error":
+      return { type: "error", content: String(rawData.error || rawData.content || "Unknown error") };
+    case "done":
+      return { type: "done" };
+    default:
+      return null;
+  }
 }
 
 export function useChat(sessionId: string | null): UseChatReturn {
@@ -48,8 +108,13 @@ export function useChat(sessionId: string | null): UseChatReturn {
   const [pendingConfirmation, setPendingConfirmation] = useState<ToolConfirmation | null>(null);
   const [autoApprovedTools, setAutoApprovedTools] = useState<Set<string>>(new Set());
   const [usage, setUsage] = useState<Usage>({ inputTokens: 0, outputTokens: 0, cost: 0 });
+  const [autoApproveToasts, setAutoApproveToasts] = useState<AutoApproveToastData[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const confirmationResolverRef = useRef<((approved: boolean) => void) | null>(null);
+
+  const removeAutoApproveToast = useCallback((id: string) => {
+    setAutoApproveToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   const stopStreaming = useCallback(() => {
     abortControllerRef.current?.abort();
@@ -60,8 +125,8 @@ export function useChat(sessionId: string | null): UseChatReturn {
   }, []);
 
   const confirmTool = useCallback(
-    async (toolUseId: string, approved: boolean, alwaysAllow?: boolean) => {
-      if (alwaysAllow && approved && pendingConfirmation) {
+    async (toolCallId: string, approved: boolean, alwaysAllow?: boolean) => {
+      if (alwaysAllow && approved && pendingConfirmation && pendingConfirmation.riskLevel === "high") {
         setAutoApprovedTools((prev) => {
           const next = new Set(prev);
           next.add(pendingConfirmation.toolName);
@@ -74,7 +139,7 @@ export function useChat(sessionId: string | null): UseChatReturn {
         await fetch("/api/tools/confirm", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ toolUseId, approved }),
+          body: JSON.stringify({ toolUseId: toolCallId, approved }),
         });
       } catch {
         // Confirmation endpoint may not exist yet; resolve locally
@@ -151,24 +216,32 @@ export function useChat(sessionId: string | null): UseChatReturn {
           signal: abortController.signal,
         });
 
-        for await (const event of stream) {
+        for await (const sseEvent of stream) {
           if (abortController.signal.aborted) break;
 
           try {
-            const data = JSON.parse(event.data) as ChatResponseEvent;
+            const rawData = JSON.parse(sseEvent.data) as Record<string, unknown>;
+            const eventType = sseEvent.event || "";
+            const data = normalizeSSEEvent(eventType, rawData);
+
+            if (!data) continue;
 
             // Handle tool confirmation needed
-            if (data.type === "tool_confirmation_needed" && "confirmation" in data) {
-              const confirmation = data.confirmation;
+            if (data.type === "tool_confirmation_needed") {
+              const toolName = data.name;
+              const toolCallId = data.tool_use_id;
+              const riskLevel = data.riskLevel;
+              const sandboxEnabled = data.sandboxEnabled;
+              const reason = data.reason || "";
 
-              // Check if tool is auto-approved
-              if (autoApprovedTools.has(confirmation.toolName)) {
+              // Check if tool is auto-approved (by previous "Always Allow" for high risk)
+              if (autoApprovedTools.has(toolName) && riskLevel === "high") {
                 // Auto-approve: send confirmation immediately
                 try {
                   await fetch("/api/tools/confirm", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ toolUseId: confirmation.toolUseId, approved: true }),
+                    body: JSON.stringify({ toolUseId: toolCallId, approved: true }),
                   });
                 } catch {
                   // Confirmation endpoint may not exist yet
@@ -176,7 +249,39 @@ export function useChat(sessionId: string | null): UseChatReturn {
                 continue;
               }
 
-              // Show confirmation dialog and wait for user response
+              // Handle based on risk level
+              if (riskLevel === "low") {
+                // Auto-approve low-risk operations
+                try {
+                  await fetch("/api/tools/confirm", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ toolUseId: toolCallId, approved: true }),
+                  });
+                } catch {
+                  // Confirmation endpoint may not exist yet
+                }
+
+                // Show auto-approve toast
+                const toastId = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+                setAutoApproveToasts((prev) => [
+                  ...prev,
+                  { id: toastId, toolName, reason },
+                ]);
+
+                continue;
+              }
+
+              // For 'high' and 'outside-sandbox': show confirmation dialog
+              const confirmation: ToolConfirmation = {
+                toolCallId,
+                toolName,
+                toolInput: data.input,
+                riskLevel,
+                sandboxEnabled,
+                reason,
+              };
+
               setPendingConfirmation(confirmation);
               const approved = await new Promise<boolean>((resolve) => {
                 confirmationResolverRef.current = resolve;
@@ -304,10 +409,10 @@ export function useChat(sessionId: string | null): UseChatReturn {
               ) {
                 blocks[blocks.length - 1] = {
                   ...blocks[blocks.length - 1],
-                  text: (blocks[blocks.length - 1].text || "") + event.data,
+                  text: (blocks[blocks.length - 1].text || "") + sseEvent.data,
                 };
               } else {
-                blocks.push({ type: "text", text: event.data });
+                blocks.push({ type: "text", text: sseEvent.data });
               }
 
               const fullText = blocks
@@ -355,5 +460,7 @@ export function useChat(sessionId: string | null): UseChatReturn {
     autoApprovedTools,
     confirmTool,
     usage,
+    autoApproveToasts,
+    removeAutoApproveToast,
   };
 }

@@ -11,6 +11,7 @@ import { existsSync } from "fs";
 import { dirname, resolve } from "path";
 import { diffLines } from "diff";
 import type { ToolExecutor, ToolResult } from "./registry";
+import type { Sandbox } from '@vercel/sandbox';
 
 const WORK_DIR = process.env.WORK_DIR || process.cwd();
 
@@ -43,6 +44,7 @@ export const fileReadTool: ToolExecutor = {
     required: ["path"],
   },
   requiresConfirmation: false,
+  sandboxCapable: true,
 
   async execute(params: Record<string, unknown>): Promise<ToolResult> {
     const filePath = resolvePath(params.path as string);
@@ -82,6 +84,35 @@ export const fileReadTool: ToolExecutor = {
       };
     }
   },
+
+  async executeInSandbox(params: Record<string, unknown>, sandbox: Sandbox): Promise<ToolResult> {
+    const rawPath = params.path as string;
+    const filePath = rawPath.startsWith("/") ? rawPath : `/vercel/sandbox/${rawPath}`;
+    const offset = (params.offset as number) || 1;
+    const limit = params.limit as number | undefined;
+
+    try {
+      const content = await sandbox.fs.readFile(filePath, "utf-8");
+      const lines = content.split("\n");
+
+      const startLine = Math.max(1, offset) - 1;
+      const endLine = limit !== undefined ? startLine + limit : lines.length;
+      const selectedLines = lines.slice(startLine, endLine);
+
+      const numbered = selectedLines
+        .map((line: string, i: number) => `${startLine + i + 1}→${line}`)
+        .join("\n");
+
+      return { output: numbered };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        output: "",
+        error: `Failed to read file in sandbox: ${message}`,
+        exitCode: 1,
+      };
+    }
+  },
 };
 
 // ─── FileWriteTool ───────────────────────────────────────────────────────────
@@ -104,6 +135,7 @@ export const fileWriteTool: ToolExecutor = {
     required: ["path", "content"],
   },
   requiresConfirmation: true,
+  sandboxCapable: true,
 
   async execute(params: Record<string, unknown>): Promise<ToolResult> {
     const filePath = resolvePath(params.path as string);
@@ -137,6 +169,33 @@ export const fileWriteTool: ToolExecutor = {
       };
     }
   },
+
+  async executeInSandbox(params: Record<string, unknown>, sandbox: Sandbox): Promise<ToolResult> {
+    const rawPath = params.path as string;
+    const filePath = rawPath.startsWith("/") ? rawPath : `/vercel/sandbox/${rawPath}`;
+    const content = params.content as string;
+
+    if (content === undefined || content === null) {
+      return { output: "", error: "content is required", exitCode: 1 };
+    }
+
+    try {
+      const dir = dirname(filePath);
+      await sandbox.fs.mkdir(dir, { recursive: true });
+      await sandbox.fs.writeFile(filePath, content, "utf-8");
+
+      return {
+        output: `Successfully wrote ${content.length} bytes to ${filePath}`,
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        output: "",
+        error: `Failed to write file in sandbox: ${message}`,
+        exitCode: 1,
+      };
+    }
+  },
 };
 
 // ─── FileEditTool ────────────────────────────────────────────────────────────
@@ -163,6 +222,7 @@ export const fileEditTool: ToolExecutor = {
     required: ["path", "old_string", "new_string"],
   },
   requiresConfirmation: true,
+  sandboxCapable: true,
 
   async execute(params: Record<string, unknown>): Promise<ToolResult> {
     const filePath = resolvePath(params.path as string);
@@ -231,6 +291,71 @@ export const fileEditTool: ToolExecutor = {
       return {
         output: "",
         error: `Failed to edit file: ${message}`,
+        exitCode: 1,
+      };
+    }
+  },
+
+  async executeInSandbox(params: Record<string, unknown>, sandbox: Sandbox): Promise<ToolResult> {
+    const rawPath = params.path as string;
+    const filePath = rawPath.startsWith("/") ? rawPath : `/vercel/sandbox/${rawPath}`;
+    const oldString = params.old_string as string;
+    const newString = params.new_string as string;
+
+    if (oldString === newString) {
+      return {
+        output: "",
+        error: "old_string and new_string are identical — no change needed",
+        exitCode: 1,
+      };
+    }
+
+    try {
+      const content = await sandbox.fs.readFile(filePath, "utf-8");
+
+      if (!content.includes(oldString)) {
+        return {
+          output: "",
+          error: `old_string not found in ${filePath}. Make sure the string matches exactly, including whitespace and indentation.`,
+          exitCode: 1,
+        };
+      }
+
+      // Check for uniqueness
+      const firstIndex = content.indexOf(oldString);
+      const secondIndex = content.indexOf(oldString, firstIndex + 1);
+      if (secondIndex !== -1) {
+        return {
+          output: "",
+          error: `old_string appears multiple times in ${filePath}. Provide more context to make it unique.`,
+          exitCode: 1,
+        };
+      }
+
+      const newContent = content.replace(oldString, newString);
+      await sandbox.fs.writeFile(filePath, newContent, "utf-8");
+
+      // Generate diff
+      const changes = diffLines(oldString, newString);
+      const diffOutput = changes
+        .map((change) => {
+          const prefix = change.added ? "+" : change.removed ? "-" : " ";
+          return change.value
+            .split("\n")
+            .filter((line) => line !== "")
+            .map((line) => `${prefix}${line}`)
+            .join("\n");
+        })
+        .join("\n");
+
+      return {
+        output: `Successfully edited ${filePath}\n\nDiff:\n${diffOutput}`,
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        output: "",
+        error: `Failed to edit file in sandbox: ${message}`,
         exitCode: 1,
       };
     }

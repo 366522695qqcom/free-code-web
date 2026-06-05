@@ -128,19 +128,26 @@ export type ChatResponseEvent =
   | { type: "thinking"; content: string }
   | { type: "tool_use"; toolUse: { id: string; name: string; input: Record<string, unknown> } }
   | { type: "tool_result"; toolUse: { id: string }; content: string; isError?: boolean }
-  | { type: "tool_confirmation_needed"; confirmation: ToolConfirmation }
+  | { type: "tool_confirmation_needed"; tool_use_id: string; name: string; input: Record<string, unknown>; riskLevel: RiskLevel; sandboxEnabled: boolean; reason?: string }
   | { type: "usage"; usage: Usage }
   | { type: "error"; content: string }
   | { type: "done" };
 
 /**
+ * Risk level for tool execution permission.
+ */
+export type RiskLevel = "low" | "high" | "outside-sandbox";
+
+/**
  * Tool confirmation request from the server.
  */
 export interface ToolConfirmation {
-  toolUseId: string;
+  toolCallId: string;
   toolName: string;
-  input: Record<string, unknown>;
-  riskLevel: "low" | "medium" | "high";
+  toolInput: Record<string, unknown>;
+  riskLevel: RiskLevel;
+  sandboxEnabled: boolean;
+  reason: string;
 }
 
 /**

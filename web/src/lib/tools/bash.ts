@@ -7,6 +7,7 @@
 
 import { exec } from "child_process";
 import type { ToolExecutor, ToolResult } from "./registry";
+import type { Sandbox } from '@vercel/sandbox';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const WORK_DIR = process.env.WORK_DIR || process.cwd();
@@ -52,6 +53,7 @@ export const bashTool: ToolExecutor = {
     required: ["command"],
   },
   requiresConfirmation: true,
+  sandboxCapable: true,
 
   async execute(params: Record<string, unknown>): Promise<ToolResult> {
     const command = params.command as string;
@@ -103,5 +105,41 @@ export const bashTool: ToolExecutor = {
         }
       );
     });
+  },
+
+  async executeInSandbox(params: Record<string, unknown>, sandbox: Sandbox): Promise<ToolResult> {
+    const command = params.command as string;
+    const cwd = (params.workdir as string) || '/vercel/sandbox';
+
+    if (!command) {
+      return { output: '', error: 'command is required', exitCode: 1 };
+    }
+
+    if (isDangerousCommand(command)) {
+      return {
+        output: '',
+        error: `Command blocked for safety: "${command}". This pattern matches a known dangerous command.`,
+        exitCode: 1,
+      };
+    }
+
+    try {
+      const result = await sandbox.runCommand({ cmd: 'sh', args: ['-c', command], cwd });
+      const stdout = await result.stdout();
+      const stderr = await result.stderr();
+
+      return {
+        output: stdout + (stderr ? `\n[stderr]\n${stderr}` : ''),
+        error: stderr || undefined,
+        exitCode: result.exitCode,
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        output: '',
+        error: `Sandbox execution failed: ${message}`,
+        exitCode: 1,
+      };
+    }
   },
 };

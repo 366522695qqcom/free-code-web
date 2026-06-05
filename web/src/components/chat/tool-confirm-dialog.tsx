@@ -1,6 +1,6 @@
 "use client";
 
-import type { ToolConfirmation } from "@/types";
+import type { ToolConfirmation, RiskLevel } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -10,33 +10,33 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Shield, Terminal, FileEdit, FilePen, AlertTriangle } from "lucide-react";
+import { Shield, Terminal, FileEdit, FilePen, AlertTriangle, Monitor, Box } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ToolConfirmDialogProps {
   confirmation: ToolConfirmation | null;
-  onAllow: (toolUseId: string, alwaysAllow?: boolean) => void;
-  onDeny: (toolUseId: string) => void;
+  onAllow: (toolCallId: string, alwaysAllow?: boolean) => void;
+  onDeny: (toolCallId: string) => void;
 }
 
-function getRiskColor(level: "low" | "medium" | "high") {
+function getRiskColor(level: RiskLevel) {
   switch (level) {
     case "low":
       return "text-terminal-green";
-    case "medium":
-      return "text-terminal-amber";
     case "high":
+      return "text-terminal-amber";
+    case "outside-sandbox":
       return "text-terminal-red";
   }
 }
 
-function getRiskBg(level: "low" | "medium" | "high") {
+function getRiskBg(level: RiskLevel) {
   switch (level) {
     case "low":
       return "bg-terminal-green/10 border-terminal-green/20";
-    case "medium":
-      return "bg-terminal-amber/10 border-terminal-amber/20";
     case "high":
+      return "bg-terminal-amber/10 border-terminal-amber/20";
+    case "outside-sandbox":
       return "bg-terminal-red/10 border-terminal-red/20";
   }
 }
@@ -82,12 +82,33 @@ function ToolIcon({ name }: { name: string }) {
   return <Shield className="size-4 text-terminal-amber" />;
 }
 
+function EnvironmentBadge({ sandboxEnabled }: { sandboxEnabled: boolean }) {
+  if (sandboxEnabled) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded border border-terminal-green/30 bg-terminal-green/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-terminal-green">
+        <Box className="size-3" />
+        Sandbox
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
+      <Monitor className="size-3" />
+      Host
+    </span>
+  );
+}
+
 export function ToolConfirmDialog({
   confirmation,
   onAllow,
   onDeny,
 }: ToolConfirmDialogProps) {
   if (!confirmation) return null;
+
+  const isOutsideSandbox = confirmation.riskLevel === "outside-sandbox";
+  const isHighRisk = confirmation.riskLevel === "high";
+  const isLowRisk = confirmation.riskLevel === "low";
 
   const isBash =
     confirmation.toolName.toLowerCase().includes("bash") ||
@@ -98,34 +119,96 @@ export function ToolConfirmDialog({
   return (
     <Dialog open={!!confirmation}>
       <DialogContent
-        className="sm:max-w-lg border-border/50 bg-popover"
+        className={cn(
+          "sm:max-w-lg bg-popover",
+          isOutsideSandbox
+            ? "border-2 border-terminal-red/60 ring-1 ring-terminal-red/20"
+            : "border-border/50"
+        )}
         showCloseButton={false}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-mono text-sm">
-            <ToolIcon name={confirmation.toolName} />
-            <span>Tool Permission Request</span>
+            {isOutsideSandbox ? (
+              <AlertTriangle className="size-4 text-terminal-red" />
+            ) : (
+              <ToolIcon name={confirmation.toolName} />
+            )}
+            <span>
+              {isOutsideSandbox
+                ? "Host Execution Required"
+                : "Tool Permission Request"}
+            </span>
           </DialogTitle>
           <DialogDescription className="font-mono text-xs text-muted-foreground">
-            The AI wants to execute a tool that requires your permission.
+            {isOutsideSandbox
+              ? "This tool requires direct access to the host machine."
+              : "The AI wants to execute a tool that requires your permission."}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Risk level indicator */}
-        <div
-          className={cn(
-            "flex items-center gap-2 rounded-lg border px-3 py-2",
-            getRiskBg(confirmation.riskLevel)
-          )}
-        >
-          <AlertTriangle className={cn("size-4", getRiskColor(confirmation.riskLevel))} />
-          <span className={cn("font-mono text-xs font-medium", getRiskColor(confirmation.riskLevel))}>
-            Risk: {confirmation.riskLevel.toUpperCase()}
-          </span>
-          <span className="ml-auto font-mono text-xs text-muted-foreground">
-            {confirmation.toolName}
-          </span>
-        </div>
+        {/* Outside-sandbox warning */}
+        {isOutsideSandbox && (
+          <div className="rounded-lg border border-terminal-red/40 bg-terminal-red/10 px-3 py-2.5">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-terminal-red" />
+              <div className="space-y-1">
+                <p className="font-mono text-xs font-bold text-terminal-red">
+                  This operation will run OUTSIDE the sandbox on the host machine
+                </p>
+                {confirmation.reason && (
+                  <p className="font-mono text-[11px] text-terminal-red/70">
+                    {confirmation.reason}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Risk level indicator (for high risk) */}
+        {isHighRisk && (
+          <div
+            className={cn(
+              "flex items-center gap-2 rounded-lg border px-3 py-2",
+              getRiskBg(confirmation.riskLevel)
+            )}
+          >
+            <AlertTriangle className={cn("size-4", getRiskColor(confirmation.riskLevel))} />
+            <span className={cn("font-mono text-xs font-medium", getRiskColor(confirmation.riskLevel))}>
+              High Risk
+            </span>
+            <EnvironmentBadge sandboxEnabled={confirmation.sandboxEnabled} />
+            <span className="ml-auto font-mono text-xs text-muted-foreground">
+              {confirmation.toolName}
+            </span>
+          </div>
+        )}
+
+        {/* Low risk fallback indicator */}
+        {isLowRisk && (
+          <div
+            className={cn(
+              "flex items-center gap-2 rounded-lg border px-3 py-2",
+              getRiskBg(confirmation.riskLevel)
+            )}
+          >
+            <Shield className={cn("size-4", getRiskColor(confirmation.riskLevel))} />
+            <span className={cn("font-mono text-xs font-medium", getRiskColor(confirmation.riskLevel))}>
+              Low Risk
+            </span>
+            <span className="ml-auto font-mono text-xs text-muted-foreground">
+              {confirmation.toolName}
+            </span>
+          </div>
+        )}
+
+        {/* Reason for high risk */}
+        {isHighRisk && confirmation.reason && (
+          <p className="font-mono text-[11px] text-muted-foreground px-1">
+            {confirmation.reason}
+          </p>
+        )}
 
         {/* Tool-specific preview */}
         <div className="rounded-lg border border-border/30 bg-black/40 overflow-hidden">
@@ -137,13 +220,13 @@ export function ToolConfirmDialog({
               </div>
               <div className="terminal-output text-muted-foreground">
                 <span className="text-terminal-green">$ </span>
-                {formatBashCommand(confirmation.input)}
+                {formatBashCommand(confirmation.toolInput)}
               </div>
             </div>
           )}
 
           {isFileEdit && (() => {
-            const { filePath, oldText, newText } = formatFileEditPreview(confirmation.input);
+            const { filePath, oldText, newText } = formatFileEditPreview(confirmation.toolInput);
             return (
               <div>
                 <div className="flex items-center gap-1.5 border-b border-border/30 px-3 py-1.5">
@@ -177,7 +260,7 @@ export function ToolConfirmDialog({
           })()}
 
           {isFileWrite && (() => {
-            const { filePath, content } = formatFileWritePreview(confirmation.input);
+            const { filePath, content } = formatFileWritePreview(confirmation.toolInput);
             return (
               <div>
                 <div className="flex items-center gap-1.5 border-b border-border/30 px-3 py-1.5">
@@ -199,35 +282,59 @@ export function ToolConfirmDialog({
           {!isBash && !isFileEdit && !isFileWrite && (
             <div className="p-3">
               <div className="terminal-output text-muted-foreground">
-                {JSON.stringify(confirmation.input, null, 2).slice(0, 500)}
+                {JSON.stringify(confirmation.toolInput, null, 2).slice(0, 500)}
               </div>
             </div>
           )}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onDeny(confirmation.toolUseId)}
-            className="font-mono text-xs"
-          >
-            Deny
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => onAllow(confirmation.toolUseId, true)}
-            className="font-mono text-xs bg-terminal-amber/80 hover:bg-terminal-amber text-black"
-          >
-            Always Allow
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => onAllow(confirmation.toolUseId, false)}
-            className="font-mono text-xs bg-terminal-green/80 hover:bg-terminal-green text-black"
-          >
-            Allow
-          </Button>
+          {isOutsideSandbox ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDeny(confirmation.toolCallId)}
+                className="font-mono text-xs"
+              >
+                Deny
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => onAllow(confirmation.toolCallId, false)}
+                className="font-mono text-xs bg-terminal-red/80 hover:bg-terminal-red text-white"
+              >
+                Confirm Host Execution
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDeny(confirmation.toolCallId)}
+                className="font-mono text-xs"
+              >
+                Deny
+              </Button>
+              {isHighRisk && (
+                <Button
+                  size="sm"
+                  onClick={() => onAllow(confirmation.toolCallId, true)}
+                  className="font-mono text-xs bg-terminal-amber/80 hover:bg-terminal-amber text-black"
+                >
+                  Always Allow
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={() => onAllow(confirmation.toolCallId, false)}
+                className="font-mono text-xs bg-terminal-green/80 hover:bg-terminal-green text-black"
+              >
+                Allow
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

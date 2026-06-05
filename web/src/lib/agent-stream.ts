@@ -19,6 +19,8 @@ import {
   setPendingConfirmation,
   waitForConfirmation,
 } from "@/lib/tools/confirmations";
+import { assessToolExecution, executeToolWithSandbox } from "@/lib/sandbox/tool-adapter";
+import type { ToolExecutionDecision } from "@/lib/sandbox/tool-adapter";
 import type { Message, ContentBlock } from "@/types";
 
 const DEFAULT_MAX_TOKENS = 16384;
@@ -29,6 +31,7 @@ interface AgenticStreamOptions {
   model?: string;
   systemPrompt?: string;
   maxTokens?: number;
+  sessionId?: string;
 }
 
 type EmitFn = (event: string, data: unknown) => void;
@@ -209,12 +212,6 @@ async function runAnthropicLoop(
             input: parsedInput,
           });
 
-          emit("tool_use", {
-            id: currentToolUse.id,
-            name: currentToolUse.name,
-            input: parsedInput,
-          });
-
           currentToolUse = null;
         }
       }
@@ -241,7 +238,8 @@ async function runAnthropicLoop(
     // Execute tools and collect results
     const toolResultBlocks: ContentBlock[] = await executeTools(
       toolUseBlocks,
-      emit
+      emit,
+      options.sessionId
     );
 
     // Add tool results as user message
@@ -487,12 +485,7 @@ async function runOpenAILoop(
       input: JSON.parse(tc.arguments || "{}"),
     }));
 
-    // Emit tool_use events
-    for (const tu of toolUseBlocks) {
-      emit("tool_use", { id: tu.id, name: tu.name, input: tu.input });
-    }
-
-    const toolResultBlocks = await executeTools(toolUseBlocks, emit);
+    const toolResultBlocks = await executeTools(toolUseBlocks, emit, options.sessionId);
 
     // Add tool results as separate messages
     for (const result of toolResultBlocks) {
@@ -519,7 +512,8 @@ async function runOpenAILoop(
 
 async function executeTools(
   toolUseBlocks: { id: string; name: string; input: Record<string, unknown> }[],
-  emit: EmitFn
+  emit: EmitFn,
+  sessionId?: string
 ): Promise<ContentBlock[]> {
   const toolResultBlocks: ContentBlock[] = [];
 
@@ -542,12 +536,32 @@ async function executeTools(
       continue;
     }
 
-    // Check if tool requires confirmation
-    if (tool.requiresConfirmation) {
+    // Assess tool execution using permission grading
+    const decision: ToolExecutionDecision = assessToolExecution({
+      toolName: toolUse.name,
+      params: toolUse.input,
+      sessionId,
+    });
+
+    // Emit tool_use event with risk level
+    emit("tool_use", {
+      id: toolUse.id,
+      name: toolUse.name,
+      input: toolUse.input,
+      riskLevel: decision.riskLevel,
+    });
+
+    // Handle confirmation based on risk level
+    if (decision.riskLevel === "low") {
+      // Auto-approve: no confirmation needed
+    } else if (decision.riskLevel === "high") {
+      // Needs confirmation before execution
       emit("tool_confirmation_needed", {
         tool_use_id: toolUse.id,
         name: toolUse.name,
         input: toolUse.input,
+        riskLevel: "high",
+        sandboxEnabled: decision.sandboxEnabled,
       });
 
       setPendingConfirmation(toolUse.id);
@@ -568,11 +582,54 @@ async function executeTools(
         });
         continue;
       }
+    } else if (decision.riskLevel === "outside-sandbox") {
+      // Needs special confirmation — runs on host, not sandbox
+      emit("tool_confirmation_needed", {
+        tool_use_id: toolUse.id,
+        name: toolUse.name,
+        input: toolUse.input,
+        riskLevel: "outside-sandbox",
+        sandboxEnabled: decision.sandboxEnabled,
+      });
+
+      setPendingConfirmation(toolUse.id);
+      const approved = await waitForConfirmation(toolUse.id);
+
+      if (!approved) {
+        const denialMsg = `Tool execution denied by user: ${toolUse.name} (host execution)`;
+        toolResultBlocks.push({
+          type: "tool_result",
+          tool_use_id: toolUse.id,
+          content: denialMsg,
+          is_error: true,
+        });
+        emit("tool_result", {
+          tool_use_id: toolUse.id,
+          content: denialMsg,
+          is_error: true,
+        });
+        continue;
+      }
     }
 
-    // Execute the tool
+    // Execute the tool (with sandbox routing)
     try {
-      const result: ToolResult = await tool.execute(toolUse.input);
+      let result: ToolResult;
+
+      if (decision.riskLevel === "outside-sandbox") {
+        // Outside-sandbox: always execute on host
+        result = await tool.execute(toolUse.input);
+      } else {
+        // Use the sandbox adapter for routing
+        result = await executeToolWithSandbox(
+          {
+            toolName: toolUse.name,
+            params: toolUse.input,
+            sessionId,
+          }
+        );
+      }
+
       const resultContent = result.error
         ? `${result.output}\n[Error] ${result.error}`
         : result.output;

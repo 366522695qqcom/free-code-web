@@ -5,6 +5,8 @@
  * description, JSON Schema for parameters, and an execute function.
  */
 
+import type { Sandbox } from '@vercel/sandbox';
+
 export interface ToolResult {
   output: string;
   error?: string;
@@ -17,7 +19,11 @@ export interface ToolExecutor {
   parameters: Record<string, unknown>; // JSON Schema
   /** Whether this tool requires user confirmation before execution */
   requiresConfirmation?: boolean;
+  /** Can this tool run in sandbox? */
+  sandboxCapable?: boolean;
   execute: (params: Record<string, unknown>) => Promise<ToolResult>;
+  /** Execute the tool within a sandbox instance */
+  executeInSandbox?: (params: Record<string, unknown>, sandboxInstance: Sandbox) => Promise<ToolResult>;
 }
 
 const toolRegistry = new Map<string, ToolExecutor>();
