@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { connectSSE } from "@/lib/sse";
 import type { ChatMessage, ChatResponseEvent, ToolConfirmation, Usage, RiskLevel } from "@/types";
 import type { AutoApproveToastData } from "@/components/chat/auto-approve-toast";
+import type { PermissionMode } from "@/components/chat/chat-input";
 
 export interface ContentBlock {
   type: "text" | "thinking" | "tool_use" | "tool_result";
@@ -101,7 +102,7 @@ function normalizeSSEEvent(eventType: string, rawData: Record<string, unknown>):
   }
 }
 
-export function useChat(sessionId: string | null): UseChatReturn {
+export function useChat(sessionId: string | null, permissionMode: PermissionMode = "default"): UseChatReturn {
   const [messages, setMessages] = useState<EnhancedMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -212,6 +213,7 @@ export function useChat(sessionId: string | null): UseChatReturn {
             ],
             model,
             sessionId,
+            permissionMode,
           }),
           signal: abortController.signal,
         });
@@ -440,7 +442,7 @@ export function useChat(sessionId: string | null): UseChatReturn {
         abortControllerRef.current = null;
       }
     },
-    [sessionId, messages, autoApprovedTools]
+    [sessionId, messages, autoApprovedTools, permissionMode]
   );
 
   const clearMessages = useCallback(() => {

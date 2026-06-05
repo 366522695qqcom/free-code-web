@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { ChatInput } from "@/components/chat/chat-input";
+import type { PermissionMode } from "@/components/chat/chat-input";
 import { ChatArea } from "@/components/chat-area";
 import { ToolConfirmDialog } from "@/components/chat/tool-confirm-dialog";
 import { AutoApproveToastContainer } from "@/components/chat/auto-approve-toast";
@@ -39,6 +40,7 @@ export function ChatLayout() {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentModel, setCurrentModel] = useState("claude-sonnet-4-20250514");
+  const [permissionMode, setPermissionMode] = useState<PermissionMode>("default");
   const [username] = useState<string | undefined>();
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
   const router = useRouter();
@@ -56,7 +58,7 @@ export function ChatLayout() {
     usage,
     autoApproveToasts,
     removeAutoApproveToast,
-  } = useChat(currentSessionId);
+  } = useChat(currentSessionId, permissionMode);
 
   const handleSelectSession = useCallback(
     (id: string) => {
@@ -311,6 +313,8 @@ export function ChatLayout() {
             onSlashCommand={handleSlashCommand}
             isStreaming={isStreaming}
             disabled={false}
+            permissionMode={permissionMode}
+            onPermissionModeChange={setPermissionMode}
           />
           {/* Cost tracker in the bottom bar */}
           <div className="flex items-center justify-end px-4 pb-1.5">
