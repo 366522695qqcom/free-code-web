@@ -14,6 +14,7 @@ import {
   Plus,
   Trash2,
   AlertTriangle,
+  Server,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -278,6 +279,29 @@ export default function SettingsPage() {
 
       {/* Content */}
       <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
+        {/* Model Providers */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Server className="size-4 text-terminal-cyan" />
+              <CardTitle>模型提供商</CardTitle>
+            </div>
+            <CardDescription>
+              管理自定义模型提供商，连接 OpenAI 兼容 API。
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/settings/providers")}
+            >
+              <Server className="mr-1.5 size-3.5" />
+              管理提供商
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Model Selection */}
         <Card>
           <CardHeader>

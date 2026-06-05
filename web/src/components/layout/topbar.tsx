@@ -30,13 +30,14 @@ interface TopbarProps {
   onLogout: () => void;
   username?: string;
   isStreaming: boolean;
+  customModels?: ModelOption[];
 }
 
 interface EnhancedModelOption extends ModelOption {
   capabilities?: string[];
 }
 
-const AVAILABLE_MODELS: EnhancedModelOption[] = [
+const BUILT_IN_MODELS: EnhancedModelOption[] = [
   { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", provider: "Anthropic", capabilities: [] },
   { id: "claude-opus-4-20250514", name: "Claude Opus 4", provider: "Anthropic", capabilities: ["Extended Thinking"] },
   { id: "claude-haiku-3.5-20241022", name: "Claude 3.5 Haiku", provider: "Anthropic", capabilities: [] },
@@ -44,16 +45,6 @@ const AVAILABLE_MODELS: EnhancedModelOption[] = [
   { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI", capabilities: [] },
   { id: "o3-mini", name: "o3-mini", provider: "OpenAI", capabilities: ["Reasoning"] },
 ];
-
-// Group models by provider
-const MODEL_GROUPS = AVAILABLE_MODELS.reduce<Record<string, EnhancedModelOption[]>>(
-  (acc, model) => {
-    if (!acc[model.provider]) acc[model.provider] = [];
-    acc[model.provider].push(model);
-    return acc;
-  },
-  {}
-);
 
 function ThemeIcon({ theme }: { theme: string | undefined }) {
   switch (theme) {
@@ -73,10 +64,31 @@ export function Topbar({
   onLogout,
   username,
   isStreaming,
+  customModels = [],
 }: TopbarProps) {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
-  const selectedModel = AVAILABLE_MODELS.find((m) => m.id === currentModel);
+
+  // Merge built-in and custom models
+  const allModels: EnhancedModelOption[] = [
+    ...BUILT_IN_MODELS,
+    ...customModels.map((m) => ({
+      ...m,
+      capabilities: (m as EnhancedModelOption).capabilities || [],
+    })),
+  ];
+
+  // Group models by provider
+  const modelGroups = allModels.reduce<Record<string, EnhancedModelOption[]>>(
+    (acc, model) => {
+      if (!acc[model.provider]) acc[model.provider] = [];
+      acc[model.provider].push(model);
+      return acc;
+    },
+    {} as Record<string, EnhancedModelOption[]>
+  );
+
+  const selectedModel = allModels.find((m) => m.id === currentModel);
 
   const cycleTheme = () => {
     if (theme === "dark") setTheme("light");
@@ -106,7 +118,7 @@ export function Topbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
-            {Object.entries(MODEL_GROUPS).map(([provider, models], groupIdx) => (
+            {Object.entries(modelGroups).map(([provider, models], groupIdx) => (
               <div key={provider}>
                 {groupIdx > 0 && <DropdownMenuSeparator />}
                 <div className="px-2 py-1.5 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground/60">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
@@ -12,6 +12,7 @@ import { AutoApproveToastContainer } from "@/components/chat/auto-approve-toast"
 import { CostTracker } from "@/components/chat/cost-tracker";
 import { useSessions } from "@/hooks/use-sessions";
 import { useChat } from "@/hooks/use-chat";
+import type { ModelOption } from "@/types";
 
 const AVAILABLE_MODELS = [
   { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", provider: "Anthropic", capabilities: [] as string[] },
@@ -43,7 +44,36 @@ export function ChatLayout() {
   const [permissionMode, setPermissionMode] = useState<PermissionMode>("default");
   const [username] = useState<string | undefined>();
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
+  const [customModels, setCustomModels] = useState<ModelOption[]>([]);
   const router = useRouter();
+
+  // Fetch custom providers and models on mount
+  useEffect(() => {
+    fetch("/api/providers")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.providers) {
+          const models: ModelOption[] = [];
+          for (const provider of data.providers) {
+            for (const model of provider.models || []) {
+              models.push({
+                id: model.modelId,
+                name: model.displayName || model.modelId,
+                provider: provider.name,
+                capabilities: model.capabilities || [],
+              });
+            }
+          }
+          setCustomModels(models);
+        }
+      })
+      .catch(() => {
+        // Ignore fetch errors
+      });
+  }, []);
+
+  // Merge built-in and custom models for /model command
+  const allModels = useMemo(() => [...AVAILABLE_MODELS, ...customModels], [customModels]);
 
   const {
     messages,
@@ -177,14 +207,14 @@ export function ChatLayout() {
 
         case "/model": {
           if (!args.trim()) {
-            const modelList = AVAILABLE_MODELS
+            const modelList = allModels
               .map((m) => `  ${m.id}  (${m.provider})`)
               .join("\n");
             setSystemMessage(`Available models:\n${modelList}`);
             break;
           }
           // Try to find model by partial match
-          const match = AVAILABLE_MODELS.find(
+          const match = allModels.find(
             (m) => m.id === args.trim() || m.name.toLowerCase() === args.trim().toLowerCase()
           );
           if (match) {
@@ -230,7 +260,7 @@ export function ChatLayout() {
       // Auto-dismiss system message after 5 seconds
       setTimeout(() => setSystemMessage(null), 5000);
     },
-    [clearMessages, currentModel, currentSessionId, messages, sendMessage, usage]
+    [clearMessages, currentModel, currentSessionId, messages, sendMessage, usage, allModels]
   );
 
   const handleLogout = useCallback(async () => {
@@ -281,6 +311,7 @@ export function ChatLayout() {
           onLogout={handleLogout}
           username={username}
           isStreaming={isStreaming}
+          customModels={customModels}
         />
 
         {/* Chat area */}

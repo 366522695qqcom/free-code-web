@@ -18,6 +18,8 @@ export interface ChatStreamOptions {
   provider?: string;
   /** Override API key (ignores env var) */
   apiKey?: string;
+  /** Custom base URL for OpenAI-compatible providers */
+  baseUrl?: string;
 }
 
 /**
@@ -71,6 +73,17 @@ function getGenerator(
   messages: Message[],
   options: ChatStreamOptions
 ): StreamGenerator {
+  // If baseUrl is set, always use OpenAI-compatible streaming
+  if (options.baseUrl) {
+    return streamOpenAI(messages, {
+      model: options.model,
+      systemPrompt: options.systemPrompt,
+      maxTokens: options.maxTokens,
+      apiKey: options.apiKey,
+      baseUrl: options.baseUrl,
+    });
+  }
+
   switch (provider) {
     case "anthropic":
       return streamAnthropic(messages, {

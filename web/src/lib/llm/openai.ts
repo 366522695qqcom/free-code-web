@@ -13,6 +13,7 @@ interface OpenAIStreamOptions {
   systemPrompt?: string;
   maxTokens?: number;
   apiKey?: string;
+  baseUrl?: string;
 }
 
 interface StreamEvent {
@@ -78,8 +79,13 @@ export async function* streamOpenAI(
     });
   }
 
+  const baseUrl = options.baseUrl
+    ? options.baseUrl.replace(/\/+$/, "")
+    : "https://api.openai.com/v1";
+  const apiPath = "/chat/completions";
+
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(`${baseUrl}${apiPath}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
