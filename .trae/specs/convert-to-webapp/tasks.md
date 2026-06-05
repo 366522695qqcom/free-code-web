@@ -10,13 +10,13 @@
 - [ ] Task 2: 后端核心 — LLM API 代理与会话管理
   - [ ] SubTask 2.1: 实现 /api/chat 流式端点（SSE），封装 Anthropic/OpenAI/Bedrock/Vertex API 调用
   - [ ] SubTask 2.2: 移植 QueryEngine 核心逻辑为服务端事件驱动模式
-  - [ ] SubTask 2.3: 实现会话 CRUD API（/api/sessions），使用 Vercel KV 或内存存储
-  - [ ] SubTask 2.4: 实现用户认证系统（API Key 加密存储 + OAuth + httpOnly cookie）
-  - [ ] SubTask 2.5: 实现模型提供商选择逻辑（从 CLI 版本移植）
+  - [ ] SubTask 2.3: 实现会话 CRUD API（/api/sessions），使用 SQLite 或内存存储
+  - [ ] SubTask 2.4: 实现用户认证系统（环境变量 AUTH_USERNAME/AUTH_PASSWORD + httpOnly cookie + 登录页面）
+  - [ ] SubTask 2.5: 实现模型提供商选择逻辑（从 CLI 版本移植，API Key 通过环境变量配置）
 
-- [ ] Task 3: 后端工具执行 — 服务端沙箱
+- [ ] Task 3: 后端工具执行 — 服务端直接执行
   - [ ] SubTask 3.1: 实现 /api/tools/execute 端点，接收工具调用请求
-  - [ ] SubTask 3.2: 移植 BashTool 为服务端执行（使用子进程 + 超时限制）
+  - [ ] SubTask 3.2: 移植 BashTool 为服务端执行（使用子进程 + 超时限制，无需沙箱）
   - [ ] SubTask 3.3: 移植 FileEditTool/FileReadTool/FileWriteTool 为服务端文件操作
   - [ ] SubTask 3.4: 移植 GlobTool/GrepTool 为服务端搜索
   - [ ] SubTask 3.5: 实现工具权限确认流程（前端确认 → 后端执行 → 结果返回）

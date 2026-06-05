@@ -2,7 +2,7 @@
 
 ## Why
 
-free-code 当前是纯 CLI 应用（Bun + Ink/React 终端 UI），无法在浏览器中使用。将其改造为可部署到 Vercel 的全栈 Web 应用，可以让用户无需安装 Bun 即可通过浏览器使用 Claude Code 的核心功能。
+free-code 当前是纯 CLI 应用（Bun + Ink/React 终端 UI），无法在浏览器中使用。将其改造为可部署到 Vercel 的全栈 Web 应用，让用户无需安装 Bun 即可通过浏览器使用 Claude Code 的核心功能。该应用为自部署自用场景，非公开 SaaS。
 
 ## What Changes
 
@@ -12,7 +12,7 @@ free-code 当前是纯 CLI 应用（Bun + Ink/React 终端 UI），无法在浏�
 - 将 120+ 终端 UI 组件替换/改造为 Web UI 组件
 - 将文件系统操作（BashTool、FileEditTool 等）迁移到服务端执行
 - 新增 WebSocket/SSE 流式通信层
-- 新增用户认证系统（基于现有 OAuth 逻辑）
+- 新增用户认证系统（环境变量配置用户名密码 + httpOnly cookie 会话）
 - **BREAKING**: 终端专属功能（Vim 模式、终端快捷键、原生音频）在 Web 版中不可用
 
 ## Impact
@@ -31,10 +31,10 @@ Ink 是终端渲染框架，使用 `<Box>`, `<Text>` 等 Ink 专有组件，与�
 
 ### 困难 2: 工具执行需要服务端沙箱
 
-BashTool、FileEditTool、FileReadTool、FileWriteTool 等工具直接操作文件系统和 shell，在浏览器中无法执行。必须在服务端提供沙箱环境执行这些操作，并通过 API 通信。
+BashTool、FileEditTool、FileReadTool、FileWriteTool 等工具直接操作文件系统和 shell，在浏览器中无法执行。必须在服务端执行这些操作，并通过 API 通信。由于是自部署自用场景，安全性要求相对宽松——工具直接在服务端进程内执行即可，无需 Docker/gVisor 沙箱，但需要超时限制防止无限运行。
 
 **影响范围**: src/tools/BashTool/, src/tools/FileEditTool/, src/tools/FileReadTool/, src/tools/FileWriteTool/, src/tools/GlobTool/, src/tools/GrepTool/
-**难度**: 高 — 需要设计安全的服务端沙箱（Docker/gVisor），防止任意代码执行风险
+**难度**: 中 — 自部署场景简化了沙箱需求，但仍需处理超时和资源限制
 
 ### 困难 3: 流式响应与长时间运行的工具调用
 
@@ -45,10 +45,10 @@ QueryEngine 的查询循环是同步阻塞式的：发送消息 → 等待 LLM �
 
 ### 困难 4: 会话持久化与状态同步
 
-当前会话状态存储在本地文件系统（sessionStorage.ts），Web 版需要使用数据库（如 Vercel KV/Postgres）存储会话，并处理多标签页/多设备同步。
+当前会话状态存储在本地文件系统（sessionStorage.ts），Web 版需要使用数据库或文件存储会话。自部署场景下，可使用 SQLite（本地文件）或 Vercel KV 简化部署。
 
 **影响范围**: src/utils/sessionStorage.ts, src/utils/sessionState.ts, src/state/
-**难度**: 中 — 架构变化但逻辑可复用
+**难度**: 中低 — 自部署场景可使用 SQLite 等轻量方案，无需复杂分布式存储
 
 ### 困难 5: MCP 服务器集成
 
@@ -59,10 +59,10 @@ MCP 服务器当前在本地进程内运行（stdio/SSE transport），Web 版�
 
 ### 困难 6: 认证与安全
 
-Web 版暴露在公网，需要：用户认证、API Key 安全存储（不能暴露到前端）、CSRF 防护、速率限制等。当前 CLI 的认证逻辑（本地 API Key / OAuth）需要全面改造。
+Web 版需要基本的访问控制，防止未授权访问。自部署自用场景下，使用环境变量配置的用户名密码进行简单认证即可，无需复杂的 OAuth 流程。API Key 存储在服务端环境变量中，不暴露到前端。
 
-**影响范围**: src/utils/auth.ts, src/utils/authPortable.ts, src/bridge/jwtUtils.ts
-**难度**: 中 — 可复用 OAuth 逻辑，但需要增加 Web 安全层
+**影响范围**: 新增认证中间件，src/utils/auth.ts（简化版）
+**难度**: 低 — 简单的用户名密码认证 + httpOnly cookie，无需 OAuth
 
 ### 困难 7: 特性标志系统适配
 
@@ -127,15 +127,21 @@ Web 版暴露在公网，需要：用户认证、API Key 安全存储（不能�
 
 ### Requirement: 用户认证
 
-系统 SHALL 提供用户认证功能，保护 API Key 不暴露到前端。
+系统 SHALL 提供基于环境变量的简单用户名密码认证，保护应用不被未授权访问。
 
-#### Scenario: API Key 登录
-- **WHEN** 用户输入 API Key
-- **THEN** Key 存储在服务端加密存储中，前端仅持有会话 token
+#### Scenario: 登录
+- **WHEN** 用户访问应用且未认证
+- **THEN** 显示登录页面，要求输入用户名和密码
+- **WHEN** 用户输入正确的用户名密码（与环境变量 AUTH_USERNAME / AUTH_PASSWORD 匹配）
+- **THEN** 设置 httpOnly cookie 会话，跳转到聊天界面
 
-#### Scenario: OAuth 登录
-- **WHEN** 用户通过 OAuth 登录
-- **THEN** 认证 token 存储在服务端，前端通过 httpOnly cookie 维持会话
+#### Scenario: 未认证访问
+- **WHEN** 未认证用户访问任何 API 端点
+- **THEN** 返回 401 状态码
+
+#### Scenario: API Key 管理
+- **WHEN** 部署者在环境变量中设置 ANTHROPIC_API_KEY
+- **THEN** API Key 仅在服务端使用，前端不可见
 
 ### Requirement: Vercel 部署
 
