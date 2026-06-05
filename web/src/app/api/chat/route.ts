@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
 
     const stream = createAgenticStream(body.messages, {
       model: body.model,
+      sessionId: body.sessionId,
+      permissionMode: body.permissionMode,
     });
 
     return createSSEResponse(stream);

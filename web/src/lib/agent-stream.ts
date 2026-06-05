@@ -32,6 +32,7 @@ interface AgenticStreamOptions {
   systemPrompt?: string;
   maxTokens?: number;
   sessionId?: string;
+  permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
 }
 
 type EmitFn = (event: string, data: unknown) => void;
@@ -239,7 +240,8 @@ async function runAnthropicLoop(
     const toolResultBlocks: ContentBlock[] = await executeTools(
       toolUseBlocks,
       emit,
-      options.sessionId
+      options.sessionId,
+      options.permissionMode
     );
 
     // Add tool results as user message
@@ -485,7 +487,7 @@ async function runOpenAILoop(
       input: JSON.parse(tc.arguments || "{}"),
     }));
 
-    const toolResultBlocks = await executeTools(toolUseBlocks, emit, options.sessionId);
+    const toolResultBlocks = await executeTools(toolUseBlocks, emit, options.sessionId, options.permissionMode);
 
     // Add tool results as separate messages
     for (const result of toolResultBlocks) {
@@ -513,7 +515,8 @@ async function runOpenAILoop(
 async function executeTools(
   toolUseBlocks: { id: string; name: string; input: Record<string, unknown> }[],
   emit: EmitFn,
-  sessionId?: string
+  sessionId?: string,
+  permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions"
 ): Promise<ContentBlock[]> {
   const toolResultBlocks: ContentBlock[] = [];
 
@@ -536,6 +539,50 @@ async function executeTools(
       continue;
     }
 
+    // Bypass permissions mode: skip all confirmations
+    if (permissionMode === "bypassPermissions") {
+      emit("tool_use", {
+        id: toolUse.id,
+        name: toolUse.name,
+        input: toolUse.input,
+        riskLevel: "low",
+      });
+
+      try {
+        const result = await executeToolWithSandbox({
+          toolName: toolUse.name,
+          params: toolUse.input,
+          sessionId,
+        });
+
+        toolResultBlocks.push({
+          type: "tool_result",
+          tool_use_id: toolUse.id,
+          content: result.output || result.error || "",
+          is_error: !!result.error,
+        });
+        emit("tool_result", {
+          tool_use_id: toolUse.id,
+          content: result.output || result.error || "",
+          is_error: !!result.error,
+        });
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Tool execution failed";
+        toolResultBlocks.push({
+          type: "tool_result",
+          tool_use_id: toolUse.id,
+          content: errorMsg,
+          is_error: true,
+        });
+        emit("tool_result", {
+          tool_use_id: toolUse.id,
+          content: errorMsg,
+          is_error: true,
+        });
+      }
+      continue;
+    }
+
     // Assess tool execution using permission grading
     const decision: ToolExecutionDecision = assessToolExecution({
       toolName: toolUse.name,
@@ -543,18 +590,25 @@ async function executeTools(
       sessionId,
     });
 
+    // In acceptEdits mode: auto-approve file edit tools
+    const effectiveRiskLevel =
+      permissionMode === "acceptEdits" &&
+      (toolUse.name === "file_edit" || toolUse.name === "file_write" || toolUse.name === "multiEdit")
+        ? "low"
+        : decision.riskLevel;
+
     // Emit tool_use event with risk level
     emit("tool_use", {
       id: toolUse.id,
       name: toolUse.name,
       input: toolUse.input,
-      riskLevel: decision.riskLevel,
+      riskLevel: effectiveRiskLevel,
     });
 
     // Handle confirmation based on risk level
-    if (decision.riskLevel === "low") {
+    if (effectiveRiskLevel === "low") {
       // Auto-approve: no confirmation needed
-    } else if (decision.riskLevel === "high") {
+    } else if (effectiveRiskLevel === "high") {
       // Needs confirmation before execution
       emit("tool_confirmation_needed", {
         tool_use_id: toolUse.id,
@@ -562,6 +616,7 @@ async function executeTools(
         input: toolUse.input,
         riskLevel: "high",
         sandboxEnabled: decision.sandboxEnabled,
+        reason: decision.reason,
       });
 
       setPendingConfirmation(toolUse.id);
@@ -582,7 +637,7 @@ async function executeTools(
         });
         continue;
       }
-    } else if (decision.riskLevel === "outside-sandbox") {
+    } else if (effectiveRiskLevel === "outside-sandbox") {
       // Needs special confirmation — runs on host, not sandbox
       emit("tool_confirmation_needed", {
         tool_use_id: toolUse.id,
@@ -590,6 +645,7 @@ async function executeTools(
         input: toolUse.input,
         riskLevel: "outside-sandbox",
         sandboxEnabled: decision.sandboxEnabled,
+        reason: decision.reason,
       });
 
       setPendingConfirmation(toolUse.id);

@@ -194,17 +194,7 @@ export function ChatInput({
         handleSend();
       }
     },
-    [handleSend, showModeMenu, selectedIndex]
-  );
-
-  const handleSelectMode = useCallback(
-    (mode: PermissionMode) => {
-      onPermissionModeChange?.(mode);
-      setShowModeMenu(false);
-      setValue("");
-      textareaRef.current?.focus();
-    },
-    [onPermissionModeChange]
+    [handleSend, showModeMenu, selectedIndex, handleSelectMode]
   );
 
   // Scroll selected item into view
