@@ -1,10 +1,9 @@
 import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/auth";
-import { createLLMProvider } from "@/lib/llm";
+import { createQueryEngine } from "@/lib/query-engine";
 import { createSSEResponse } from "@/lib/sse";
-import type { ChatRequest } from "@/types";
+import type { ChatRequest, QueryEngineEvent } from "@/types";
 
-export const POST = requireAuth(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   try {
     const body: ChatRequest = await request.json();
 
@@ -15,15 +14,29 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
-    const provider = createLLMProvider({ model: body.model });
+    const provider = process.env.MODEL_PROVIDER || "anthropic";
+
+    if (provider !== "anthropic") {
+      return new Response(
+        JSON.stringify({
+          error: `Provider "${provider}" is not yet implemented. Only "anthropic" is supported currently.`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const engine = createQueryEngine({
+      model: body.model,
+    });
 
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         const encoder = new TextEncoder();
 
         try {
-          for await (const event of provider.run(body.messages)) {
-            const line = `event: ${event.event}\ndata: ${event.data}\n\n`;
+          for await (const event of engine.run(body.messages)) {
+            const sseEvent: QueryEngineEvent = event;
+            const line = `event: ${sseEvent.event}\ndata: ${sseEvent.data}\n\n`;
             controller.enqueue(encoder.encode(line));
           }
           controller.close();
@@ -48,4 +61,4 @@ export const POST = requireAuth(async (request: NextRequest) => {
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-});
+}

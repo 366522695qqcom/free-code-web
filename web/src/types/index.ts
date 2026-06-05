@@ -46,14 +46,20 @@ export interface Message {
 }
 
 /**
- * Tool use within a message.
+ * Chat API request body.
  */
-export interface ToolUse {
-  id: string;
-  name: string;
-  input: Record<string, unknown>;
-  status: "pending" | "confirmed" | "running" | "completed" | "failed";
-  output?: string;
+export interface ChatRequest {
+  messages: Message[];
+  model?: string;
+  sessionId?: string;
+}
+
+/**
+ * SSE event structure.
+ */
+export interface SSEEvent {
+  event?: string;
+  data: string;
 }
 
 /**
@@ -70,34 +76,6 @@ export interface Session {
 }
 
 /**
- * SSE event structure for streaming responses.
- */
-export interface SSEEvent {
-  event?: string;
-  data: string;
-  id?: string;
-  retry?: number;
-}
-
-/**
- * Usage information for token tracking.
- */
-export interface UsageInfo {
-  inputTokens: number;
-  outputTokens: number;
-  cost: number;
-}
-
-/**
- * Chat API request body.
- */
-export interface ChatRequest {
-  messages: Message[];
-  model?: string;
-  sessionId?: string;
-}
-
-/**
  * Login request body.
  */
 export interface LoginRequestBody {
@@ -111,46 +89,4 @@ export interface LoginRequestBody {
 export interface LoginResponseBody {
   success: boolean;
   error?: string;
-}
-
-/**
- * Chat response event types for client-side parsing.
- */
-export type ChatResponseEvent =
-  | { type: "text"; content: string }
-  | { type: "thinking"; content: string }
-  | { type: "tool_use"; toolUse: { id: string; name: string; input: Record<string, unknown> } }
-  | { type: "tool_result"; toolUse: { id: string; name: string }; content: string }
-  | { type: "usage"; usage: UsageInfo }
-  | { type: "done" }
-  | { type: "error"; content: string };
-
-/**
- * Chat message type used by client hooks (simplified flat structure).
- */
-export interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: number;
-}
-
-/**
- * Chat conversation type used by client hooks.
- */
-export interface ChatConversation {
-  id: string;
-  title: string;
-  messages: ChatMessage[];
-  createdAt: number;
-  updatedAt: number;
-  model?: string;
-}
-
-/**
- * Query engine event type for internal streaming.
- */
-export interface QueryEngineEvent {
-  event: string;
-  data: string;
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession, updateSession, deleteSession } from "@/lib/sessions";
+import { getSession, updateSession, deleteSession } from "@/lib/store";
 
 export async function GET(
   _request: NextRequest,
