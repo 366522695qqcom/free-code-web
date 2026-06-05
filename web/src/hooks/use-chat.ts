@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { connectSSE } from "@/lib/sse";
 import type { ChatMessage, ChatResponseEvent, ToolConfirmation, Usage, RiskLevel } from "@/types";
 import type { AutoApproveToastData } from "@/components/chat/auto-approve-toast";
@@ -29,6 +29,53 @@ export interface EnhancedMessage extends ChatMessage {
   contentBlocks?: ContentBlock[];
 }
 
+/** Model max context window sizes */
+const MODEL_MAX_CONTEXT: Record<string, number> = {
+  "claude-sonnet-4-20250514": 200000,
+  "claude-opus-4-20250514": 200000,
+  "claude-haiku-3.5-20241022": 200000,
+  "gpt-4o": 128000,
+  "gpt-4o-mini": 128000,
+  "o3-mini": 200000,
+};
+
+const DEFAULT_MAX_CONTEXT = 200000;
+
+/** Extract @file/path references from a message string */
+function extractFileReferences(content: string): string[] {
+  const matches = content.match(/@([^\s@]+)/g);
+  if (!matches) return [];
+  return matches.map((m) => m.substring(1)); // Remove the @ prefix
+}
+
+/** Resolve @ file references by fetching their contents */
+async function resolveFileReferences(content: string): Promise<string> {
+  const refs = extractFileReferences(content);
+  if (refs.length === 0) return content;
+
+  const contextParts: string[] = [];
+
+  await Promise.all(
+    refs.map(async (ref) => {
+      try {
+        const res = await fetch(`/api/files/content?path=${encodeURIComponent(ref)}`);
+        if (res.ok) {
+          const data = await res.json();
+          contextParts.push(
+            `[Referenced file: @${ref}]\n\`\`\`\n${data.content}\n\`\`\``
+          );
+        }
+      } catch {
+        // Ignore fetch errors for individual files
+      }
+    })
+  );
+
+  if (contextParts.length === 0) return content;
+
+  return `${contextParts.join("\n\n")}\n\n${content}`;
+}
+
 interface UseChatReturn {
   messages: EnhancedMessage[];
   isStreaming: boolean;
@@ -43,6 +90,7 @@ interface UseChatReturn {
   usage: Usage;
   autoApproveToasts: AutoApproveToastData[];
   removeAutoApproveToast: (id: string) => void;
+  contextPercentage: number;
 }
 
 /**
@@ -102,7 +150,7 @@ function normalizeSSEEvent(eventType: string, rawData: Record<string, unknown>):
   }
 }
 
-export function useChat(sessionId: string | null, permissionMode: PermissionMode = "default"): UseChatReturn {
+export function useChat(sessionId: string | null, permissionMode: PermissionMode = "default", currentModel?: string): UseChatReturn {
   const [messages, setMessages] = useState<EnhancedMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +160,13 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
   const [autoApproveToasts, setAutoApproveToasts] = useState<AutoApproveToastData[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const confirmationResolverRef = useRef<((approved: boolean) => void) | null>(null);
+
+  // Calculate context percentage
+  const contextPercentage = useMemo(() => {
+    const maxContext = MODEL_MAX_CONTEXT[currentModel || ""] ?? DEFAULT_MAX_CONTEXT;
+    const totalTokens = usage.inputTokens + usage.outputTokens;
+    return (totalTokens / maxContext) * 100;
+  }, [usage.inputTokens, usage.outputTokens, currentModel]);
 
   const removeAutoApproveToast = useCallback((id: string) => {
     setAutoApproveToasts((prev) => prev.filter((t) => t.id !== id));
@@ -163,6 +218,9 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
       setError(null);
       setIsStreaming(true);
 
+      // Resolve @ file references before sending
+      const resolvedContent = await resolveFileReferences(content);
+
       const userMessage: EnhancedMessage = {
         id: `user-${Date.now()}`,
         role: "user",
@@ -207,7 +265,7 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
               })),
               {
                 role: "user",
-                content: [{ type: "text", text: content }],
+                content: [{ type: "text", text: resolvedContent }],
                 timestamp: new Date().toISOString(),
               },
             ],
@@ -464,5 +522,6 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
     usage,
     autoApproveToasts,
     removeAutoApproveToast,
+    contextPercentage,
   };
 }

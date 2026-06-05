@@ -72,6 +72,11 @@ function formatCost(cost: number): string {
   return `$${cost.toFixed(2)}`;
 }
 
+interface FileEntry {
+  path: string;
+  type: "file" | "dir";
+}
+
 interface ChatInputProps {
   onSend: (content: string) => void;
   onStop: () => void;
@@ -86,6 +91,10 @@ interface ChatInputProps {
   currentModelName?: string;
   /** 用量数据（用于状态栏显示） */
   usage?: Usage;
+  /** 上下文窗口使用百分比 */
+  contextPercentage?: number;
+  /** 打开 Provider 管理对话框 */
+  onProviderDialogOpen?: () => void;
 }
 
 export function ChatInput({
@@ -98,12 +107,22 @@ export function ChatInput({
   onPermissionModeChange,
   currentModelName = "claude-sonnet-4",
   usage,
+  contextPercentage,
+  onProviderDialogOpen,
 }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // @ file autocomplete state
+  const [showFileMenu, setShowFileMenu] = useState(false);
+  const [fileResults, setFileResults] = useState<FileEntry[]>([]);
+  const [fileSelectedIndex, setFileSelectedIndex] = useState(0);
+  const [atPosition, setAtPosition] = useState(-1); // cursor position when @ was typed
+  const fileMenuRef = useRef<HTMLDivElement>(null);
+  const fileFetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Command history
   const historyRef = useRef<string[]>([]);
@@ -126,6 +145,7 @@ export function ChatInput({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowModeMenu(true);
       setSelectedIndex(0);
+      setShowFileMenu(false);
     } else {
       setShowModeMenu(false);
     }
@@ -139,6 +159,70 @@ export function ChatInput({
     }
   }, [showModeMenu]);
 
+  // @ file autocomplete: detect @ and fetch files
+  useEffect(() => {
+    if (showModeMenu) {
+      return;
+    }
+
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const cursorPos = textarea.selectionStart;
+    const textBeforeCursor = value.substring(0, cursorPos);
+
+    // Find the last @ that isn't preceded by another @ (i.e., start of a file reference)
+    const atIdx = textBeforeCursor.lastIndexOf("@");
+    if (atIdx === -1) {
+      setShowFileMenu(false);
+      setAtPosition(-1);
+      return;
+    }
+
+    // Check there's a space or start of string before @, or it's the first char
+    if (atIdx > 0 && textBeforeCursor[atIdx - 1] !== " " && textBeforeCursor[atIdx - 1] !== "\n") {
+      setShowFileMenu(false);
+      return;
+    }
+
+    // Extract the prefix after @
+    const prefix = textBeforeCursor.substring(atIdx + 1);
+
+    // If there's a space after @, it's not a file reference anymore
+    if (prefix.includes(" ")) {
+      setShowFileMenu(false);
+      return;
+    }
+
+    setAtPosition(atIdx);
+
+    // Debounce fetch
+    if (fileFetchTimerRef.current) {
+      clearTimeout(fileFetchTimerRef.current);
+    }
+
+    fileFetchTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/files?prefix=${encodeURIComponent(prefix)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const files: FileEntry[] = data.files || [];
+          setFileResults(files);
+          setShowFileMenu(files.length > 0);
+          setFileSelectedIndex(0);
+        }
+      } catch {
+        // Ignore fetch errors
+      }
+    }, 150);
+
+    return () => {
+      if (fileFetchTimerRef.current) {
+        clearTimeout(fileFetchTimerRef.current);
+      }
+    };
+  }, [value, showModeMenu]);
+
   const handleSelectMode = useCallback(
     (mode: PermissionMode) => {
       onPermissionModeChange?.(mode);
@@ -147,6 +231,38 @@ export function ChatInput({
       textareaRef.current?.focus();
     },
     [onPermissionModeChange]
+  );
+
+  const handleSelectFile = useCallback(
+    (file: FileEntry) => {
+      if (atPosition === -1) return;
+
+      const before = value.substring(0, atPosition);
+      const afterAt = value.substring(atPosition + 1);
+      // Find where the current prefix ends (next space or end of string)
+      const spaceIdx = afterAt.indexOf(" ");
+      const after = spaceIdx !== -1 ? afterAt.substring(spaceIdx) : "";
+
+      const suffix = file.type === "dir" ? "/" : " ";
+      const newValue = `${before}@${file.path}${suffix}${after}`;
+      setValue(newValue);
+
+      setShowFileMenu(false);
+      setAtPosition(-1);
+      setFileResults([]);
+      setFileSelectedIndex(0);
+
+      // Focus and set cursor position
+      requestAnimationFrame(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+          const newCursorPos = before.length + 1 + file.path.length + suffix.length;
+          textarea.focus();
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      });
+    },
+    [value, atPosition]
   );
 
   const handleSend = useCallback(() => {
@@ -190,6 +306,37 @@ export function ChatInput({
         return;
       }
 
+      // File autocomplete navigation
+      if (showFileMenu) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setFileSelectedIndex((prev) =>
+            prev < fileResults.length - 1 ? prev + 1 : 0
+          );
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setFileSelectedIndex((prev) =>
+            prev > 0 ? prev - 1 : fileResults.length - 1
+          );
+          return;
+        }
+        if (e.key === "Enter" || e.key === "Tab") {
+          e.preventDefault();
+          const selected = fileResults[fileSelectedIndex];
+          if (selected) {
+            handleSelectFile(selected);
+          }
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setShowFileMenu(false);
+          return;
+        }
+      }
+
       if (showModeMenu) {
         if (e.key === "ArrowDown") {
           e.preventDefault();
@@ -221,8 +368,8 @@ export function ChatInput({
         setShowModeMenu(false);
       }
 
-      // Command history navigation (only when not showing mode menu)
-      if (!showModeMenu && !isStreaming) {
+      // Command history navigation (only when not showing mode menu or file menu)
+      if (!showModeMenu && !showFileMenu && !isStreaming) {
         if (e.key === "ArrowUp" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
           // Only navigate history if cursor is at the start of the textarea
           const textarea = textareaRef.current;
@@ -265,10 +412,10 @@ export function ChatInput({
         handleSend();
       }
     },
-    [handleSend, showModeMenu, selectedIndex, handleSelectMode, isStreaming, onStop, value]
+    [handleSend, showModeMenu, showFileMenu, selectedIndex, fileSelectedIndex, fileResults, handleSelectMode, handleSelectFile, isStreaming, onStop, value]
   );
 
-  // Scroll selected item into view
+  // Scroll selected item into view (mode menu)
   useEffect(() => {
     if (showModeMenu && menuRef.current) {
       const selectedEl = menuRef.current.querySelector(
@@ -277,6 +424,16 @@ export function ChatInput({
       selectedEl?.scrollIntoView({ block: "nearest" });
     }
   }, [selectedIndex, showModeMenu]);
+
+  // Scroll selected item into view (file menu)
+  useEffect(() => {
+    if (showFileMenu && fileMenuRef.current) {
+      const selectedEl = fileMenuRef.current.querySelector(
+        `[data-file-index="${fileSelectedIndex}"]`
+      );
+      selectedEl?.scrollIntoView({ block: "nearest" });
+    }
+  }, [fileSelectedIndex, showFileMenu]);
 
   /** 当前模式的标签 */
   const currentModeLabel = MODE_OPTIONS.find(
@@ -291,8 +448,66 @@ export function ChatInput({
 
   const cost = usage?.cost ?? 0;
 
+  // Context percentage display
+  const ctxPct = contextPercentage ?? 0;
+  const ctxColor =
+    ctxPct > 90
+      ? "text-terminal-red"
+      : ctxPct > 70
+        ? "text-yellow-500"
+        : "text-muted-foreground/50";
+
   return (
     <div className="relative">
+      {/* File Autocomplete Menu */}
+      {showFileMenu && fileResults.length > 0 && (
+        <div
+          ref={fileMenuRef}
+          className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
+        >
+          <div className="border-b border-border bg-muted/20 px-3 py-1 flex items-center justify-between">
+            <span className="text-[0.65rem] text-muted-foreground/60">Files</span>
+            <div className="flex items-center gap-2 text-[0.6rem] text-muted-foreground/40">
+              <kbd className="border border-border px-1">↑↓</kbd>
+              <span>navigate</span>
+              <span>·</span>
+              <kbd className="border border-border px-1">Tab</kbd>
+              <span>select</span>
+              <span>·</span>
+              <kbd className="border border-border px-1">Esc</kbd>
+              <span>close</span>
+            </div>
+          </div>
+          {fileResults.map((file, idx) => (
+            <button
+              key={file.path}
+              data-file-index={idx}
+              onClick={() => handleSelectFile(file)}
+              onMouseEnter={() => setFileSelectedIndex(idx)}
+              className={cn(
+                "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border last:border-b-0",
+                idx === fileSelectedIndex
+                  ? "bg-accent text-accent-foreground"
+                  : "hover:bg-accent/30"
+              )}
+            >
+              <span
+                className={cn(
+                  "font-mono text-xs shrink-0",
+                  file.type === "dir" ? "text-terminal-cyan" : "text-muted-foreground/60"
+                )}
+              >
+                {file.type === "dir" ? "📁" : "📄"}
+              </span>
+              <span className="font-mono text-xs truncate">{file.path}</span>
+              {file.type === "dir" && (
+                <span className="ml-auto text-[0.6rem] text-muted-foreground/40 shrink-0">/</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Mode Selector Menu */}
       {showModeMenu && (
         <div
@@ -396,7 +611,7 @@ export function ChatInput({
             placeholder={
               isStreaming
                 ? "Waiting for response..."
-                : "Type a message... (Enter to send · / to switch mode)"
+                : "Type a message... (Enter to send · / to switch mode · @ to reference file)"
             }
             disabled={disabled}
             rows={1}
@@ -430,6 +645,8 @@ export function ChatInput({
           <span>{currentModelName}</span>
           <span className="text-muted-foreground/30">│</span>
           <span>{formatCost(cost)}</span>
+          <span className="text-muted-foreground/30">│</span>
+          <span className={ctxColor}>ctx: {ctxPct.toFixed(0)}%</span>
           {historyIndicator && (
             <>
               <span className="text-muted-foreground/30">│</span>
@@ -438,7 +655,7 @@ export function ChatInput({
           )}
         </span>
         <span className="font-mono text-[0.6rem] text-muted-foreground/30">
-          Enter↵ send · Shift+Enter newline · / mode · Ctrl+C stop
+          Enter↵ send · Shift+Enter newline · / mode · @ file · Ctrl+C stop
         </span>
       </div>
     </div>

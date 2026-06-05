@@ -117,8 +117,13 @@ export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
 
   const filePath = (toolUse.input.file_path || toolUse.input.path) as string | undefined;
 
+  // Generate a DOM id for scrolling from file tree
+  const domId = filePath
+    ? `tool-${filePath.replace(/[^a-zA-Z0-9-_]/g, "_")}-${toolUse.id}`
+    : undefined;
+
   return (
-    <div className="py-0.5">
+    <div id={domId} className="py-0.5">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex w-full items-center gap-1.5 text-left font-mono text-sm leading-relaxed"

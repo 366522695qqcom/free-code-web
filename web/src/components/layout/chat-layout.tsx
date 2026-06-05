@@ -2,14 +2,18 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { FolderTree } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { ChatInput } from "@/components/chat/chat-input";
 import type { PermissionMode } from "@/components/chat/chat-input";
+import { ProviderDialog } from "@/components/chat/provider-dialog";
 import { ChatArea } from "@/components/chat-area";
 import { ToolConfirmDialog } from "@/components/chat/tool-confirm-dialog";
 import { AutoApproveToastContainer } from "@/components/chat/auto-approve-toast";
+import { FileTreePanel } from "@/components/chat/file-tree-panel";
 import { useSessions } from "@/hooks/use-sessions";
 import { useChat } from "@/hooks/use-chat";
+import { useFileTree } from "@/hooks/use-file-tree";
 import type { ModelOption } from "@/types";
 
 const AVAILABLE_MODELS = [
@@ -26,6 +30,17 @@ const TOOL_NAMES = [
   "listDirectory", "webSearch", "webFetch",
 ];
 
+const MODEL_MAX_CONTEXT: Record<string, number> = {
+  "claude-sonnet-4-20250514": 200000,
+  "claude-opus-4-20250514": 200000,
+  "claude-haiku-3.5-20241022": 200000,
+  "gpt-4o": 128000,
+  "gpt-4o-mini": 128000,
+  "o3-mini": 200000,
+};
+
+const DEFAULT_MAX_CONTEXT = 200000;
+
 export function ChatLayout() {
   const {
     sessions,
@@ -38,14 +53,16 @@ export function ChatLayout() {
   } = useSessions();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showFileTree, setShowFileTree] = useState(true);
   const [currentModel, setCurrentModel] = useState("claude-sonnet-4-20250514");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>("default");
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
   const [customModels, setCustomModels] = useState<ModelOption[]>([]);
+  const [providerDialogOpen, setProviderDialogOpen] = useState(false);
   const router = useRouter();
 
   // Fetch custom providers and models on mount
-  useEffect(() => {
+  const refreshCustomModels = useCallback(() => {
     fetch("/api/providers")
       .then((res) => res.json())
       .then((data) => {
@@ -69,6 +86,10 @@ export function ChatLayout() {
       });
   }, []);
 
+  useEffect(() => {
+    refreshCustomModels();
+  }, [refreshCustomModels]);
+
   // Merge built-in and custom models for /model command
   const allModels = useMemo(() => [...AVAILABLE_MODELS, ...customModels], [customModels]);
 
@@ -85,7 +106,19 @@ export function ChatLayout() {
     usage,
     autoApproveToasts,
     removeAutoApproveToast,
-  } = useChat(currentSessionId, permissionMode);
+    contextPercentage,
+  } = useChat(currentSessionId, permissionMode, currentModel);
+
+  const { tree: fileTree } = useFileTree(messages);
+
+  const handleFileClick = useCallback((filePath: string) => {
+    // Find the first tool-use block that references this file path and scroll to it
+    const sanitizedPath = filePath.replace(/[^a-zA-Z0-9-_]/g, "_");
+    const elements = document.querySelectorAll(`[id^="tool-${sanitizedPath}"]`);
+    if (elements.length > 0) {
+      elements[0].scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
 
   const handleSelectSession = useCallback(
     (id: string) => {
@@ -197,6 +230,9 @@ export function ChatLayout() {
             "  /compact  — Compact/summarize conversation",
             "  /cost     — Show current session cost",
             "  /tools    — List available tools",
+            "  /context  — Show context usage details",
+            "  /review   — Ask AI to review code changes in this session",
+            "  /status   — Show system status",
           ].join("\n");
           setSystemMessage(helpText);
           break;
@@ -250,6 +286,52 @@ export function ChatLayout() {
           );
           break;
 
+        case "/context": {
+          const { inputTokens, outputTokens } = usage;
+          const totalTokens = inputTokens + outputTokens;
+          const modelName = allModels.find((m) => m.id === currentModel)?.name || currentModel;
+          const maxContext = MODEL_MAX_CONTEXT[currentModel] ?? DEFAULT_MAX_CONTEXT;
+          setSystemMessage(
+            `Context Usage:\nInput: ${inputTokens.toLocaleString()} tokens\nOutput: ${outputTokens.toLocaleString()} tokens\nTotal: ${totalTokens.toLocaleString()} tokens\nContext: ${contextPercentage.toFixed(1)}% of ${maxContext.toLocaleString()} (${modelName})`
+          );
+          break;
+        }
+
+        case "/review":
+          if (currentSessionId && messages.length > 0) {
+            sendMessage(
+              "Review the code changes made in this session. Analyze each file modification for potential bugs, style issues, and improvements.",
+              currentModel
+            );
+          } else {
+            setSystemMessage("No conversation to review.");
+          }
+          break;
+
+        case "/status": {
+          const modelName = allModels.find((m) => m.id === currentModel)?.name || currentModel;
+          // Fetch status info from API, then display
+          fetch("/api/status")
+            .then((res) => res.json())
+            .then((data) => {
+              const sandboxStr = data.sandboxEnabled ? "enabled" : "disabled";
+              const mcpCount = data.mcpConnections ?? 0;
+              const sessionId = currentSessionId || "none";
+              setSystemMessage(
+                `System Status:\nModel: ${modelName}\nPermission: ${permissionMode}\nSandbox: ${sandboxStr}\nMCP: ${mcpCount} connection${mcpCount !== 1 ? "s" : ""}\nSession: ${sessionId}`
+              );
+              setTimeout(() => setSystemMessage(null), 5000);
+            })
+            .catch(() => {
+              const sessionId = currentSessionId || "none";
+              setSystemMessage(
+                `System Status:\nModel: ${modelName}\nPermission: ${permissionMode}\nSandbox: unknown\nMCP: unknown\nSession: ${sessionId}`
+              );
+              setTimeout(() => setSystemMessage(null), 5000);
+            });
+          return; // skip the auto-dismiss below since we handle it in the async callbacks
+        }
+
         default:
           setSystemMessage(`Unknown command: ${command}. Type /help for available commands.`);
       }
@@ -257,7 +339,7 @@ export function ChatLayout() {
       // Auto-dismiss system message after 5 seconds
       setTimeout(() => setSystemMessage(null), 5000);
     },
-    [clearMessages, currentModel, currentSessionId, messages, sendMessage, usage, allModels]
+    [clearMessages, currentModel, currentSessionId, messages, sendMessage, usage, allModels, contextPercentage, permissionMode]
   );
 
   const handleLogout = useCallback(async () => {
@@ -305,8 +387,28 @@ export function ChatLayout() {
 
       {/* Main content — continuous terminal session */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Chat area */}
-        <ChatArea messages={messages} isStreaming={isStreaming} />
+        {/* Top bar with file tree toggle */}
+        <div className="flex items-center border-b border-border px-2 py-1">
+          <button
+            onClick={() => setShowFileTree(!showFileTree)}
+            className={`flex items-center gap-1 font-mono text-xs transition-colors ${
+              showFileTree ? "text-terminal-cyan" : "text-muted-foreground/50 hover:text-foreground"
+            }`}
+            title={showFileTree ? "Hide file tree" : "Show file tree"}
+          >
+            <FolderTree className="size-3.5" />
+          </button>
+        </div>
+
+        <div className="flex min-h-0 flex-1">
+          {/* File tree panel */}
+          {showFileTree && (
+            <FileTreePanel tree={fileTree} onFileClick={handleFileClick} />
+          )}
+
+          {/* Chat area */}
+          <ChatArea messages={messages} isStreaming={isStreaming} />
+        </div>
 
         {/* System message — terminal echo line */}
         {systemMessage && (
@@ -339,6 +441,8 @@ export function ChatLayout() {
             onPermissionModeChange={setPermissionMode}
             currentModelName={currentModelName}
             usage={usage}
+            contextPercentage={contextPercentage}
+            onProviderDialogOpen={() => setProviderDialogOpen(true)}
           />
         </div>
       </div>
@@ -348,6 +452,13 @@ export function ChatLayout() {
         confirmation={pendingConfirmation}
         onAllow={handleConfirmAllow}
         onDeny={handleConfirmDeny}
+      />
+
+      {/* Provider management dialog */}
+      <ProviderDialog
+        open={providerDialogOpen}
+        onOpenChange={setProviderDialogOpen}
+        onProvidersChange={refreshCustomModels}
       />
     </div>
   );

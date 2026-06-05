@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { AnsiRenderer } from "@/components/chat/ansi-renderer";
-import { DiffView } from "@/components/chat/diff-view";
+import { DiffView, getLanguageLabel } from "@/components/chat/diff-view";
 
 interface ToolResultBlockProps {
   toolResult: {
@@ -30,9 +30,14 @@ function extractFilePath(input?: Record<string, unknown>): string | null {
 }
 
 export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
   const { output, isError, toolName, toolInput, exitCode } = toolResult;
+
+  const isFileEditTool =
+    toolName?.toLowerCase().includes("edit");
+
+  // File edit results default to expanded
+  const [isExpanded, setIsExpanded] = useState(isFileEditTool);
+  const [copied, setCopied] = useState(false);
 
   const detectedExitCode = exitCode ?? extractExitCode(output);
   const filePath = extractFilePath(toolInput) as string | null;
@@ -40,8 +45,6 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
   const isBashTool =
     toolName?.toLowerCase().includes("bash") ||
     toolName?.toLowerCase().includes("shell");
-  const isFileEditTool =
-    toolName?.toLowerCase().includes("edit");
 
   const handleCopy = useCallback(async () => {
     try {
@@ -56,6 +59,8 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
   const oldString = typeof toolInput?.old_string === "string" ? toolInput.old_string : "";
   const newString = typeof toolInput?.new_string === "string" ? toolInput.new_string : "";
   const shouldShowDiff = isFileEditTool && oldString && newString;
+
+  const languageLabel = getLanguageLabel(filePath ?? undefined);
 
   return (
     <div className="pl-4 py-0.5">
@@ -76,6 +81,12 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
         ) : (
           <span className={cn(isError ? "text-terminal-red" : "text-terminal-green")}>
             {isError ? "✗ error" : "✓ done"}
+          </span>
+        )}
+        {/* Language badge */}
+        {languageLabel && (
+          <span className="inline-flex items-center rounded px-1 py-0.5 text-[0.6rem] font-semibold leading-none bg-terminal-cyan/15 text-terminal-cyan border border-terminal-cyan/30">
+            {languageLabel}
           </span>
         )}
         {!isExpanded && (
