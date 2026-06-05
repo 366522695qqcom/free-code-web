@@ -1,20 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [bootLines, setBootLines] = useState<string[]>([]);
+
+  // Boot sequence animation
+  useEffect(() => {
+    const lines = [
+      "free-code v0.1.0",
+      "initializing system...",
+      "loading modules... ok",
+      "establishing secure connection... ok",
+      "ready.",
+    ];
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i < lines.length) {
+        setBootLines((prev) => [...prev, lines[i]]);
+        i++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 200);
+    return () => clearInterval(timer);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
-    const formData = new FormData(e.currentTarget);
-    const username = formData.get("username") as string;
-    const password = formData.get("password") as string;
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -26,9 +47,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (data.success) {
-        window.location.href = "/";
+        setShowSuccess(true);
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
       } else {
-        setError(data.error || "Login failed");
+        setError(data.error || "ACCESS DENIED");
       }
     } catch {
       setError("Network error. Please try again.");
@@ -38,62 +62,111 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Free Code
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Self-hosted Claude Code web UI
-          </p>
+    <div className="flex min-h-screen items-center justify-center bg-terminal-bg p-4 font-mono">
+      <div className="w-full max-w-sm">
+        {/* Terminal window frame */}
+        <div className="border border-terminal-border bg-terminal-surface">
+          {/* Title bar */}
+          <div className="flex items-center gap-2 border-b border-terminal-border px-3 py-1.5">
+            <div className="flex gap-1.5">
+              <div className="size-2.5 rounded-full bg-terminal-red/60" />
+              <div className="size-2.5 rounded-full bg-terminal-yellow/60" />
+              <div className="size-2.5 rounded-full bg-terminal-green/60" />
+            </div>
+            <span className="text-[0.65rem] text-terminal-dim ml-2">
+              free-code — login
+            </span>
+          </div>
+
+          {/* Terminal content */}
+          <div className="p-4 space-y-3">
+            {/* Boot sequence */}
+            {bootLines.map((line, i) => (
+              <div key={i} className="text-xs text-terminal-dim animate-message-in">
+                <span className="text-terminal-green">&gt;</span> {line}
+              </div>
+            ))}
+
+            {showSuccess ? (
+              <div className="animate-message-in text-xs text-terminal-green terminal-glow">
+                <span className="text-terminal-green">&gt;</span> AUTHENTICATED
+                <br />
+                <span className="text-terminal-dim">redirecting...</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-3 pt-2">
+                {/* Username field */}
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="username"
+                    className="text-xs text-terminal-green shrink-0 terminal-glow"
+                  >
+                    &gt; Username:
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    required
+                    autoComplete="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="flex-1 bg-transparent text-xs text-foreground placeholder:text-terminal-dim/50 focus:outline-none border-b border-terminal-border focus:border-terminal-green pb-0.5"
+                    placeholder="admin"
+                    autoFocus
+                  />
+                </div>
+
+                {/* Password field */}
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="password"
+                    className="text-xs text-terminal-green shrink-0 terminal-glow"
+                  >
+                    &gt; Password:
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="flex-1 bg-transparent text-xs text-foreground placeholder:text-terminal-dim/50 focus:outline-none border-b border-terminal-border focus:border-terminal-green pb-0.5"
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                {/* Error message */}
+                {error && (
+                  <div className="animate-message-in text-xs text-terminal-red">
+                    <span className="text-terminal-red">&gt;</span> {error}
+                  </div>
+                )}
+
+                {/* Submit button */}
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-terminal-green/10 border border-terminal-green/30 text-terminal-green hover:bg-terminal-green/20 text-xs font-mono"
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-cursor-blink">▌</span>
+                      authenticating...
+                    </span>
+                  ) : (
+                    "> login"
+                  )}
+                </Button>
+              </form>
+            )}
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="username"
-              className="text-sm font-medium text-foreground"
-            >
-              Username
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              required
-              autoComplete="username"
-              className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              placeholder="admin"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-foreground"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in"}
-          </Button>
-        </form>
+        {/* Footer */}
+        <div className="mt-2 text-center text-[0.6rem] text-terminal-dim font-mono">
+          self-hosted claude code web ui
+        </div>
       </div>
     </div>
   );

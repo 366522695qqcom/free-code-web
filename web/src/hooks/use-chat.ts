@@ -113,6 +113,20 @@ export function useChat(sessionId: string | null): UseChatReturn {
                   }
                   break;
 
+                case "thinking":
+                  if (
+                    blocks.length > 0 &&
+                    blocks[blocks.length - 1].type === "thinking"
+                  ) {
+                    blocks[blocks.length - 1] = {
+                      ...blocks[blocks.length - 1],
+                      text: (blocks[blocks.length - 1].text || "") + data.content,
+                    };
+                  } else {
+                    blocks.push({ type: "thinking", text: data.content });
+                  }
+                  break;
+
                 case "tool_use":
                   if (data.toolUse) {
                     blocks.push({
@@ -133,7 +147,6 @@ export function useChat(sessionId: string | null): UseChatReturn {
                       },
                       status: "done",
                     });
-                    // Mark the matching tool_use block as done
                     const toolUseIdx = blocks.findIndex(
                       (b) =>
                         b.type === "tool_use" &&
@@ -172,7 +185,6 @@ export function useChat(sessionId: string | null): UseChatReturn {
               return updated;
             });
           } catch {
-            // Non-JSON data, treat as raw text
             setMessages((prev) => {
               const updated = [...prev];
               const lastMsg = updated[updated.length - 1];
@@ -207,7 +219,7 @@ export function useChat(sessionId: string | null): UseChatReturn {
         }
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
-          // User cancelled, ignore
+          // User cancelled
         } else {
           setError(err instanceof Error ? err.message : "Streaming failed");
         }
