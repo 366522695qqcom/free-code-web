@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession, updateSession, deleteSession } from "@/lib/store";
+import { getSession as getSessionById, updateSession, deleteSession } from "@/lib/sessions";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = getSession(id);
+  const session = getSessionById(id);
   if (!session) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
@@ -18,7 +18,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = getSession(id);
+  const session = getSessionById(id);
   if (!session) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }

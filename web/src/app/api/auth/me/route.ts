@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifySession, getCookieName } from "@/lib/auth";
+import { verifySessionToken, getCookieName } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(getCookieName())?.value;
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ user: null }, { status: 401 });
   }
 
-  const session = await verifySession(token);
+  const session = await verifySessionToken(token);
 
   if (!session) {
     return NextResponse.json({ user: null }, { status: 401 });

@@ -1,4 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
+import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 
 const AUTH_USERNAME = process.env.AUTH_USERNAME || "admin";
 const AUTH_PASSWORD = process.env.AUTH_PASSWORD || "changeme";
@@ -12,14 +14,25 @@ export interface SessionPayload {
   username: string;
 }
 
-export function validateCredentials(
+/**
+ * Verify username and password against environment variables.
+ */
+export function verifyCredentials(
   username: string,
   password: string
 ): boolean {
   return username === AUTH_USERNAME && password === AUTH_PASSWORD;
 }
 
-export async function createSession(username: string): Promise<string> {
+/** @deprecated Use verifyCredentials instead */
+export const validateCredentials = verifyCredentials;
+
+/**
+ * Create a signed JWT session token.
+ */
+export async function createSessionToken(
+  username: string = AUTH_USERNAME
+): Promise<string> {
   const token = await new SignJWT({ username })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -28,7 +41,13 @@ export async function createSession(username: string): Promise<string> {
   return token;
 }
 
-export async function verifySession(
+/** @deprecated Use createSessionToken instead */
+export const createSession = createSessionToken;
+
+/**
+ * Verify a session token and return the payload.
+ */
+export async function verifySessionToken(
   token: string
 ): Promise<SessionPayload | null> {
   try {
@@ -39,6 +58,51 @@ export async function verifySession(
   }
 }
 
+/** @deprecated Use verifySessionToken instead */
+export const verifySession = verifySessionToken;
+
+/**
+ * Extract and verify session from a Next.js Request (API route or middleware).
+ * Works with both NextRequest (middleware) and regular Request objects.
+ */
+export async function getSession(
+  request: NextRequest | Request
+): Promise<SessionPayload | null> {
+  let token: string | undefined;
+
+  if ("cookies" in request && typeof request.cookies === "object") {
+    // NextRequest with cookies accessor
+    token = (request as NextRequest).cookies.get(COOKIE_NAME)?.value;
+  }
+
+  if (!token) {
+    // Fallback: try to parse cookie header manually
+    const cookieHeader = request.headers.get("cookie");
+    if (cookieHeader) {
+      const match = cookieHeader
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith(`${COOKIE_NAME}=`));
+      if (match) {
+        token = match.slice(COOKIE_NAME.length + 1);
+      }
+    }
+  }
+
+  if (!token) return null;
+  return verifySessionToken(token);
+}
+
+/**
+ * Get session from next/headers cookies() (for use in Server Components / Route Handlers).
+ */
+export async function getSessionFromCookies(): Promise<SessionPayload | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+  return verifySessionToken(token);
+}
+
 export function getCookieName(): string {
   return COOKIE_NAME;
 }
@@ -47,7 +111,7 @@ export function getCookieOptions(): {
   name: string;
   httpOnly: boolean;
   secure: boolean;
-  sameSite: "lax" as const;
+  sameSite: "lax";
   path: string;
   maxAge: number;
 } {

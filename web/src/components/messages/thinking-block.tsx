@@ -25,12 +25,12 @@ export function ThinkingBlock({ text }: ThinkingBlockProps) {
             isExpanded && "rotate-90"
           )}
         />
-        <Brain className="size-3.5 shrink-0" />
-        <span className="truncate">Thinking...</span>
+        <Brain className="size-3.5 shrink-0 text-terminal-amber" />
+        <span className="truncate font-mono">Thinking...</span>
       </button>
       {isExpanded && (
-        <div className="border-t border-border/50 px-3 py-2">
-          <p className="whitespace-pre-wrap text-xs text-muted-foreground/80">
+        <div className="animate-collapse-in border-t border-border/50 px-3 py-2">
+          <p className="whitespace-pre-wrap font-mono text-xs italic text-muted-foreground/80">
             {text}
           </p>
         </div>

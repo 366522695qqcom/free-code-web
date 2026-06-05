@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { connectSSE } from "@/lib/sse";
-import type { ChatMessage, ChatResponseEvent } from "@/types";
+import type { ChatMessage, ChatResponseEvent, ToolConfirmation, Usage } from "@/types";
 
 export interface ContentBlock {
   type: "text" | "thinking" | "tool_use" | "tool_result";
@@ -16,6 +16,9 @@ export interface ContentBlock {
     toolUseId: string;
     output: string;
     isError?: boolean;
+    toolName?: string;
+    toolInput?: Record<string, unknown>;
+    exitCode?: number;
   };
   status?: "running" | "done" | "error";
 }
@@ -32,19 +35,60 @@ interface UseChatReturn {
   stopStreaming: () => void;
   clearMessages: () => void;
   setMessages: (messages: EnhancedMessage[]) => void;
+  pendingConfirmation: ToolConfirmation | null;
+  autoApprovedTools: Set<string>;
+  confirmTool: (toolUseId: string, approved: boolean, alwaysAllow?: boolean) => void;
+  usage: Usage;
 }
 
 export function useChat(sessionId: string | null): UseChatReturn {
   const [messages, setMessages] = useState<EnhancedMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<ToolConfirmation | null>(null);
+  const [autoApprovedTools, setAutoApprovedTools] = useState<Set<string>>(new Set());
+  const [usage, setUsage] = useState<Usage>({ inputTokens: 0, outputTokens: 0, cost: 0 });
   const abortControllerRef = useRef<AbortController | null>(null);
+  const confirmationResolverRef = useRef<((approved: boolean) => void) | null>(null);
 
   const stopStreaming = useCallback(() => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
     setIsStreaming(false);
+    setPendingConfirmation(null);
+    confirmationResolverRef.current = null;
   }, []);
+
+  const confirmTool = useCallback(
+    async (toolUseId: string, approved: boolean, alwaysAllow?: boolean) => {
+      if (alwaysAllow && approved && pendingConfirmation) {
+        setAutoApprovedTools((prev) => {
+          const next = new Set(prev);
+          next.add(pendingConfirmation.toolName);
+          return next;
+        });
+      }
+
+      // Send confirmation to server
+      try {
+        await fetch("/api/tools/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ toolUseId, approved }),
+        });
+      } catch {
+        // Confirmation endpoint may not exist yet; resolve locally
+      }
+
+      // Resolve the pending promise so streaming can continue
+      if (confirmationResolverRef.current) {
+        confirmationResolverRef.current(approved);
+        confirmationResolverRef.current = null;
+      }
+      setPendingConfirmation(null);
+    },
+    [pendingConfirmation]
+  );
 
   const sendMessage = useCallback(
     async (content: string, model?: string) => {
@@ -78,9 +122,31 @@ export function useChat(sessionId: string | null): UseChatReturn {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: content,
-            conversationId: sessionId,
+            messages: [
+              ...messages.map((m) => ({
+                role: m.role,
+                content: m.contentBlocks
+                  ? m.contentBlocks
+                      .filter((b) => b.type === "text" || b.type === "tool_use" || b.type === "tool_result")
+                      .map((b) => {
+                        if (b.type === "text") return { type: "text", text: b.text || "" };
+                        if (b.type === "tool_use" && b.toolUse)
+                          return { type: "tool_use", id: b.toolUse.id, name: b.toolUse.name, input: b.toolUse.input };
+                        if (b.type === "tool_result" && b.toolResult)
+                          return { type: "tool_result", tool_use_id: b.toolResult.toolUseId, content: b.toolResult.output, is_error: b.toolResult.isError };
+                        return { type: "text", text: "" };
+                      })
+                  : [{ type: "text", text: m.content }],
+                timestamp: new Date(m.timestamp).toISOString(),
+              })),
+              {
+                role: "user",
+                content: [{ type: "text", text: content }],
+                timestamp: new Date().toISOString(),
+              },
+            ],
             model,
+            sessionId,
           }),
           signal: abortController.signal,
         });
@@ -90,6 +156,49 @@ export function useChat(sessionId: string | null): UseChatReturn {
 
           try {
             const data = JSON.parse(event.data) as ChatResponseEvent;
+
+            // Handle tool confirmation needed
+            if (data.type === "tool_confirmation_needed" && "confirmation" in data) {
+              const confirmation = data.confirmation;
+
+              // Check if tool is auto-approved
+              if (autoApprovedTools.has(confirmation.toolName)) {
+                // Auto-approve: send confirmation immediately
+                try {
+                  await fetch("/api/tools/confirm", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ toolUseId: confirmation.toolUseId, approved: true }),
+                  });
+                } catch {
+                  // Confirmation endpoint may not exist yet
+                }
+                continue;
+              }
+
+              // Show confirmation dialog and wait for user response
+              setPendingConfirmation(confirmation);
+              const approved = await new Promise<boolean>((resolve) => {
+                confirmationResolverRef.current = resolve;
+              });
+
+              if (!approved) {
+                // User denied — stop streaming
+                break;
+              }
+              continue;
+            }
+
+            // Handle usage events
+            if (data.type === "usage" && "usage" in data) {
+              const usageData = data.usage as Usage;
+              setUsage((prev) => ({
+                inputTokens: prev.inputTokens + usageData.inputTokens,
+                outputTokens: prev.outputTokens + usageData.outputTokens,
+                cost: prev.cost + usageData.cost,
+              }));
+              continue;
+            }
 
             setMessages((prev) => {
               const updated = [...prev];
@@ -125,13 +234,23 @@ export function useChat(sessionId: string | null): UseChatReturn {
 
                 case "tool_result":
                   if (data.toolUse) {
+                    // Find the matching tool_use block to get its name/input
+                    const matchingToolUse = blocks.find(
+                      (b) =>
+                        b.type === "tool_use" &&
+                        b.toolUse?.id === data.toolUse?.id
+                    );
+
                     blocks.push({
                       type: "tool_result",
                       toolResult: {
                         toolUseId: data.toolUse.id,
                         output: data.content,
+                        isError: data.isError,
+                        toolName: matchingToolUse?.toolUse?.name,
+                        toolInput: matchingToolUse?.toolUse?.input,
                       },
-                      status: "done",
+                      status: data.isError ? "error" : "done",
                     });
                     // Mark the matching tool_use block as done
                     const toolUseIdx = blocks.findIndex(
@@ -142,7 +261,7 @@ export function useChat(sessionId: string | null): UseChatReturn {
                     if (toolUseIdx !== -1) {
                       blocks[toolUseIdx] = {
                         ...blocks[toolUseIdx],
-                        status: "done",
+                        status: data.isError ? "error" : "done",
                       };
                     }
                   }
@@ -216,11 +335,12 @@ export function useChat(sessionId: string | null): UseChatReturn {
         abortControllerRef.current = null;
       }
     },
-    [sessionId]
+    [sessionId, messages, autoApprovedTools]
   );
 
   const clearMessages = useCallback(() => {
     setMessages([]);
+    setUsage({ inputTokens: 0, outputTokens: 0, cost: 0 });
   }, []);
 
   return {
@@ -231,5 +351,9 @@ export function useChat(sessionId: string | null): UseChatReturn {
     stopStreaming,
     clearMessages,
     setMessages,
+    pendingConfirmation,
+    autoApprovedTools,
+    confirmTool,
+    usage,
   };
 }

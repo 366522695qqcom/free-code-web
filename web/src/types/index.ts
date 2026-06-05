@@ -35,7 +35,7 @@ export type ContentBlock =
   | { type: "tool_result"; tool_use_id: string; content: string; is_error?: boolean };
 
 /**
- * Chat message with structured content blocks.
+ * Chat message with structured content blocks (API format).
  */
 export interface Message {
   id: string;
@@ -46,24 +46,28 @@ export interface Message {
 }
 
 /**
- * Chat API request body.
+ * Tool use within a message.
  */
-export interface ChatRequest {
-  messages: Message[];
-  model?: string;
-  sessionId?: string;
+export interface ToolUse {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+  status: "pending" | "running" | "completed" | "error";
+  output?: string;
+  error?: string;
 }
 
 /**
- * SSE event structure.
+ * Token usage and cost tracking.
  */
-export interface SSEEvent {
-  event?: string;
-  data: string;
+export interface Usage {
+  inputTokens: number;
+  outputTokens: number;
+  cost: number;
 }
 
 /**
- * Session stored in memory.
+ * Session stored in memory (server-side / API format).
  */
 export interface Session {
   id: string;
@@ -72,7 +76,24 @@ export interface Session {
   createdAt: string;
   updatedAt: string;
   model: string;
-  tokenUsage: { inputTokens: number; outputTokens: number; cost: number };
+  tokenUsage: Usage;
+}
+
+/**
+ * SSE event structure for LLM streaming.
+ */
+export interface SSEEvent {
+  type: "thinking" | "text" | "tool_use" | "tool_result" | "tool_confirmation_needed" | "usage" | "done" | "error";
+  data: unknown;
+}
+
+/**
+ * Chat API request body.
+ */
+export interface ChatRequest {
+  messages: Message[];
+  model?: string;
+  sessionId?: string;
 }
 
 /**
@@ -89,4 +110,70 @@ export interface LoginRequestBody {
 export interface LoginResponseBody {
   success: boolean;
   error?: string;
+}
+
+/**
+ * Query engine event (server-side internal streaming).
+ */
+export interface QueryEngineEvent {
+  event: string;
+  data: string;
+}
+
+/**
+ * Chat response SSE event types (client-side).
+ */
+export type ChatResponseEvent =
+  | { type: "text"; content: string }
+  | { type: "thinking"; content: string }
+  | { type: "tool_use"; toolUse: { id: string; name: string; input: Record<string, unknown> } }
+  | { type: "tool_result"; toolUse: { id: string }; content: string; isError?: boolean }
+  | { type: "tool_confirmation_needed"; confirmation: ToolConfirmation }
+  | { type: "usage"; usage: Usage }
+  | { type: "error"; content: string }
+  | { type: "done" };
+
+/**
+ * Tool confirmation request from the server.
+ */
+export interface ToolConfirmation {
+  toolUseId: string;
+  toolName: string;
+  input: Record<string, unknown>;
+  riskLevel: "low" | "medium" | "high";
+}
+
+/**
+ * Chat message type used by client hooks (simplified flat content).
+ */
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+  thinking?: string;
+  toolUses?: ToolUse[];
+}
+
+/**
+ * Chat conversation type used by client hooks.
+ * Maps to the Session type from the API but with numeric timestamps.
+ */
+export interface ChatConversation {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: number;
+  updatedAt: number;
+  model: string;
+  tokenUsage: Usage;
+}
+
+/**
+ * Available model options.
+ */
+export interface ModelOption {
+  id: string;
+  name: string;
+  provider: string;
 }

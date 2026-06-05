@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChatLayout } from "@/components/layout/chat-layout";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 interface UserInfo {
   username: string;
@@ -8,6 +10,7 @@ interface UserInfo {
 
 export default function Home() {
   const [user, setUser] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -15,28 +18,37 @@ export default function Home() {
       .then((data) => {
         if (data.user) {
           setUser(data.user);
+        } else {
+          window.location.href = "/login";
         }
       })
       .catch(() => {
-        // Ignore fetch errors
+        window.location.href = "/login";
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
 
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="space-y-4 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Free Code
-        </h1>
-        <p className="text-muted-foreground">
-          Chat interface coming soon
-        </p>
-        {user && (
-          <p className="text-sm text-muted-foreground">
-            Signed in as <span className="font-medium text-foreground">{user.username}</span>
-          </p>
-        )}
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <span className="font-mono text-sm text-terminal-green">$</span>
+          <span className="font-mono text-sm">Loading...</span>
+          <span className="inline-block size-2 animate-cursor-blink bg-terminal-green" />
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <TooltipProvider>
+      <ChatLayout />
+    </TooltipProvider>
   );
 }

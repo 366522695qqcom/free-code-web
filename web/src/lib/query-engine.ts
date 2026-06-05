@@ -22,7 +22,7 @@ function contentBlockToAnthropic(block: ContentBlock): Anthropic.ContentBlockPar
     case "text":
       return { type: "text", text: block.text };
     case "thinking":
-      return { type: "thinking", thinking: block.text };
+      return { type: "thinking", thinking: block.text, signature: block.signature || "" };
     case "tool_use":
       return { type: "tool_use", id: block.id, name: block.name, input: block.input };
     case "tool_result":
@@ -71,6 +71,7 @@ export function createQueryEngine(options: QueryEngineOptions = {}) {
         model,
         max_tokens: 16384,
         messages: anthropicMessages,
+        stream: true,
       };
 
       if (options.systemPrompt) {
@@ -206,7 +207,7 @@ export function createQueryEngine(options: QueryEngineOptions = {}) {
           const finalMessage = await stream.finalMessage();
 
           // Check stop reason
-          if (finalMessage.stop_reason === "end_turn" || finalMessage.stop_reason === "stop") {
+          if (finalMessage.stop_reason === "end_turn") {
             break;
           }
 

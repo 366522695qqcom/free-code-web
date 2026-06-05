@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronRight,
   Terminal,
@@ -9,6 +9,7 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,21 +20,21 @@ interface ToolUseBlockProps {
     input: Record<string, unknown>;
   };
   status: "running" | "done" | "error";
+  output?: string;
 }
 
-function getToolIcon(name: string) {
+function ToolIcon({ name }: { name: string }) {
   const lower = name.toLowerCase();
   if (lower.includes("bash") || lower.includes("shell") || lower.includes("exec")) {
-    return Terminal;
+    return <Terminal className="size-3.5 shrink-0 text-terminal-amber" />;
   }
   if (lower.includes("edit") || lower.includes("file") || lower.includes("write")) {
-    return FileEdit;
+    return <FileEdit className="size-3.5 shrink-0 text-terminal-amber" />;
   }
-  return Wrench;
+  return <Wrench className="size-3.5 shrink-0 text-terminal-amber" />;
 }
 
 function getToolDisplayName(name: string): string {
-  // Convert camelCase/PascalCase to readable format
   return name
     .replace(/([A-Z])/g, " $1")
     .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -60,9 +61,32 @@ function formatFileEditInput(input: Record<string, unknown>): string {
   return parts.join("\n") || truncateInput(input);
 }
 
-export function ToolUseBlock({ toolUse, status }: ToolUseBlockProps) {
+function ElapsedTimer() {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const startTime = performance.now();
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((performance.now() - startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (elapsed < 1) return null;
+
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  return (
+    <span className="font-mono text-xs text-muted-foreground/50">
+      {mins > 0 ? `${mins}m ` : ""}
+      {secs}s
+    </span>
+  );
+}
+
+export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const Icon = getToolIcon(toolUse.name);
+  const [showOutput, setShowOutput] = useState(false);
   const displayName = getToolDisplayName(toolUse.name);
 
   const isBash =
@@ -78,8 +102,15 @@ export function ToolUseBlock({ toolUse, status }: ToolUseBlockProps) {
       ? formatFileEditInput(toolUse.input)
       : truncateInput(toolUse.input);
 
+  const hasOutput = !!output;
+
   return (
-    <div className="rounded-lg border border-border/50 bg-muted/20">
+    <div
+      className={cn(
+        "rounded-lg border border-border/50 bg-muted/20",
+        status === "running" && "animate-pulse-glow border-terminal-cyan/20"
+      )}
+    >
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted/30"
@@ -90,35 +121,61 @@ export function ToolUseBlock({ toolUse, status }: ToolUseBlockProps) {
             isExpanded && "rotate-90"
           )}
         />
-        <Icon className="size-3.5 shrink-0 text-muted-foreground" />
-        <span className="flex-1 truncate text-sm text-muted-foreground">
+        <ToolIcon name={toolUse.name} />
+        <span className="flex-1 truncate font-mono text-sm text-muted-foreground">
           {displayName}
         </span>
         {status === "running" && (
-          <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+          <>
+            <ElapsedTimer />
+            <Loader2 className="size-3.5 animate-spin text-terminal-cyan" />
+          </>
         )}
         {status === "done" && (
-          <CheckCircle2 className="size-3.5 text-green-500/70" />
+          <CheckCircle2 className="size-3.5 text-terminal-green" />
         )}
         {status === "error" && (
-          <XCircle className="size-3.5 text-destructive/70" />
+          <XCircle className="size-3.5 text-terminal-red" />
         )}
       </button>
       {isExpanded && (
-        <div className="border-t border-border/50 px-3 py-2">
+        <div className="animate-collapse-in border-t border-border/50 px-3 py-2">
           <div
             className={cn(
               "terminal-output text-muted-foreground",
-              isBash && "rounded bg-black/30 p-2"
+              isBash && "rounded border border-border/30 bg-black/40 p-2"
             )}
           >
+            {isBash && <span className="text-terminal-green">$ </span>}
             {inputPreview}
           </div>
+
+          {/* View Output button for completed tools */}
+          {status !== "running" && hasOutput && (
+            <div className="mt-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowOutput(!showOutput);
+                }}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-terminal-cyan"
+              >
+                <Clock className="size-3" />
+                {showOutput ? "Hide Output" : "View Output"}
+              </button>
+              {showOutput && (
+                <div className="mt-1.5 terminal-output rounded border border-border/30 bg-black/40 p-2 text-muted-foreground max-h-60 overflow-y-auto">
+                  {output}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
       {!isExpanded && (
         <div className="border-t border-border/30 px-3 py-1.5">
-          <p className="truncate text-xs text-muted-foreground/60">
+          <p className="truncate font-mono text-xs text-muted-foreground/60">
+            {isBash && <span className="text-terminal-green/60">$ </span>}
             {inputPreview.split("\n")[0]}
           </p>
         </div>

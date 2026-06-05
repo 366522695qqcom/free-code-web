@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  validateCredentials,
-  createSession,
+  verifyCredentials,
+  createSessionToken,
   getCookieOptions,
 } from "@/lib/auth";
 import type { LoginResponseBody } from "@/types";
@@ -18,14 +18,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!validateCredentials(username, password)) {
+    if (!verifyCredentials(username, password)) {
       return NextResponse.json<LoginResponseBody>(
         { success: false, error: "Invalid credentials" },
         { status: 401 }
       );
     }
 
-    const token = await createSession(username);
+    const token = await createSessionToken(username);
     const cookieOptions = getCookieOptions();
 
     const response = NextResponse.json<LoginResponseBody>({ success: true });

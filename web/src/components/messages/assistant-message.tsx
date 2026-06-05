@@ -20,8 +20,8 @@ export function AssistantMessage({ message, isStreaming }: AssistantMessageProps
 
   return (
     <div className="animate-message-in flex items-start gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-        <Bot className="size-4 text-muted-foreground" />
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted border border-border">
+        <Bot className="size-4 text-terminal-green" />
       </div>
       <div className="min-w-0 max-w-[80%] flex-1 space-y-3">
         {blocks.map((block, index) => {
@@ -50,9 +50,9 @@ export function AssistantMessage({ message, isStreaming }: AssistantMessageProps
           }
         })}
         {showLoading && (
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex items-center gap-2 text-terminal-cyan">
             <Loader2 className="size-4 animate-spin" />
-            <span className="text-sm">Thinking...</span>
+            <span className="text-sm font-mono">Thinking...</span>
           </div>
         )}
       </div>

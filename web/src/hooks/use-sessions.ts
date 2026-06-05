@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import type { ChatConversation } from "@/types";
+import type { ChatConversation, Session } from "@/types";
 
 interface UseSessionsReturn {
   sessions: ChatConversation[];
@@ -13,6 +13,18 @@ interface UseSessionsReturn {
   deleteSession: (id: string) => Promise<void>;
   renameSession: (id: string, title: string) => Promise<void>;
   refreshSessions: () => Promise<void>;
+}
+
+function sessionToConversation(session: Session): ChatConversation {
+  return {
+    id: session.id,
+    title: session.title,
+    messages: [],
+    model: session.model,
+    createdAt: new Date(session.createdAt).getTime(),
+    updatedAt: new Date(session.updatedAt).getTime(),
+    tokenUsage: session.tokenUsage,
+  };
 }
 
 export function useSessions(): UseSessionsReturn {
@@ -28,10 +40,11 @@ export function useSessions(): UseSessionsReturn {
       const res = await fetch("/api/sessions");
       if (!res.ok) throw new Error(`Failed to fetch sessions: ${res.status}`);
       const data = await res.json();
+      const conversations = (Array.isArray(data) ? data : []).map(
+        (s: Session) => sessionToConversation(s)
+      );
       setSessions(
-        (data as ChatConversation[]).sort(
-          (a, b) => b.updatedAt - a.updatedAt
-        )
+        conversations.sort((a, b) => b.updatedAt - a.updatedAt)
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch sessions");
@@ -52,10 +65,11 @@ export function useSessions(): UseSessionsReturn {
           }),
         });
         if (!res.ok) throw new Error(`Failed to create session: ${res.status}`);
-        const session = (await res.json()) as ChatConversation;
-        setSessions((prev) => [session, ...prev]);
-        setCurrentSessionId(session.id);
-        return session;
+        const session = (await res.json()) as Session;
+        const conversation = sessionToConversation(session);
+        setSessions((prev) => [conversation, ...prev]);
+        setCurrentSessionId(conversation.id);
+        return conversation;
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to create session";
@@ -70,14 +84,14 @@ export function useSessions(): UseSessionsReturn {
     async (id: string): Promise<void> => {
       setError(null);
       try {
-        const res = await fetch(`/api/sessions?id=${id}`, {
+        const res = await fetch(`/api/sessions/${id}`, {
           method: "DELETE",
         });
         if (!res.ok)
           throw new Error(`Failed to delete session: ${res.status}`);
         setSessions((prev) => prev.filter((s) => s.id !== id));
         if (currentSessionId === id) {
-          setCurrentSessionId(sessions[0]?.id ?? null);
+          setCurrentSessionId(null);
         }
       } catch (err) {
         setError(
@@ -85,17 +99,17 @@ export function useSessions(): UseSessionsReturn {
         );
       }
     },
-    [currentSessionId, sessions]
+    [currentSessionId]
   );
 
   const renameSession = useCallback(
     async (id: string, title: string): Promise<void> => {
       setError(null);
       try {
-        const res = await fetch("/api/sessions", {
+        const res = await fetch(`/api/sessions/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, title }),
+          body: JSON.stringify({ title }),
         });
         if (!res.ok)
           throw new Error(`Failed to rename session: ${res.status}`);
@@ -112,6 +126,7 @@ export function useSessions(): UseSessionsReturn {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshSessions();
   }, [refreshSessions]);
 

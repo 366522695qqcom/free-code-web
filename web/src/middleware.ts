@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifySession, getCookieName } from "@/lib/auth";
+import { verifySessionToken, getCookieName } from "@/lib/auth";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const session = await verifySession(token);
+  const session = await verifySessionToken(token);
 
   if (!session) {
     if (pathname.startsWith("/api/")) {
