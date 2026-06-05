@@ -7,9 +7,9 @@ import {
   useEffect,
   type KeyboardEvent,
 } from "react";
-import { Send, SquareSlash, Shield, ShieldCheck, ShieldAlert, ShieldOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Shield, ShieldCheck, ShieldAlert, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { Usage } from "@/types";
 
 /** 四档权限模式 — 参考 Claude Code 权限体系 */
 export type PermissionMode =
@@ -22,10 +22,10 @@ interface ModeOption {
   value: PermissionMode;
   label: string;
   icon: React.ReactNode;
-  coreBehavior: string;    // 核心行为
-  useCase: string;         // 适用场景
-  riskLevel: string;       // 风险等级
-  riskColor: string;       // 风险颜色
+  coreBehavior: string;
+  useCase: string;
+  riskLevel: string;
+  riskColor: string;
 }
 
 const MODE_OPTIONS: ModeOption[] = [
@@ -60,12 +60,17 @@ const MODE_OPTIONS: ModeOption[] = [
     value: "bypassPermissions",
     label: "bypassPermissions",
     icon: <ShieldOff className="size-4" />,
-    coreBehavior: "跳过所有权限提示。AI 将无需任何批准，自动执行所有操作，包括 Bash 命令。即官方文档中的“YOLO 模式”。",
+    coreBehavior: "跳过所有权限提示。AI 将无需任何批准，自动执行所有操作，包括 Bash 命令。即官方文档中的\"YOLO 模式\"。",
     useCase: "极高风险，仅应在完全隔离的、无网络访问的容器化环境（如 Dev Container）中使用。",
     riskLevel: "极高",
     riskColor: "text-red-500",
   },
 ];
+
+function formatCost(cost: number): string {
+  if (cost < 0.01 && cost > 0) return `$${cost.toFixed(4)}`;
+  return `$${cost.toFixed(2)}`;
+}
 
 interface ChatInputProps {
   onSend: (content: string) => void;
@@ -77,6 +82,10 @@ interface ChatInputProps {
   permissionMode?: PermissionMode;
   /** 权限模式变更回调 */
   onPermissionModeChange?: (mode: PermissionMode) => void;
+  /** 当前模型名称（用于状态栏显示） */
+  currentModelName?: string;
+  /** 用量数据（用于状态栏显示） */
+  usage?: Usage;
 }
 
 export function ChatInput({
@@ -87,12 +96,21 @@ export function ChatInput({
   disabled,
   permissionMode = "default",
   onPermissionModeChange,
+  currentModelName = "claude-sonnet-4",
+  usage,
 }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Command history
+  const historyRef = useRef<string[]>([]);
+  const historyIndexRef = useRef(-1);
+  const savedValueRef = useRef("");
+  const [historyLen, setHistoryLen] = useState(0);
+  const [historyPos, setHistoryPos] = useState(-1);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -135,6 +153,13 @@ export function ChatInput({
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
 
+    // Add to history
+    historyRef.current = [...historyRef.current, trimmed];
+    historyIndexRef.current = historyRef.current.length;
+    savedValueRef.current = "";
+    setHistoryLen(historyRef.current.length);
+    setHistoryPos(historyRef.current.length);
+
     // Handle slash commands (non-mode commands like /clear, /help)
     if (trimmed.startsWith("/") && trimmed !== "/") {
       const parts = trimmed.split(/\s+/);
@@ -158,6 +183,13 @@ export function ChatInput({
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      // Ctrl+C to stop streaming
+      if (e.key === "c" && e.ctrlKey && isStreaming) {
+        e.preventDefault();
+        onStop();
+        return;
+      }
+
       if (showModeMenu) {
         if (e.key === "ArrowDown") {
           e.preventDefault();
@@ -189,12 +221,51 @@ export function ChatInput({
         setShowModeMenu(false);
       }
 
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      // Command history navigation (only when not showing mode menu)
+      if (!showModeMenu && !isStreaming) {
+        if (e.key === "ArrowUp" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          // Only navigate history if cursor is at the start of the textarea
+          const textarea = textareaRef.current;
+          if (textarea && textarea.selectionStart === 0 && textarea.selectionEnd === 0) {
+            e.preventDefault();
+            const history = historyRef.current;
+            if (history.length === 0) return;
+            // Save current input when first going up
+            if (historyIndexRef.current === history.length) {
+              savedValueRef.current = value;
+            }
+            const newIndex = Math.max(0, historyIndexRef.current - 1);
+            historyIndexRef.current = newIndex;
+            setHistoryPos(newIndex);
+            setValue(history[newIndex]);
+            return;
+          }
+        }
+        if (e.key === "ArrowDown" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          const textarea = textareaRef.current;
+          if (textarea && textarea.selectionStart === value.length && textarea.selectionEnd === value.length) {
+            e.preventDefault();
+            const history = historyRef.current;
+            const newIndex = Math.min(history.length, historyIndexRef.current + 1);
+            historyIndexRef.current = newIndex;
+            setHistoryPos(newIndex);
+            if (newIndex === history.length) {
+              setValue(savedValueRef.current);
+            } else {
+              setValue(history[newIndex]);
+            }
+            return;
+          }
+        }
+      }
+
+      // Enter to send, Shift+Enter for newline
+      if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         handleSend();
       }
     },
-    [handleSend, showModeMenu, selectedIndex, handleSelectMode]
+    [handleSend, showModeMenu, selectedIndex, handleSelectMode, isStreaming, onStop, value]
   );
 
   // Scroll selected item into view
@@ -212,13 +283,21 @@ export function ChatInput({
     (m) => m.value === permissionMode
   )?.label;
 
+  // History position indicator
+  const historyIndicator =
+    historyLen > 0
+      ? `↑${historyLen - historyPos}↓${historyPos}`
+      : "";
+
+  const cost = usage?.cost ?? 0;
+
   return (
-    <div className="relative border-t border-border bg-background/80 backdrop-blur-sm">
+    <div className="relative">
       {/* Mode Selector Menu */}
       {showModeMenu && (
         <div
           ref={menuRef}
-          className="absolute bottom-full left-0 right-0 mb-1 rounded-lg border border-border bg-popover shadow-xl overflow-hidden z-50"
+          className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50"
         >
           {/* Table header */}
           <div className="grid grid-cols-[100px_1fr_1fr_90px] gap-px bg-border border-b border-border">
@@ -256,8 +335,8 @@ export function ChatInput({
                 {mode.icon}
                 {mode.label}
                 {permissionMode === mode.value && (
-                  <span className="ml-auto text-[10px] bg-primary text-primary-foreground px-1.5 rounded-full">
-                    当前
+                  <span className="ml-auto text-[10px] bg-primary text-primary-foreground px-1.5">
+                    *
                   </span>
                 )}
               </div>
@@ -290,21 +369,24 @@ export function ChatInput({
               选择一个权限模式来控制 AI 的操作范围
             </span>
             <div className="flex items-center gap-2 text-[0.6rem] text-muted-foreground/40">
-              <kbd className="rounded border border-border px-1">↑↓</kbd>
+              <kbd className="border border-border px-1">↑↓</kbd>
               <span>选择</span>
               <span>·</span>
-              <kbd className="rounded border border-border px-1">Enter</kbd>
+              <kbd className="border border-border px-1">Enter</kbd>
               <span>确认</span>
               <span>·</span>
-              <kbd className="rounded border border-border px-1">Esc</kbd>
+              <kbd className="border border-border px-1">Esc</kbd>
               <span>关闭</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Input area */}
-      <div className="flex items-end gap-2 px-4 py-3">
+      {/* Terminal prompt input */}
+      <div className="flex items-start px-4 py-2">
+        <span className="font-mono text-sm text-terminal-cyan shrink-0 pt-2 select-none">
+          &gt;&nbsp;
+        </span>
         <div className="relative min-w-0 flex-1">
           <textarea
             ref={textareaRef}
@@ -314,58 +396,49 @@ export function ChatInput({
             placeholder={
               isStreaming
                 ? "Waiting for response..."
-                : `Type a message... (Ctrl+Enter to send · / 切换模式)`
+                : "Type a message... (Enter to send · / to switch mode)"
             }
-            disabled={disabled || isStreaming}
+            disabled={disabled}
             rows={1}
             className={cn(
-              "w-full resize-none rounded-lg border border-input bg-background px-3 py-2.5",
+              "w-full resize-none border-0 bg-transparent px-0 py-2",
               "font-mono text-sm leading-relaxed text-foreground",
-              "placeholder:text-muted-foreground/50",
-              "transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "placeholder:text-muted-foreground/40",
+              "outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50",
               "max-h-[200px]"
             )}
           />
         </div>
-
-        {isStreaming ? (
-          <Button
-            variant="destructive"
-            size="icon"
+        {/* Stop button during streaming — small ■ character */}
+        {isStreaming && (
+          <button
             onClick={onStop}
-            title="Stop generating"
-            className="shrink-0"
+            title="Stop generating (Ctrl+C)"
+            className="shrink-0 mt-2 ml-2 font-mono text-sm text-muted-foreground hover:text-destructive transition-colors"
           >
-            <SquareSlash className="size-4" />
-          </Button>
-        ) : (
-          <Button
-            variant="default"
-            size="icon"
-            onClick={handleSend}
-            disabled={!value.trim() || disabled}
-            title="Send message"
-            className="shrink-0"
-          >
-            <Send className="size-4" />
-          </Button>
+            ■
+          </button>
         )}
       </div>
 
-      {/* Status bar */}
-      <div className="flex items-center justify-between px-4 pb-2">
-        <span className="text-[0.65rem] text-muted-foreground/40">
-          Ctrl+Enter to send
+      {/* Terminal-style status bar */}
+      <div className="flex items-center justify-between px-4 py-1 border-t border-border/50">
+        <span className="font-mono text-[0.65rem] text-muted-foreground/50 flex items-center gap-1.5">
+          <span className="text-terminal-cyan/70">{currentModeLabel}</span>
+          <span className="text-muted-foreground/30">│</span>
+          <span>{currentModelName}</span>
+          <span className="text-muted-foreground/30">│</span>
+          <span>{formatCost(cost)}</span>
+          {historyIndicator && (
+            <>
+              <span className="text-muted-foreground/30">│</span>
+              <span>{historyIndicator}</span>
+            </>
+          )}
         </span>
-        <span className="text-[0.65rem] text-muted-foreground/40 flex items-center gap-1">
-          模式:
-          <kbd className="rounded border border-border px-1 font-mono text-terminal-cyan">
-            {currentModeLabel}
-          </kbd>
-          <span className="mx-1">·</span>
-          输入 <kbd className="rounded border border-border px-1">/</kbd> 切换
+        <span className="font-mono text-[0.6rem] text-muted-foreground/30">
+          Enter↵ send · Shift+Enter newline · / mode · Ctrl+C stop
         </span>
       </div>
     </div>

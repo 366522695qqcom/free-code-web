@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronRight, FileOutput, Copy, Check, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnsiRenderer } from "@/components/chat/ansi-renderer";
 import { DiffView } from "@/components/chat/diff-view";
@@ -18,7 +17,6 @@ interface ToolResultBlockProps {
 }
 
 function extractExitCode(output: string): number | null {
-  // Try to find exit code pattern in output
   const match = output.match(/exit code[:\s]+(\d+)/i);
   if (match) return parseInt(match[1], 10);
   return null;
@@ -55,64 +53,44 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
     }
   }, [output]);
 
-  // For file edit tool, try to show diff view
   const oldString = typeof toolInput?.old_string === "string" ? toolInput.old_string : "";
   const newString = typeof toolInput?.new_string === "string" ? toolInput.new_string : "";
   const shouldShowDiff = isFileEditTool && oldString && newString;
 
   return (
-    <div
-      className={cn(
-        "rounded-lg border border-border/50",
-        isError ? "bg-terminal-red/5 border-terminal-red/20" : "bg-muted/10"
-      )}
-    >
+    <div className="pl-4 py-0.5">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted/30"
+        className="flex items-center gap-1.5 font-mono text-sm text-left"
       >
-        <ChevronRight
-          className={cn(
-            "size-3.5 shrink-0 text-muted-foreground transition-transform",
-            isExpanded && "rotate-90"
-          )}
-        />
-        <FileOutput
-          className={cn(
-            "size-3.5 shrink-0",
-            isError ? "text-terminal-red" : "text-terminal-green"
-          )}
-        />
-        <span className="font-mono text-sm text-muted-foreground">
-          {isError ? "Error Output" : "Output"}
-        </span>
-
-        {/* Exit code indicator */}
-        {detectedExitCode !== null && (
+        {detectedExitCode !== null ? (
           <span
             className={cn(
-              "ml-auto font-mono text-xs px-1.5 py-0.5 rounded",
               detectedExitCode === 0
-                ? "text-terminal-green bg-terminal-green/10"
-                : "text-terminal-red bg-terminal-red/10"
+                ? "text-terminal-green"
+                : "text-terminal-red"
             )}
           >
-            exit {detectedExitCode}
+            ✓ exit {detectedExitCode}
           </span>
+        ) : (
+          <span className={cn(isError ? "text-terminal-red" : "text-terminal-green")}>
+            {isError ? "✗ error" : "✓ done"}
+          </span>
+        )}
+        {!isExpanded && (
+          <span className="text-muted-foreground/50 text-xs">(click to expand)</span>
         )}
       </button>
 
-      {isExpanded ? (
-        <div className="animate-collapse-in border-t border-border/50 px-3 py-2 space-y-2">
+      {isExpanded && (
+        <div className="animate-collapse-in mt-1">
           {/* File path link */}
-          {filePath ? (
-            <div className="flex items-center gap-1.5">
-              <ExternalLink className="size-3 text-terminal-cyan/60" />
-              <span className="font-mono text-xs text-terminal-cyan truncate">
-                {filePath}
-              </span>
+          {filePath && (
+            <div className="font-mono text-xs text-terminal-cyan mb-1">
+              {filePath}
             </div>
-          ) : null}
+          )}
 
           {/* Diff view for file edits */}
           {shouldShowDiff && (
@@ -123,7 +101,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
             />
           )}
 
-          {/* ANSI-rendered output for bash tools, plain for others */}
+          {/* Output box */}
           {output && !shouldShowDiff && (
             <div className="relative group">
               <div className="rounded border border-border/30 bg-black/40 p-2 max-h-80 overflow-y-auto">
@@ -142,21 +120,21 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
                 title="Copy output"
               >
                 {copied ? (
-                  <Check className="size-3 text-terminal-green" />
+                  <span className="text-terminal-green text-xs">✓</span>
                 ) : (
-                  <Copy className="size-3" />
+                  <span className="text-xs">⎘</span>
                 )}
               </button>
             </div>
           )}
 
           {!output && !shouldShowDiff && (
-            <div className="terminal-output rounded border border-border/30 bg-black/40 p-2 text-muted-foreground/40">
+            <div className="terminal-output text-muted-foreground/40 text-xs">
               (no output)
             </div>
           )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

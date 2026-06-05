@@ -23,9 +23,9 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-4 py-6"
+      className="flex-1 overflow-y-auto px-4 py-2"
     >
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-4xl space-y-2">
         {messages.map((message) =>
           message.role === "user" ? (
             <UserMessage key={message.id} message={message} />

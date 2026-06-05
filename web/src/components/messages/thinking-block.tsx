@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Brain } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ThinkingBlockProps {
   text: string;
@@ -14,23 +12,19 @@ export function ThinkingBlock({ text }: ThinkingBlockProps) {
   if (!text) return null;
 
   return (
-    <div className="rounded-lg border border-border/50 bg-muted/30">
+    <div className="py-0.5">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="flex items-center gap-1.5 font-mono text-sm text-left text-muted-foreground/60 transition-colors hover:text-muted-foreground"
       >
-        <ChevronRight
-          className={cn(
-            "size-3.5 shrink-0 transition-transform",
-            isExpanded && "rotate-90"
-          )}
-        />
-        <Brain className="size-3.5 shrink-0 text-terminal-amber" />
-        <span className="truncate font-mono">Thinking...</span>
+        <span className="text-terminal-amber">{isExpanded ? "▼" : "◌"}</span>
+        <span className="truncate">
+          {isExpanded ? "Thinking" : "Thinking..."}
+        </span>
       </button>
       {isExpanded && (
-        <div className="animate-collapse-in border-t border-border/50 px-3 py-2">
-          <p className="whitespace-pre-wrap font-mono text-xs italic text-muted-foreground/80">
+        <div className="animate-collapse-in pl-4 pt-1">
+          <p className="whitespace-pre-wrap font-mono text-xs text-muted-foreground/50">
             {text}
           </p>
         </div>

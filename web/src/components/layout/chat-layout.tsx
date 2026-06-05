@@ -3,13 +3,11 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "./sidebar";
-import { Topbar } from "./topbar";
 import { ChatInput } from "@/components/chat/chat-input";
 import type { PermissionMode } from "@/components/chat/chat-input";
 import { ChatArea } from "@/components/chat-area";
 import { ToolConfirmDialog } from "@/components/chat/tool-confirm-dialog";
 import { AutoApproveToastContainer } from "@/components/chat/auto-approve-toast";
-import { CostTracker } from "@/components/chat/cost-tracker";
 import { useSessions } from "@/hooks/use-sessions";
 import { useChat } from "@/hooks/use-chat";
 import type { ModelOption } from "@/types";
@@ -42,7 +40,6 @@ export function ChatLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentModel, setCurrentModel] = useState("claude-sonnet-4-20250514");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>("default");
-  const [username] = useState<string | undefined>();
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
   const [customModels, setCustomModels] = useState<ModelOption[]>([]);
   const router = useRouter();
@@ -286,8 +283,11 @@ export function ChatLayout() {
     [confirmTool]
   );
 
+  // Resolve model display name
+  const currentModelName = allModels.find((m) => m.id === currentModel)?.name || currentModel;
+
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background font-mono">
       {/* Sidebar */}
       <Sidebar
         sessions={sessions}
@@ -299,40 +299,31 @@ export function ChatLayout() {
         onDeleteSession={handleDeleteSession}
         onRenameSession={renameSession}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        onSettingsClick={handleSettingsClick}
+        onLogout={handleLogout}
       />
 
-      {/* Main content */}
+      {/* Main content — continuous terminal session */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top bar */}
-        <Topbar
-          currentModel={currentModel}
-          onModelChange={setCurrentModel}
-          onSettingsClick={handleSettingsClick}
-          onLogout={handleLogout}
-          username={username}
-          isStreaming={isStreaming}
-          customModels={customModels}
-        />
-
         {/* Chat area */}
         <ChatArea messages={messages} isStreaming={isStreaming} />
 
-        {/* System message bar (for slash command feedback) */}
+        {/* System message — terminal echo line */}
         {systemMessage && (
-          <div className="border-t border-terminal-cyan/20 bg-terminal-cyan/5 px-4 py-2 font-mono text-xs text-terminal-cyan whitespace-pre-wrap">
+          <div className="px-4 py-1.5 font-mono text-xs text-terminal-cyan/70 whitespace-pre-wrap">
             {systemMessage}
           </div>
         )}
 
         {/* Error bar */}
         {error && (
-          <div className="border-t border-destructive/30 bg-destructive/5 px-4 py-2 text-sm text-destructive">
+          <div className="px-4 py-1.5 text-sm text-destructive font-mono">
             {error}
           </div>
         )}
 
         {/* Input area */}
-        <div className="relative">
+        <div className="relative mt-auto">
           {/* Auto-approve toasts */}
           <AutoApproveToastContainer
             toasts={autoApproveToasts}
@@ -346,11 +337,9 @@ export function ChatLayout() {
             disabled={false}
             permissionMode={permissionMode}
             onPermissionModeChange={setPermissionMode}
+            currentModelName={currentModelName}
+            usage={usage}
           />
-          {/* Cost tracker in the bottom bar */}
-          <div className="flex items-center justify-end px-4 pb-1.5">
-            <CostTracker usage={usage} />
-          </div>
         </div>
       </div>
 

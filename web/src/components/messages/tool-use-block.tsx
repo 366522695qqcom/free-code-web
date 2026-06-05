@@ -1,17 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  ChevronRight,
-  Terminal,
-  FileEdit,
-  Wrench,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  Clock,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ToolUseBlockProps {
   toolUse: {
@@ -21,17 +10,6 @@ interface ToolUseBlockProps {
   };
   status: "running" | "done" | "error";
   output?: string;
-}
-
-function ToolIcon({ name }: { name: string }) {
-  const lower = name.toLowerCase();
-  if (lower.includes("bash") || lower.includes("shell") || lower.includes("exec")) {
-    return <Terminal className="size-3.5 shrink-0 text-terminal-amber" />;
-  }
-  if (lower.includes("edit") || lower.includes("file") || lower.includes("write")) {
-    return <FileEdit className="size-3.5 shrink-0 text-terminal-amber" />;
-  }
-  return <Wrench className="size-3.5 shrink-0 text-terminal-amber" />;
 }
 
 function getToolDisplayName(name: string): string {
@@ -61,6 +39,30 @@ function formatFileEditInput(input: Record<string, unknown>): string {
   return parts.join("\n") || truncateInput(input);
 }
 
+function formatCollapsedPreview(
+  name: string,
+  input: Record<string, unknown>
+): string {
+  const isBash =
+    name.toLowerCase().includes("bash") ||
+    name.toLowerCase().includes("shell");
+  const isFileEdit =
+    name.toLowerCase().includes("edit") ||
+    name.toLowerCase().includes("file");
+
+  if (isBash) return formatBashInput(input);
+  if (isFileEdit) {
+    const filePath = input.file_path || input.path;
+    if (filePath) {
+      const oldStr = input.old_string ? String(input.old_string).slice(0, 30) : "";
+      const newStr = input.new_string ? String(input.new_string).slice(0, 30) : "";
+      if (oldStr && newStr) return `${filePath}: replace "${oldStr}" → "${newStr}"`;
+      return String(filePath);
+    }
+  }
+  return truncateInput(input, 80);
+}
+
 function ElapsedTimer() {
   const [elapsed, setElapsed] = useState(0);
 
@@ -84,9 +86,18 @@ function ElapsedTimer() {
   );
 }
 
+function StatusMarker({ status }: { status: "running" | "done" | "error" }) {
+  if (status === "running") {
+    return <span className="text-terminal-cyan animate-pulse">●</span>;
+  }
+  if (status === "done") {
+    return <span className="text-terminal-green">✓</span>;
+  }
+  return <span className="text-terminal-red">✗</span>;
+}
+
 export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showOutput, setShowOutput] = useState(false);
   const displayName = getToolDisplayName(toolUse.name);
 
   const isBash =
@@ -102,82 +113,48 @@ export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
       ? formatFileEditInput(toolUse.input)
       : truncateInput(toolUse.input);
 
-  const hasOutput = !!output;
+  const collapsedPreview = formatCollapsedPreview(toolUse.name, toolUse.input);
+
+  const filePath = (toolUse.input.file_path || toolUse.input.path) as string | undefined;
 
   return (
-    <div
-      className={cn(
-        "rounded-lg border border-border/50 bg-muted/20",
-        status === "running" && "animate-pulse-glow border-terminal-cyan/20"
-      )}
-    >
+    <div className="py-0.5">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted/30"
+        className="flex w-full items-center gap-1.5 text-left font-mono text-sm leading-relaxed"
       >
-        <ChevronRight
-          className={cn(
-            "size-3.5 shrink-0 text-muted-foreground transition-transform",
-            isExpanded && "rotate-90"
-          )}
-        />
-        <ToolIcon name={toolUse.name} />
-        <span className="flex-1 truncate font-mono text-sm text-muted-foreground">
-          {displayName}
-        </span>
-        {status === "running" && (
-          <>
-            <ElapsedTimer />
-            <Loader2 className="size-3.5 animate-spin text-terminal-cyan" />
-          </>
+        <span className="shrink-0">{isExpanded ? "▼" : "⏺"}</span>
+        <StatusMarker status={status} />
+        <span className="text-terminal-amber shrink-0">{displayName}:</span>
+        {!isExpanded && (
+          <span className="truncate text-muted-foreground">{collapsedPreview}</span>
         )}
-        {status === "done" && (
-          <CheckCircle2 className="size-3.5 text-terminal-green" />
-        )}
-        {status === "error" && (
-          <XCircle className="size-3.5 text-terminal-red" />
-        )}
+        {status === "running" && <ElapsedTimer />}
       </button>
+
       {isExpanded && (
-        <div className="animate-collapse-in border-t border-border/50 px-3 py-2">
-          <div
-            className={cn(
-              "terminal-output text-muted-foreground",
-              isBash && "rounded border border-border/30 bg-black/40 p-2"
-            )}
-          >
+        <div className="animate-collapse-in pl-4 pt-1">
+          {/* File path for file edits */}
+          {isFileEdit && filePath && (
+            <div className="font-mono text-xs text-terminal-cyan mb-1">
+              {filePath}
+            </div>
+          )}
+
+          {/* Full input */}
+          <div className="terminal-output text-muted-foreground">
             {isBash && <span className="text-terminal-green">$ </span>}
             {inputPreview}
           </div>
 
-          {/* View Output button for completed tools */}
-          {status !== "running" && hasOutput && (
-            <div className="mt-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowOutput(!showOutput);
-                }}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-terminal-cyan"
-              >
-                <Clock className="size-3" />
-                {showOutput ? "Hide Output" : "View Output"}
-              </button>
-              {showOutput && (
-                <div className="mt-1.5 terminal-output rounded border border-border/30 bg-black/40 p-2 text-muted-foreground max-h-60 overflow-y-auto">
-                  {output}
-                </div>
-              )}
+          {/* Output if available */}
+          {status !== "running" && output && (
+            <div className="mt-1.5 rounded border border-border/30 bg-black/40 p-2 max-h-60 overflow-y-auto">
+              <div className="terminal-output text-muted-foreground">
+                {output}
+              </div>
             </div>
           )}
-        </div>
-      )}
-      {!isExpanded && (
-        <div className="border-t border-border/30 px-3 py-1.5">
-          <p className="truncate font-mono text-xs text-muted-foreground/60">
-            {isBash && <span className="text-terminal-green/60">$ </span>}
-            {inputPreview.split("\n")[0]}
-          </p>
         </div>
       )}
     </div>
