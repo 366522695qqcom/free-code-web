@@ -26,52 +26,66 @@ export interface AppConfig {
 }
 
 /**
- * Chat message types.
+ * Content block types for rich message content.
  */
-export type MessageRole = "user" | "assistant" | "system";
+export type ContentBlock =
+  | { type: "text"; text: string }
+  | { type: "thinking"; text: string; signature?: string }
+  | { type: "tool_use"; id: string; name: string; input: Record<string, unknown> }
+  | { type: "tool_result"; tool_use_id: string; content: string; is_error?: boolean };
 
-export interface ChatMessage {
+/**
+ * Chat message with structured content blocks.
+ */
+export interface Message {
   id: string;
-  role: MessageRole;
-  content: string;
-  timestamp: number;
+  role: "user" | "assistant";
+  content: ContentBlock[];
+  model?: string;
+  timestamp: string;
 }
 
-export interface ChatConversation {
+/**
+ * Chat API request body.
+ */
+export interface ChatRequest {
+  messages: Message[];
+  model?: string;
+  sessionId?: string;
+}
+
+/**
+ * SSE event structure.
+ */
+export interface SSEEvent {
+  event?: string;
+  data: string;
+}
+
+/**
+ * Session stored in memory.
+ */
+export interface Session {
   id: string;
   title: string;
-  messages: ChatMessage[];
-  createdAt: number;
-  updatedAt: number;
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+  model: string;
+  tokenUsage: { inputTokens: number; outputTokens: number; cost: number };
 }
 
 /**
- * API request/response types.
- */
-export interface ChatRequestBody {
-  message: string;
-  conversationId?: string;
-  model?: string;
-}
-
-export interface ChatResponseEvent {
-  type: "text" | "tool_use" | "tool_result" | "error" | "done";
-  content: string;
-  toolUse?: {
-    id: string;
-    name: string;
-    input: Record<string, unknown>;
-  };
-}
-
-/**
- * Login request/response types.
+ * Login request body.
  */
 export interface LoginRequestBody {
   username: string;
   password: string;
 }
 
+/**
+ * Login response body.
+ */
 export interface LoginResponseBody {
   success: boolean;
   error?: string;

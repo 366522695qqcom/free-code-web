@@ -1,10 +1,45 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { feature } from "@/lib/features";
 
 export default function LoginPage() {
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        window.location.href = "/";
+      } else {
+        setError(data.error || "Login failed");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Free Code
@@ -14,7 +49,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form className="space-y-4" action="/api/auth/login" method="POST">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="space-y-2">
             <label
               htmlFor="username"
@@ -51,16 +86,14 @@ export default function LoginPage() {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Sign in
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
-
-        {feature("ULTRAPLAN") && (
-          <p className="text-center text-xs text-muted-foreground">
-            🧠 ULTRAPLAN mode enabled
-          </p>
-        )}
       </div>
     </div>
   );

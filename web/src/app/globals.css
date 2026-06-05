@@ -126,5 +126,101 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
+}
+
+/* Custom scrollbar - thin, dark themed */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.4 0 0);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0 0);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.4 0 0) transparent;
+}
+
+/* Message fade-in animation */
+@keyframes message-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-message-in {
+  animation: message-fade-in 0.3s ease-out;
+}
+
+/* Code block styles */
+pre {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  background: oklch(0.16 0 0) !important;
+  margin: 0.75rem 0;
+}
+
+pre code {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* Inline code */
+code:not(pre code) {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.85em;
+  padding: 0.15em 0.35em;
+  border-radius: calc(var(--radius-sm) * 0.7);
+  background: oklch(0.25 0 0);
+  color: oklch(0.9 0 0);
+}
+
+/* Highlight.js theme overrides for dark mode */
+.hljs {
+  background: oklch(0.16 0 0) !important;
+  color: oklch(0.9 0 0) !important;
+}
+
+/* Terminal-style output for tool results */
+.terminal-output {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Diff styles */
+.diff-add {
+  color: oklch(0.75 0.18 145);
+  background: oklch(0.25 0.06 145 / 30%);
+}
+.diff-remove {
+  color: oklch(0.75 0.18 25);
+  background: oklch(0.25 0.06 25 / 30%);
+}
+.diff-header {
+  color: oklch(0.7 0.15 260);
+  font-weight: 600;
 }

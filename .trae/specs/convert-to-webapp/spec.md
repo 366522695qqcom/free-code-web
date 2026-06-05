@@ -87,7 +87,7 @@ Web 版需要基本的访问控制，防止未授权访问。自部署自用场�
 
 ### Requirement: Web 前端应用
 
-系统 SHALL 提供基于 Next.js 的 Web 前端应用，复现 CLI 版本的核心 UI 布局和交互体验。
+系统 SHALL 提供基于 Next.js 的 Web 前端应用，UI 风格模仿 Trae 网页版（深色主题、侧边栏会话列表、主聊天区域、底部输入框、工具调用内联展示）。
 
 #### Scenario: 用户访问 Web 应用
 - **WHEN** 用户在浏览器中打开应用 URL

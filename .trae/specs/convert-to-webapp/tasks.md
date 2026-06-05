@@ -1,11 +1,11 @@
 # Tasks
 
-- [ ] Task 1: 项目脚手架搭建 — 创建 Next.js 项目结构，配置 TypeScript、Tailwind CSS、部署配置
-  - [ ] SubTask 1.1: 在 /workspace/web/ 下初始化 Next.js 项目（App Router）
-  - [ ] SubTask 1.2: 配置 Tailwind CSS 和基础 UI 框架（shadcn/ui）
-  - [ ] SubTask 1.3: 配置 Vercel 部署（vercel.json、环境变量模板）
-  - [ ] SubTask 1.4: 创建运行时特性开关系统（替代 bun:bundle feature()）
-  - [ ] SubTask 1.5: 配置 SSE/WebSocket 流式通信基础设施
+- [x] Task 1: 项目脚手架搭建 — 创建 Next.js 项目结构，配置 TypeScript、Tailwind CSS、部署配置
+  - [x] SubTask 1.1: 在 /workspace/web/ 下初始化 Next.js 项目（App Router）
+  - [x] SubTask 1.2: 配置 Tailwind CSS 和基础 UI 框架（shadcn/ui）
+  - [x] SubTask 1.3: 配置 Vercel 部署（vercel.json、环境变量模板）
+  - [x] SubTask 1.4: 创建运行时特性开关系统（替代 bun:bundle feature()）
+  - [x] SubTask 1.5: 配置 SSE/WebSocket 流式通信基础设施
 
 - [ ] Task 2: 后端核心 — LLM API 代理与会话管理
   - [ ] SubTask 2.1: 实现 /api/chat 流式端点（SSE），封装 Anthropic/OpenAI/Bedrock/Vertex API 调用
@@ -44,10 +44,10 @@
   - [ ] SubTask 6.4: 实现暗色/亮色主题切换
   - [ ] SubTask 6.5: 实现模型选择器（Opus/Sonnet/Haiku + 多提供商）
 
-- [ ] Task 7: MCP 集成（可选，Phase 2）
-  - [ ] SubTask 7.1: 实现服务端 MCP 服务器管理 API
-  - [ ] SubTask 7.2: 实现 MCP 资源浏览 UI
-  - [ ] SubTask 7.3: 实现 MCP 工具调用集成
+- [ ] Task 7: MCP 集成
+  - [ ] SubTask 7.1: 实现服务端 MCP 服务器管理 API（/api/mcp/servers CRUD + 连接/断开）
+  - [ ] SubTask 7.2: 实现 MCP 资源浏览 UI（服务器列表、资源列表、工具列表）
+  - [ ] SubTask 7.3: 实现 MCP 工具调用集成（MCP 工具注册到工具系统、前端调用展示）
 
 # Task Dependencies
 
