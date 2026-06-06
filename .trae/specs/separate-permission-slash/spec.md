@@ -1,11 +1,11 @@
 # 输入框斜杠命令菜单重构 Spec
 
 ## Why
-当前输入框输入 `/` 时直接弹出权限模式4级选择表格，但 CC 的 `/` 菜单应该是一个命令列表（/clear、/compact、/model 等）。权限分级应作为 `/` 菜单中的一个选项（如 `/permissions`），选中后才展开4个分级供选择。
+当前输入框输入 `/` 时直接弹出权限模式4级选择表格，但 CC 的 `/` 菜单应该是一个极简命令列表。权限分级应作为 `/` 菜单中的一个选项，选中后才展开4个分级。菜单风格应对齐 CC：极简，只有命令名，无描述文字、无表头、无提示。
 
 ## What Changes
-- **重构 `/` 菜单为 CC 风格斜杠命令列表**：输入 `/` 弹出命令列表，包含 /clear、/compact、/model、/permissions 等命令
-- **权限分级作为 `/permissions` 子菜单**：在命令列表中选中 `/permissions` 后，展开4个权限分级选项（default、plan、acceptEdits、bypassPermissions）
+- **重构 `/` 菜单为 CC 风格极简命令列表**：输入 `/` 弹出命令名列表，无描述、无表头、无提示文字
+- **权限分级作为 `/permissions` 子菜单**：选中后展开4个权限分级选项
 - **支持模糊搜索**：输入 `/co` 过滤出 /compact、/context、/cost
 - **支持键盘导航**：↑↓ 选择、Enter/Tab 确认、Esc 关闭/返回
 - **修改 placeholder 和状态栏提示文字**
@@ -16,28 +16,29 @@
 
 ## ADDED Requirements
 
-### Requirement: CC 风格斜杠命令菜单
-系统 SHALL 在用户输入 `/` 时弹出斜杠命令菜单：
-- 命令列表参考 CC 的斜杠命令体系，包含以下命令：
-  - `/clear` — 清空当前对话
-  - `/compact` — 压缩/总结对话
-  - `/context` — 显示上下文使用详情
-  - `/cost` — 显示当前会话费用
-  - `/help` — 显示可用命令
-  - `/model` — 切换模型
-  - `/permissions` — 切换权限模式（选中后展开4个分级）
-  - `/review` — 让 AI 审查代码变更
-  - `/status` — 显示系统状态
-  - `/tools` — 列出可用工具
+### Requirement: CC 风格极简斜杠命令菜单
+系统 SHALL 在用户输入 `/` 时弹出极简斜杠命令菜单，对齐 CC 的视觉风格：
+- 命令列表只显示命令名，不显示描述、表头、提示文字、footer 等
+- 命令列表包含：
+  - `/clear`
+  - `/compact`
+  - `/context`
+  - `/cost`
+  - `/help`
+  - `/model`
+  - `/permissions`
+  - `/review`
+  - `/status`
+  - `/tools`
 - 支持模糊搜索：输入 `/co` 过滤出 `/compact`、`/context`、`/cost`
 - 支持键盘导航（↑↓ 选择、Enter/Tab 确认、Esc 关闭）
-- 每个命令显示名称和简短描述
 - 选择普通命令后自动填入命令文本（不立即执行，用户可补充参数后按 Enter 执行）
+- 菜单样式：极简，每行一个命令名，选中项高亮，无多余装饰
 
 #### Scenario: 输入 / 弹出命令菜单
 - **WHEN** 用户在输入框中输入 `/`
-- **THEN** 弹出斜杠命令菜单，列出所有可用命令（含 /permissions）
-- **AND** 每个命令显示名称和简短描述
+- **THEN** 弹出极简斜杠命令菜单，每行只显示命令名
+- **AND** 无描述文字、无表头、无提示
 
 #### Scenario: 模糊搜索过滤命令
 - **WHEN** 用户输入 `/co`
@@ -53,31 +54,30 @@
 
 ### Requirement: /permissions 子菜单展开权限分级
 系统 SHALL 在 `/` 命令菜单中选中 `/permissions` 后展开权限分级选择：
-- 选中 `/permissions` 后，命令菜单切换为权限分级子菜单，显示4个选项：
-  - `default` — 标准模式，逐一询问（低风险）
-  - `plan` — 规划模式，只读+计划（极低风险）
-  - `acceptEdits` — 自动批准文件编辑（中等风险）
-  - `bypassPermissions` — 跳过所有权限提示（极高风险）
-- 每个选项显示：图标、模式名、核心行为简述、风险等级
-- 当前选中的模式有高亮标记
+- 选中 `/permissions` 后，命令菜单切换为权限分级子菜单
+- 子菜单同样极简风格，每行只显示模式名和图标，无描述文字：
+  - `🛡️ default`
+  - `⏸ plan`
+  - `⏵ acceptEdits`
+  - `⚠ bypassPermissions`
+- 当前选中的模式有高亮标记（如 `*` 标记）
 - 支持键盘导航（↑↓ 选择、Enter 确认、Esc 返回命令列表）
 - 选择后切换权限模式，关闭菜单，清空输入框
 
 #### Scenario: 选中 /permissions 展开权限分级
 - **WHEN** 用户在 `/` 命令菜单中选中 `/permissions` 并按 Enter
 - **THEN** 命令菜单切换为权限分级子菜单
-- **AND** 显示 default、plan、acceptEdits、bypassPermissions 四个选项
-- **AND** 当前模式有高亮标记
+- **AND** 每行只显示图标和模式名，无描述文字
+- **AND** 当前模式有 `*` 标记
 
 #### Scenario: 选择权限模式
 - **WHEN** 用户在权限分级子菜单中选择 "acceptEdits"
 - **THEN** 权限模式切换为 acceptEdits
 - **AND** 菜单关闭，输入框清空
-- **AND** 状态栏权限模式标签更新为 "acceptEdits"
 
 #### Scenario: Esc 返回命令列表
 - **WHEN** 用户在权限分级子菜单中按 Esc
-- **THEN** 返回 `/` 命令列表（而非直接关闭菜单）
+- **THEN** 返回 `/` 命令列表
 - **WHEN** 用户在命令列表中再按 Esc
 - **THEN** 关闭菜单
 
