@@ -23,50 +23,28 @@ interface ModeOption {
   value: PermissionMode;
   label: string;
   icon: React.ReactNode;
-  coreBehavior: string;
-  useCase: string;
-  riskLevel: string;
-  riskColor: string;
 }
 
 const MODE_OPTIONS: ModeOption[] = [
-  {
-    value: "default",
-    label: "default",
-    icon: <Shield className="size-4" />,
-    coreBehavior: "标准模式，逐一询问。AI 默认只能调用只读工具。所有写操作和命令执行都需经过你的逐一批准。",
-    useCase: "日常开发中最常用的模式，在安全和效率之间取得了最佳平衡。",
-    riskLevel: "低（完全可控）",
-    riskColor: "text-green-500",
-  },
-  {
-    value: "plan",
-    label: "plan",
-    icon: <ShieldCheck className="size-4" />,
-    coreBehavior: "规划模式，只读+计划。行为类似 default，但 AI 更倾向于制定行动计划，而不是直接执行或给出最终答案。",
-    useCase: "复杂的重构、新功能规划、在动手前需要深度思考的场景。",
-    riskLevel: "极低",
-    riskColor: "text-green-400",
-  },
-  {
-    value: "acceptEdits",
-    label: "acceptEdits",
-    icon: <ShieldAlert className="size-4" />,
-    coreBehavior: "自动批准文件编辑。AI 可以自动执行文件编辑类操作（Edit, Write），无需你批准。但 Bash 等高风险命令仍需你批准。",
-    useCase: "修复大量 Linter 错误、进行机械性的、可预期的代码格式化或重构。",
-    riskLevel: "中等（需谨慎）",
-    riskColor: "text-yellow-500",
-  },
-  {
-    value: "bypassPermissions",
-    label: "bypassPermissions",
-    icon: <ShieldOff className="size-4" />,
-    coreBehavior: "跳过所有权限提示。AI 将无需任何批准，自动执行所有操作，包括 Bash 命令。即官方文档中的\"YOLO 模式\"。",
-    useCase: "极高风险，仅应在完全隔离的、无网络访问的容器化环境（如 Dev Container）中使用。",
-    riskLevel: "极高",
-    riskColor: "text-red-500",
-  },
+  { value: "default", label: "default", icon: <Shield className="size-4" /> },
+  { value: "plan", label: "plan", icon: <ShieldCheck className="size-4" /> },
+  { value: "acceptEdits", label: "acceptEdits", icon: <ShieldAlert className="size-4" /> },
+  { value: "bypassPermissions", label: "bypassPermissions", icon: <ShieldOff className="size-4" /> },
 ];
+
+/** CC 风格极简斜杠命令列表 */
+const SLASH_COMMANDS = [
+  { name: "/clear", hasSubmenu: false },
+  { name: "/compact", hasSubmenu: false },
+  { name: "/context", hasSubmenu: false },
+  { name: "/cost", hasSubmenu: false },
+  { name: "/help", hasSubmenu: false },
+  { name: "/model", hasSubmenu: false },
+  { name: "/permissions", hasSubmenu: true },
+  { name: "/review", hasSubmenu: false },
+  { name: "/status", hasSubmenu: false },
+  { name: "/tools", hasSubmenu: false },
+] as const;
 
 function formatCost(cost: number): string {
   if (cost < 0.01 && cost > 0) return `$${cost.toFixed(4)}`;
@@ -115,8 +93,10 @@ export function ChatInput({
   onProviderDialogOpen,
 }: ChatInputProps) {
   const [value, setValue] = useState("");
-  const [showModeMenu, setShowModeMenu] = useState(false);
+  const [showCommandMenu, setShowCommandMenu] = useState(false);
+  const [showPermissionSubmenu, setShowPermissionSubmenu] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [commandFilter, setCommandFilter] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -143,29 +123,34 @@ export function ChatInput({
     textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
   }, [value]);
 
-  // Detect "/" to show mode selector
+  // Detect "/" to show command menu and update filter
   useEffect(() => {
-    if (value === "/") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setShowModeMenu(true);
-      setSelectedIndex(0);
-      setShowFileMenu(false);
-    } else {
-      setShowModeMenu(false);
+    if (showPermissionSubmenu) {
+      return;
     }
-  }, [value]);
+    if (value.startsWith("/") && !value.includes(" ")) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShowCommandMenu(true);
+      setCommandFilter(value);
+      setSelectedIndex(0);
+    } else {
+      setShowCommandMenu(false);
+      setShowPermissionSubmenu(false);
+      setCommandFilter("");
+    }
+  }, [value, showPermissionSubmenu]);
 
   // Reset selected index when menu toggles
   useEffect(() => {
-    if (showModeMenu) {
+    if (showCommandMenu || showPermissionSubmenu) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedIndex(0);
     }
-  }, [showModeMenu]);
+  }, [showCommandMenu, showPermissionSubmenu]);
 
   // @ file autocomplete: detect @ and fetch files
   useEffect(() => {
-    if (showModeMenu) {
+    if (showCommandMenu || showPermissionSubmenu) {
       return;
     }
 
@@ -225,16 +210,50 @@ export function ChatInput({
         clearTimeout(fileFetchTimerRef.current);
       }
     };
-  }, [value, showModeMenu]);
+  }, [value, showCommandMenu, showPermissionSubmenu]);
 
-  const handleSelectMode = useCallback(
+  const handleSelectPermission = useCallback(
     (mode: PermissionMode) => {
       onPermissionModeChange?.(mode);
-      setShowModeMenu(false);
+      setShowCommandMenu(false);
+      setShowPermissionSubmenu(false);
       setValue("");
       textareaRef.current?.focus();
     },
     [onPermissionModeChange]
+  );
+
+  // Filtered command list based on user input
+  const filteredCommands = SLASH_COMMANDS.filter((cmd) => {
+    if (!commandFilter || commandFilter === "/") return true;
+    const filterLower = commandFilter.toLowerCase();
+    return cmd.name.toLowerCase().includes(filterLower);
+  });
+
+  const handleSelectCommand = useCallback(
+    (cmd: { name: string; hasSubmenu: boolean }) => {
+      if (cmd.hasSubmenu) {
+        // Switch to permission submenu
+        setShowPermissionSubmenu(true);
+        setShowCommandMenu(false);
+        setSelectedIndex(0);
+        return;
+      }
+      // Fill input with command + space, do not execute yet
+      const newValue = `${cmd.name} `;
+      setValue(newValue);
+      setShowCommandMenu(false);
+      setShowPermissionSubmenu(false);
+      setCommandFilter("");
+      requestAnimationFrame(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+          textarea.focus();
+          textarea.setSelectionRange(newValue.length, newValue.length);
+        }
+      });
+    },
+    []
   );
 
   const handleSelectFile = useCallback(
@@ -341,7 +360,8 @@ export function ChatInput({
         }
       }
 
-      if (showModeMenu) {
+      // Permission submenu navigation
+      if (showPermissionSubmenu) {
         if (e.key === "ArrowDown") {
           e.preventDefault();
           setSelectedIndex((prev) =>
@@ -359,21 +379,62 @@ export function ChatInput({
         if (e.key === "Enter" || e.key === "Tab") {
           e.preventDefault();
           const selected = MODE_OPTIONS[selectedIndex];
-          handleSelectMode(selected.value);
+          handleSelectPermission(selected.value);
           return;
         }
         if (e.key === "Escape") {
           e.preventDefault();
-          setShowModeMenu(false);
+          // Return to command list
+          setShowPermissionSubmenu(false);
+          setShowCommandMenu(true);
           setValue("");
+          setCommandFilter("/");
+          setSelectedIndex(0);
           return;
         }
-        // Any other key when showing mode menu: hide menu and let typing continue
-        setShowModeMenu(false);
       }
 
-      // Command history navigation (only when not showing mode menu or file menu)
-      if (!showModeMenu && !showFileMenu && !isStreaming) {
+      // Command menu navigation
+      if (showCommandMenu) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            prev < filteredCommands.length - 1 ? prev + 1 : 0
+          );
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            prev > 0 ? prev - 1 : filteredCommands.length - 1
+          );
+          return;
+        }
+        if (e.key === "Enter" || e.key === "Tab") {
+          e.preventDefault();
+          const selected = filteredCommands[selectedIndex];
+          if (selected) {
+            handleSelectCommand(selected);
+          }
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setShowCommandMenu(false);
+          setShowPermissionSubmenu(false);
+          setValue("");
+          setCommandFilter("");
+          return;
+        }
+        // Backspace at "/" (only slash, no extra chars) returns to command list from submenu
+        if (e.key === "Backspace" && value === "/") {
+          // Allow backspace to clear value
+          return;
+        }
+      }
+
+      // Command history navigation (only when not showing any menu)
+      if (!showCommandMenu && !showPermissionSubmenu && !showFileMenu && !isStreaming) {
         if (e.key === "ArrowUp" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
           // Only navigate history if cursor is at the start of the textarea
           const textarea = textareaRef.current;
@@ -416,18 +477,34 @@ export function ChatInput({
         handleSend();
       }
     },
-    [handleSend, showModeMenu, showFileMenu, selectedIndex, fileSelectedIndex, fileResults, handleSelectMode, handleSelectFile, isStreaming, onStop, value]
+    [
+      handleSend,
+      showCommandMenu,
+      showPermissionSubmenu,
+      showFileMenu,
+      selectedIndex,
+      fileSelectedIndex,
+      fileResults,
+      filteredCommands,
+      handleSelectCommand,
+      handleSelectPermission,
+      handleSelectFile,
+      isStreaming,
+      onStop,
+      value,
+    ]
   );
 
-  // Scroll selected item into view (mode menu)
+  // Scroll selected item into view
   useEffect(() => {
-    if (showModeMenu && menuRef.current) {
+    if ((showCommandMenu || showPermissionSubmenu) && menuRef.current) {
+      const attr = showCommandMenu ? "data-cmd-index" : "data-mode-index";
       const selectedEl = menuRef.current.querySelector(
-        `[data-mode-index="${selectedIndex}"]`
+        `[${attr}="${selectedIndex}"]`
       );
       selectedEl?.scrollIntoView({ block: "nearest" });
     }
-  }, [selectedIndex, showModeMenu]);
+  }, [selectedIndex, showCommandMenu, showPermissionSubmenu]);
 
   // Scroll selected item into view (file menu)
   useEffect(() => {
@@ -513,92 +590,66 @@ export function ChatInput({
         </div>
       )}
 
-      {/* Mode Selector Menu */}
-      {showModeMenu && (
+      {/* Command Menu (CC 风格极简) */}
+      {showCommandMenu && !showPermissionSubmenu && (
         <div
           ref={menuRef}
           className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50"
         >
-          {/* Table header */}
-          <div className="grid grid-cols-[100px_1fr_1fr_90px] gap-px bg-border border-b border-border">
-            {["模式", "核心行为", "适用场景", "风险等级"].map((h) => (
-              <div
-                key={h}
-                className="bg-muted/60 px-2 py-1.5 text-xs font-medium text-muted-foreground"
+          {filteredCommands.length === 0 ? (
+            <div className="px-3 py-2 font-mono text-xs text-muted-foreground/60">
+              No matches
+            </div>
+          ) : (
+            filteredCommands.map((cmd, idx) => (
+              <button
+                key={cmd.name}
+                data-cmd-index={idx}
+                onClick={() => handleSelectCommand(cmd)}
+                onMouseEnter={() => setSelectedIndex(idx)}
+                className={cn(
+                  "flex w-full items-center px-3 py-1.5 text-left transition-colors",
+                  idx === selectedIndex
+                    ? "bg-accent text-accent-foreground"
+                    : "hover:bg-accent/30"
+                )}
               >
-                {h}
-              </div>
-            ))}
-          </div>
+                <span className="font-mono text-sm">{cmd.name}</span>
+                {cmd.hasSubmenu && (
+                  <span className="ml-auto text-[0.6rem] text-muted-foreground/40">▶</span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
 
-          {/* Mode rows */}
+      {/* Permission Submenu (极简风格) */}
+      {showPermissionSubmenu && (
+        <div
+          ref={menuRef}
+          className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50"
+        >
           {MODE_OPTIONS.map((mode, idx) => (
             <button
               key={mode.value}
               data-mode-index={idx}
-              onClick={() => handleSelectMode(mode.value)}
+              onClick={() => handleSelectPermission(mode.value)}
               onMouseEnter={() => setSelectedIndex(idx)}
               className={cn(
-                "grid grid-cols-[100px_1fr_1fr_90px] gap-px w-full text-left transition-colors border-b border-border last:border-b-0",
+                "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors",
                 idx === selectedIndex
                   ? "bg-accent text-accent-foreground"
                   : "hover:bg-accent/30"
               )}
             >
-              {/* 模式名 */}
-              <div
-                className={cn(
-                  "flex items-center gap-1.5 px-2 py-2.5 font-mono text-sm font-semibold",
-                  idx !== selectedIndex && "text-foreground"
-                )}
-              >
-                {mode.icon}
-                {mode.label}
-                {permissionMode === mode.value && (
-                  <span className="ml-auto text-[10px] bg-primary text-primary-foreground px-1.5">
-                    *
-                  </span>
-                )}
-              </div>
-
-              {/* 核心行为 */}
-              <div className="px-2 py-2.5 text-xs leading-relaxed line-clamp-3">
-                {mode.coreBehavior}
-              </div>
-
-              {/* 适用场景 */}
-              <div className="px-2 py-2.5 text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                {mode.useCase}
-              </div>
-
-              {/* 风险等级 */}
-              <div
-                className={cn(
-                  "px-2 py-2.5 text-xs font-medium flex items-center",
-                  idx !== selectedIndex && mode.riskColor
-                )}
-              >
-                {mode.riskLevel}
-              </div>
+              {mode.icon}
+              <span className="font-mono text-sm">{mode.label}</span>
+              {permissionMode === mode.value && (
+                <span className="ml-auto text-[0.6rem] text-muted-foreground/60">*</span>
+              )}
             </button>
           ))}
-
-          {/* Footer hint */}
-          <div className="border-t border-border bg-muted/20 px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[0.65rem] text-muted-foreground/60">
-              选择一个权限模式来控制 AI 的操作范围
-            </span>
-            <div className="flex items-center gap-2 text-[0.6rem] text-muted-foreground/40">
-              <kbd className="border border-border px-1">↑↓</kbd>
-              <span>选择</span>
-              <span>·</span>
-              <kbd className="border border-border px-1">Enter</kbd>
-              <span>确认</span>
-              <span>·</span>
-              <kbd className="border border-border px-1">Esc</kbd>
-              <span>关闭</span>
-            </div>
-          </div>
         </div>
       )}
 
@@ -616,7 +667,7 @@ export function ChatInput({
             placeholder={
               isStreaming
                 ? "Waiting for response..."
-                : "Type a message... (Enter to send · / to switch mode · @ to reference file)"
+                : "Type a message... (Enter to send · / for commands · @ to reference file)"
             }
             disabled={disabled}
             rows={1}
@@ -664,7 +715,7 @@ export function ChatInput({
           )}
         </span>
         <span className="font-mono text-[0.6rem] text-muted-foreground/30">
-          Enter↵ send · Shift+Enter newline · / mode · @ file · Ctrl+C stop
+          Enter↵ send · Shift+Enter newline · / commands · @ file · Ctrl+C stop
         </span>
       </div>
     </div>
