@@ -32,8 +32,14 @@ const MODE_OPTIONS: ModeOption[] = [
   { value: "bypassPermissions", label: "bypassPermissions", icon: <ShieldOff className="size-4" /> },
 ];
 
+/** 斜杠命令数据结构 */
+interface SlashCommand {
+  name: string;
+  hasSubmenu: boolean;
+}
+
 /** CC 风格极简斜杠命令列表 */
-const SLASH_COMMANDS = [
+const SLASH_COMMANDS: SlashCommand[] = [
   { name: "/clear", hasSubmenu: false },
   { name: "/compact", hasSubmenu: false },
   { name: "/context", hasSubmenu: false },
