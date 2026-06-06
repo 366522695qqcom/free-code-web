@@ -33,13 +33,13 @@ const MODE_OPTIONS: ModeOption[] = [
 ];
 
 /** 斜杠命令数据结构 */
-interface SlashCommand {
+export interface SlashCommand {
   name: string;
   hasSubmenu: boolean;
 }
 
 /** CC 风格极简斜杠命令列表 */
-const SLASH_COMMANDS: SlashCommand[] = [
+export const SLASH_COMMANDS: SlashCommand[] = [
   { name: "/clear", hasSubmenu: false },
   { name: "/compact", hasSubmenu: false },
   { name: "/context", hasSubmenu: false },
@@ -229,12 +229,20 @@ export function ChatInput({
     [onPermissionModeChange]
   );
 
+/** 模糊搜索过滤斜杠命令 */
+export function filterSlashCommands(
+  commands: SlashCommand[],
+  commandFilter: string
+): SlashCommand[] {
+  if (!commandFilter || commandFilter === "/") return commands;
+  const filterLower = commandFilter.toLowerCase();
+  return commands.filter((cmd) =>
+    cmd.name.toLowerCase().includes(filterLower)
+  );
+}
+
   // Filtered command list based on user input
-  const filteredCommands = SLASH_COMMANDS.filter((cmd) => {
-    if (!commandFilter || commandFilter === "/") return true;
-    const filterLower = commandFilter.toLowerCase();
-    return cmd.name.toLowerCase().includes(filterLower);
-  });
+  const filteredCommands = filterSlashCommands(SLASH_COMMANDS, commandFilter);
 
   const handleSelectCommand = useCallback(
     (cmd: { name: string; hasSubmenu: boolean }) => {
