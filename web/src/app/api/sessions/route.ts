@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { listSessions, createSession } from "@/lib/sessions";
 
 export async function GET() {
-  const sessions = listSessions();
+  const sessions = await listSessions();
   return NextResponse.json(sessions);
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const session = createSession({
+    const session = await createSession({
       title: body.title,
       model: body.model,
     });
