@@ -52,6 +52,18 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   { name: "/tools", hasSubmenu: false },
 ] as const;
 
+/** 模糊搜索过滤斜杠命令 */
+export function filterSlashCommands(
+  commands: SlashCommand[],
+  commandFilter: string
+): SlashCommand[] {
+  if (!commandFilter || commandFilter === "/") return commands;
+  const filterLower = commandFilter.toLowerCase();
+  return commands.filter((cmd) =>
+    cmd.name.toLowerCase().includes(filterLower)
+  );
+}
+
 function formatCost(cost: number): string {
   if (cost < 0.01 && cost > 0) return `$${cost.toFixed(4)}`;
   return `$${cost.toFixed(2)}`;
@@ -228,18 +240,6 @@ export function ChatInput({
     },
     [onPermissionModeChange]
   );
-
-/** 模糊搜索过滤斜杠命令 */
-export function filterSlashCommands(
-  commands: SlashCommand[],
-  commandFilter: string
-): SlashCommand[] {
-  if (!commandFilter || commandFilter === "/") return commands;
-  const filterLower = commandFilter.toLowerCase();
-  return commands.filter((cmd) =>
-    cmd.name.toLowerCase().includes(filterLower)
-  );
-}
 
   // Filtered command list based on user input
   const filteredCommands = filterSlashCommands(SLASH_COMMANDS, commandFilter);
