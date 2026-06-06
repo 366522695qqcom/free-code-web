@@ -27,7 +27,7 @@ export function createSession(options?: {
     createdAt: now,
     updatedAt: now,
     model: options?.model || DEFAULT_MODEL,
-    tokenUsage: { inputTokens: 0, outputTokens: 0, cost: 0 },
+    tokenUsage: { inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0, cost: 0 },
   };
   sessions.set(session.id, session);
   return session;
@@ -66,6 +66,8 @@ export function updateSessionUsage(
   session.tokenUsage = {
     inputTokens: usage.inputTokens ?? session.tokenUsage.inputTokens,
     outputTokens: usage.outputTokens ?? session.tokenUsage.outputTokens,
+    cacheCreationInputTokens: usage.cacheCreationInputTokens ?? session.tokenUsage.cacheCreationInputTokens,
+    cacheReadInputTokens: usage.cacheReadInputTokens ?? session.tokenUsage.cacheReadInputTokens,
     cost: usage.cost ?? session.tokenUsage.cost,
   };
   session.updatedAt = new Date().toISOString();

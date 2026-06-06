@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Shield, ShieldCheck, ShieldAlert, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { calculateTokenWarningState } from "@/lib/context";
 import type { Usage } from "@/types";
 
 /** 四档权限模式 — 参考 Claude Code 权限体系 */
@@ -89,6 +90,8 @@ interface ChatInputProps {
   onPermissionModeChange?: (mode: PermissionMode) => void;
   /** 当前模型名称（用于状态栏显示） */
   currentModelName?: string;
+  /** 当前模型 ID（如 claude-sonnet-4-20250514，用于阈值计算） */
+  currentModelId?: string;
   /** 用量数据（用于状态栏显示） */
   usage?: Usage;
   /** 上下文窗口使用百分比 */
@@ -106,6 +109,7 @@ export function ChatInput({
   permissionMode = "default",
   onPermissionModeChange,
   currentModelName = "claude-sonnet-4",
+  currentModelId,
   usage,
   contextPercentage,
   onProviderDialogOpen,
@@ -448,14 +452,15 @@ export function ChatInput({
 
   const cost = usage?.cost ?? 0;
 
-  // Context percentage display
+  // Context display — use buffer-based thresholds like CC
+  const totalInputTokens = (usage?.inputTokens ?? 0) + (usage?.cacheCreationInputTokens ?? 0) + (usage?.cacheReadInputTokens ?? 0);
+  const warningState = calculateTokenWarningState(totalInputTokens, currentModelId ?? "claude-sonnet-4-20250514");
   const ctxPct = contextPercentage ?? 0;
-  const ctxColor =
-    ctxPct > 90
-      ? "text-terminal-red"
-      : ctxPct > 70
-        ? "text-yellow-500"
-        : "text-muted-foreground/50";
+  const ctxColor = warningState.isAboveErrorThreshold
+    ? "text-destructive"
+    : warningState.isAboveWarningThreshold
+      ? "text-yellow-500"
+      : "text-muted-foreground/50";
 
   return (
     <div className="relative">
@@ -646,7 +651,11 @@ export function ChatInput({
           <span className="text-muted-foreground/30">│</span>
           <span>{formatCost(cost)}</span>
           <span className="text-muted-foreground/30">│</span>
-          <span className={ctxColor}>ctx: {ctxPct.toFixed(0)}%</span>
+          <span className={ctxColor}>
+            {warningState.isAboveAutoCompactThreshold
+              ? `${warningState.percentLeft}% until auto-compact`
+              : `ctx: ${ctxPct.toFixed(0)}%`}
+          </span>
           {historyIndicator && (
             <>
               <span className="text-muted-foreground/30">│</span>

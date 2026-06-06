@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { connectSSE } from "@/lib/sse";
+import { getAutoCompactThreshold } from "@/lib/context";
 import type { ChatMessage, ChatResponseEvent, ToolConfirmation, Usage, RiskLevel } from "@/types";
 import type { AutoApproveToastData } from "@/components/chat/auto-approve-toast";
 import type { PermissionMode } from "@/components/chat/chat-input";
@@ -91,6 +92,8 @@ interface UseChatReturn {
   autoApproveToasts: AutoApproveToastData[];
   removeAutoApproveToast: (id: string) => void;
   contextPercentage: number;
+  autoCompactEnabled: boolean;
+  resetUsage: () => void;
 }
 
 /**
@@ -137,6 +140,8 @@ function normalizeSSEEvent(eventType: string, rawData: Record<string, unknown>):
         usage: {
           inputTokens: Number((usage as Record<string, unknown>).inputTokens || 0),
           outputTokens: Number((usage as Record<string, unknown>).outputTokens || 0),
+          cacheCreationInputTokens: Number((usage as Record<string, unknown>).cacheCreationInputTokens || 0),
+          cacheReadInputTokens: Number((usage as Record<string, unknown>).cacheReadInputTokens || 0),
           cost: Number((usage as Record<string, unknown>).cost || 0),
         },
       };
@@ -156,17 +161,34 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
   const [error, setError] = useState<string | null>(null);
   const [pendingConfirmation, setPendingConfirmation] = useState<ToolConfirmation | null>(null);
   const [autoApprovedTools, setAutoApprovedTools] = useState<Set<string>>(new Set());
-  const [usage, setUsage] = useState<Usage>({ inputTokens: 0, outputTokens: 0, cost: 0 });
+  const [usage, setUsage] = useState<Usage>({ inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0, cost: 0 });
   const [autoApproveToasts, setAutoApproveToasts] = useState<AutoApproveToastData[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const confirmationResolverRef = useRef<((approved: boolean) => void) | null>(null);
 
+  // Auto-compact tracking
+  const [autoCompactEnabled] = useState(true);
+  const consecutiveFailuresRef = useRef(0);
+  const MAX_CONSECUTIVE_FAILURES = 3;
+
+  // Refs to track latest state for auto-compact (state may be stale in async closures)
+  const messagesRef = useRef<EnhancedMessage[]>(messages);
+  const usageRef = useRef<Usage>(usage);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    usageRef.current = usage;
+  }, [usage]);
+
   // Calculate context percentage
   const contextPercentage = useMemo(() => {
     const maxContext = MODEL_MAX_CONTEXT[currentModel || ""] ?? DEFAULT_MAX_CONTEXT;
-    const totalTokens = usage.inputTokens + usage.outputTokens;
+    const totalTokens = usage.inputTokens + usage.cacheCreationInputTokens + usage.cacheReadInputTokens;
     return (totalTokens / maxContext) * 100;
-  }, [usage.inputTokens, usage.outputTokens, currentModel]);
+  }, [usage.inputTokens, usage.cacheCreationInputTokens, usage.cacheReadInputTokens, currentModel]);
 
   const removeAutoApproveToast = useCallback((id: string) => {
     setAutoApproveToasts((prev) => prev.filter((t) => t.id !== id));
@@ -210,6 +232,63 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
     },
     [pendingConfirmation]
   );
+
+  const resetUsage = useCallback(() => {
+    setUsage({ inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0, cost: 0 });
+  }, []);
+
+  const autoCompactIfNeeded = useCallback(async () => {
+    if (!autoCompactEnabled) return;
+    if (consecutiveFailuresRef.current >= MAX_CONSECUTIVE_FAILURES) return;
+
+    const currentUsage = usageRef.current;
+    const totalInputTokens = currentUsage.inputTokens + currentUsage.cacheCreationInputTokens + currentUsage.cacheReadInputTokens;
+    const model = currentModel || "claude-sonnet-4-20250514";
+    const threshold = getAutoCompactThreshold(model);
+
+    if (totalInputTokens < threshold) return;
+
+    const currentMessages = messagesRef.current;
+    if (currentMessages.length === 0) return;
+
+    try {
+      const messagesPayload = currentMessages.map((m) => ({
+        role: m.role,
+        content: m.contentBlocks
+          ? m.contentBlocks
+              .filter((b) => b.type === "text")
+              .map((b) => b.text || "")
+              .join("")
+          : m.content,
+      }));
+
+      const res = await fetch("/api/compact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: messagesPayload, model }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.compactedMessages) {
+          setMessages(
+            data.compactedMessages.map((msg: { id: string; role: string; content: string; timestamp: number }, idx: number) => ({
+              id: msg.id || `msg-${idx}`,
+              role: msg.role as "user" | "assistant",
+              content: msg.content,
+              timestamp: msg.timestamp || Date.now(),
+            }))
+          );
+          resetUsage();
+          consecutiveFailuresRef.current = 0;
+        }
+      } else {
+        consecutiveFailuresRef.current++;
+      }
+    } catch {
+      consecutiveFailuresRef.current++;
+    }
+  }, [autoCompactEnabled, currentModel, setMessages, resetUsage]);
 
   const sendMessage = useCallback(
     async (content: string, model?: string) => {
@@ -360,6 +439,8 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
               setUsage((prev) => ({
                 inputTokens: prev.inputTokens + usageData.inputTokens,
                 outputTokens: prev.outputTokens + usageData.outputTokens,
+                cacheCreationInputTokens: prev.cacheCreationInputTokens + usageData.cacheCreationInputTokens,
+                cacheReadInputTokens: prev.cacheReadInputTokens + usageData.cacheReadInputTokens,
                 cost: prev.cost + usageData.cost,
               }));
               continue;
@@ -498,14 +579,16 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
       } finally {
         setIsStreaming(false);
         abortControllerRef.current = null;
+        // Auto-compact if context usage exceeds threshold
+        await autoCompactIfNeeded();
       }
     },
-    [sessionId, messages, autoApprovedTools, permissionMode]
+    [sessionId, messages, autoApprovedTools, permissionMode, autoCompactIfNeeded]
   );
 
   const clearMessages = useCallback(() => {
     setMessages([]);
-    setUsage({ inputTokens: 0, outputTokens: 0, cost: 0 });
+    setUsage({ inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0, cost: 0 });
   }, []);
 
   return {
@@ -523,5 +606,7 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
     autoApproveToasts,
     removeAutoApproveToast,
     contextPercentage,
+    autoCompactEnabled,
+    resetUsage,
   };
 }

@@ -63,6 +63,8 @@ export interface ToolUse {
 export interface Usage {
   inputTokens: number;
   outputTokens: number;
+  cacheCreationInputTokens: number;
+  cacheReadInputTokens: number;
   cost: number;
 }
 

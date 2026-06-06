@@ -105,6 +105,8 @@ async function runAnthropicLoop(
   const currentMessages: Message[] = [...messages];
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
+  let totalCacheCreationInputTokens = 0;
+  let totalCacheReadInputTokens = 0;
 
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
     const anthropicMessages = currentMessages.map(messageToAnthropic);
@@ -149,6 +151,9 @@ async function runAnthropicLoop(
     for await (const event of stream) {
       if (event.type === "message_start") {
         totalInputTokens += event.message.usage.input_tokens;
+        const usageObj = event.message.usage as unknown as Record<string, unknown>;
+        totalCacheCreationInputTokens += (usageObj.cache_creation_input_tokens as number) || 0;
+        totalCacheReadInputTokens += (usageObj.cache_read_input_tokens as number) || 0;
       }
 
       if (event.type === "content_block_start") {
@@ -258,6 +263,8 @@ async function runAnthropicLoop(
   emit("usage", {
     inputTokens: totalInputTokens,
     outputTokens: totalOutputTokens,
+    cacheCreationInputTokens: totalCacheCreationInputTokens,
+    cacheReadInputTokens: totalCacheReadInputTokens,
     cost,
   });
 }
@@ -506,6 +513,8 @@ async function runOpenAILoop(
   emit("usage", {
     inputTokens: totalInputTokens,
     outputTokens: totalOutputTokens,
+    cacheCreationInputTokens: 0,
+    cacheReadInputTokens: 0,
     cost,
   });
 }

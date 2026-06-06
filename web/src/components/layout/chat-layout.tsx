@@ -6,6 +6,7 @@ import { FolderTree } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { ChatInput } from "@/components/chat/chat-input";
 import type { PermissionMode } from "@/components/chat/chat-input";
+import { TokenWarning } from "@/components/chat/token-warning";
 import { ProviderDialog } from "@/components/chat/provider-dialog";
 import { ChatArea } from "@/components/chat-area";
 import { ToolConfirmDialog } from "@/components/chat/tool-confirm-dialog";
@@ -15,6 +16,7 @@ import { useSessions } from "@/hooks/use-sessions";
 import { useChat } from "@/hooks/use-chat";
 import { useFileTree } from "@/hooks/use-file-tree";
 import type { ModelOption } from "@/types";
+import { calculateTokenWarningState, getAutoCompactThreshold, getEffectiveContextWindowSize, getContextWindowSize } from "@/lib/context";
 
 const AVAILABLE_MODELS = [
   { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", provider: "Anthropic", capabilities: [] as string[] },
@@ -29,17 +31,6 @@ const TOOL_NAMES = [
   "bash", "read", "write", "edit", "multiEdit", "glob", "grep",
   "listDirectory", "webSearch", "webFetch",
 ];
-
-const MODEL_MAX_CONTEXT: Record<string, number> = {
-  "claude-sonnet-4-20250514": 200000,
-  "claude-opus-4-20250514": 200000,
-  "claude-haiku-3.5-20241022": 200000,
-  "gpt-4o": 128000,
-  "gpt-4o-mini": 128000,
-  "o3-mini": 200000,
-};
-
-const DEFAULT_MAX_CONTEXT = 200000;
 
 export function ChatLayout() {
   const {
@@ -107,6 +98,7 @@ export function ChatLayout() {
     autoApproveToasts,
     removeAutoApproveToast,
     contextPercentage,
+    resetUsage,
   } = useChat(currentSessionId, permissionMode, currentModel);
 
   const { tree: fileTree } = useFileTree(messages);
@@ -214,7 +206,7 @@ export function ChatLayout() {
   );
 
   const handleSlashCommand = useCallback(
-    (command: string, args: string) => {
+    async (command: string, args: string) => {
       switch (command) {
         case "/clear":
           clearMessages();
@@ -261,11 +253,42 @@ export function ChatLayout() {
 
         case "/compact":
           if (currentSessionId && messages.length > 0) {
-            sendMessage(
-              "Please summarize our conversation so far in a concise way, preserving key context and decisions. This is a /compact command - output only the summary.",
-              currentModel
-            );
             setSystemMessage("Compacting conversation...");
+            try {
+              const messagesPayload = messages.map((m) => ({
+                role: m.role,
+                content: m.contentBlocks
+                  ? m.contentBlocks
+                      .filter((b) => b.type === "text")
+                      .map((b) => b.text || "")
+                      .join("")
+                  : m.content,
+              }));
+              const res = await fetch("/api/compact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messages: messagesPayload, model: currentModel }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data.compactedMessages) {
+                  setMessages(
+                    data.compactedMessages.map((msg: { id: string; role: string; content: string; timestamp: number }, idx: number) => ({
+                      id: msg.id || `msg-${idx}`,
+                      role: msg.role as "user" | "assistant",
+                      content: msg.content,
+                      timestamp: msg.timestamp || Date.now(),
+                    }))
+                  );
+                  resetUsage();
+                  setSystemMessage("Conversation compacted successfully.");
+                }
+              } else {
+                setSystemMessage("Compaction failed.");
+              }
+            } catch {
+              setSystemMessage("Compaction failed.");
+            }
           } else {
             setSystemMessage("No conversation to compact.");
           }
@@ -287,13 +310,39 @@ export function ChatLayout() {
           break;
 
         case "/context": {
-          const { inputTokens, outputTokens } = usage;
-          const totalTokens = inputTokens + outputTokens;
+          const { inputTokens, outputTokens, cacheCreationInputTokens, cacheReadInputTokens } = usage;
+          const totalInputTokens = inputTokens + cacheCreationInputTokens + cacheReadInputTokens;
+          const totalTokens = totalInputTokens + outputTokens;
           const modelName = allModels.find((m) => m.id === currentModel)?.name || currentModel;
-          const maxContext = MODEL_MAX_CONTEXT[currentModel] ?? DEFAULT_MAX_CONTEXT;
-          setSystemMessage(
-            `Context Usage:\nInput: ${inputTokens.toLocaleString()} tokens\nOutput: ${outputTokens.toLocaleString()} tokens\nTotal: ${totalTokens.toLocaleString()} tokens\nContext: ${contextPercentage.toFixed(1)}% of ${maxContext.toLocaleString()} (${modelName})`
-          );
+          const maxContext = getContextWindowSize(currentModel);
+          const ctxPct = contextPercentage.toFixed(1);
+
+          const warningState = calculateTokenWarningState(totalInputTokens, currentModel);
+          const autoCompactThreshold = getAutoCompactThreshold(currentModel);
+          const effectiveWindow = getEffectiveContextWindowSize(currentModel);
+
+          const lines = [
+            `Context Usage:`,
+            `  Input tokens:           ${inputTokens.toLocaleString()}`,
+            `  Cache creation tokens:  ${cacheCreationInputTokens.toLocaleString()}`,
+            `  Cache read tokens:      ${cacheReadInputTokens.toLocaleString()}`,
+            `  Output tokens:          ${outputTokens.toLocaleString()}`,
+            `  Total input (context):  ${totalInputTokens.toLocaleString()}`,
+            `  Total (all):            ${totalTokens.toLocaleString()}`,
+            ``,
+            `Context window: ${ctxPct}% of ${maxContext.toLocaleString()} (${modelName})`,
+            `Effective window: ${effectiveWindow.toLocaleString()} tokens`,
+            `Auto-compact at: ${autoCompactThreshold.toLocaleString()} tokens (${warningState.percentLeft}% remaining)`,
+          ];
+
+          if (warningState.isAboveWarningThreshold) {
+            lines.push(``);
+            lines.push(warningState.isAboveAutoCompactThreshold
+              ? `⚠ Context exceeds auto-compact threshold`
+              : `⚠ Context approaching limit`);
+          }
+
+          setSystemMessage(lines.join("\n"));
           break;
         }
 
@@ -339,7 +388,7 @@ export function ChatLayout() {
       // Auto-dismiss system message after 5 seconds
       setTimeout(() => setSystemMessage(null), 5000);
     },
-    [clearMessages, currentModel, currentSessionId, messages, sendMessage, usage, allModels, contextPercentage, permissionMode]
+    [clearMessages, currentModel, currentSessionId, messages, sendMessage, usage, allModels, contextPercentage, permissionMode, setMessages, resetUsage]
   );
 
   const handleLogout = useCallback(async () => {
@@ -367,6 +416,9 @@ export function ChatLayout() {
 
   // Resolve model display name
   const currentModelName = allModels.find((m) => m.id === currentModel)?.name || currentModel;
+
+  // Calculate total input token usage for token warning
+  const totalInputTokens = usage.inputTokens + usage.cacheCreationInputTokens + usage.cacheReadInputTokens;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background font-mono">
@@ -424,6 +476,9 @@ export function ChatLayout() {
           </div>
         )}
 
+        {/* Token warning */}
+        <TokenWarning tokenUsage={totalInputTokens} model={currentModel} />
+
         {/* Input area */}
         <div className="relative mt-auto">
           {/* Auto-approve toasts */}
@@ -440,6 +495,7 @@ export function ChatLayout() {
             permissionMode={permissionMode}
             onPermissionModeChange={setPermissionMode}
             currentModelName={currentModelName}
+            currentModelId={currentModel}
             usage={usage}
             contextPercentage={contextPercentage}
             onProviderDialogOpen={() => setProviderDialogOpen(true)}
