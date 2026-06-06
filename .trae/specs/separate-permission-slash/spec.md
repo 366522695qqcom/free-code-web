@@ -9,10 +9,12 @@
 - **支持模糊搜索**：输入 `/co` 过滤出 /compact、/context、/cost
 - **支持键盘导航**：↑↓ 选择、Enter/Tab 确认、Esc 关闭/返回
 - **修改 placeholder 和状态栏提示文字**
+- **添加单元测试**：对斜杠命令菜单的核心逻辑编写 vitest 单元测试
 
 ## Impact
 - Affected code: `chat-input.tsx`（主要修改，重构 `/` 菜单逻辑）
 - Affected specs: `align-with-cc`（对齐 CC 的交互模式）
+- Affected test: 新增 `chat-input.test.tsx`
 
 ## ADDED Requirements
 
@@ -80,6 +82,27 @@
 - **THEN** 返回 `/` 命令列表
 - **WHEN** 用户在命令列表中再按 Esc
 - **THEN** 关闭菜单
+
+### Requirement: 斜杠命令菜单单元测试
+系统 SHALL 为斜杠命令菜单的核心逻辑提供单元测试覆盖：
+- 测试 SLASH_COMMANDS 数据结构包含所有10个命令
+- 测试模糊搜索过滤逻辑
+- 测试 /permissions 子菜单切换逻辑
+- 测试键盘导航逻辑（↑↓ 选择、Enter/Tab 确认、Esc 关闭/返回）
+- 测试选择普通命令后填入文本逻辑
+- 测试选择权限模式后切换模式、关闭菜单、清空输入框
+
+#### Scenario: 测试模糊搜索
+- **WHEN** 运行模糊搜索测试
+- **THEN** 输入 `/co` 过滤出 /compact、/context、/cost
+- **AND** 输入 `/p` 过滤出 /permissions
+- **AND** 输入 `/xyz` 返回空列表
+
+#### Scenario: 测试命令选择
+- **WHEN** 选择普通命令 /model
+- **THEN** 输入值变为 `/model `（带尾部空格）
+- **WHEN** 选择 /permissions
+- **THEN** 切换到权限子菜单而非填入文本
 
 ## MODIFIED Requirements
 

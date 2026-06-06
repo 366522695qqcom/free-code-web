@@ -1,31 +1,40 @@
 # Tasks
 
-- [ ] Task 1: 定义斜杠命令列表数据结构
-  - [ ] SubTask 1.1: 在 `chat-input.tsx` 中定义 `SlashCommand` 类型（name、hasSubmenu）和 `SLASH_COMMANDS` 常量
-  - [ ] SubTask 1.2: 命令列表包含 /clear、/compact、/context、/cost、/help、/model、/permissions、/review、/status、/tools
+- [x] Task 1: 定义斜杠命令列表数据结构
+  - [x] SubTask 1.1: 在 `chat-input.tsx` 中定义 `SlashCommand` 类型（name、hasSubmenu）和 `SLASH_COMMANDS` 常量
+  - [x] SubTask 1.2: 命令列表包含 /clear、/compact、/context、/cost、/help、/model、/permissions、/review、/status、/tools
 
-- [ ] Task 2: 重构 `/` 菜单为极简命令列表
-  - [ ] SubTask 2.1: 将 `showModeMenu` 替换为 `showCommandMenu`，输入 `/` 弹出极简命令列表（只有命令名，无描述、无表头、无提示）
-  - [ ] SubTask 2.2: 实现模糊搜索过滤 — 根据用户输入的 `/xxx` 过滤命令列表
-  - [ ] SubTask 2.3: 实现键盘导航 — ↑↓ 选择、Enter/Tab 确认、Esc 关闭
-  - [ ] SubTask 2.4: 选择普通命令后填入 `/command ` 文本（不立即执行）
-  - [ ] SubTask 2.5: 渲染极简命令列表 UI — 每行一个命令名，选中项高亮
+- [x] Task 2: 重构 `/` 菜单为极简命令列表
+  - [x] SubTask 2.1: 将 `showModeMenu` 替换为 `showCommandMenu`，输入 `/` 弹出极简命令列表（只有命令名，无描述、无表头、无提示）
+  - [x] SubTask 2.2: 实现模糊搜索过滤 — 根据用户输入的 `/xxx` 过滤命令列表
+  - [x] SubTask 2.3: 实现键盘导航 — ↑↓ 选择、Enter/Tab 确认、Esc 关闭
+  - [x] SubTask 2.4: 选择普通命令后填入 `/command ` 文本（不立即执行）
+  - [x] SubTask 2.5: 渲染极简命令列表 UI — 每行一个命令名，选中项高亮
 
-- [ ] Task 3: 实现 /permissions 子菜单
-  - [ ] SubTask 3.1: 新增 `showPermissionSubmenu` 状态，选中 /permissions 后切换为权限分级子菜单
-  - [ ] SubTask 3.2: 权限分级子菜单极简风格 — 每行只显示图标和模式名，无描述文字
-  - [ ] SubTask 3.3: 当前模式 `*` 标记
-  - [ ] SubTask 3.4: 键盘导航 — ↑↓ 选择、Enter 确认切换模式、Esc 返回命令列表
-  - [ ] SubTask 3.5: 选择后切换权限模式，关闭菜单，清空输入框
+- [x] Task 3: 实现 /permissions 子菜单
+  - [x] SubTask 3.1: 新增 `showPermissionSubmenu` 状态，选中 /permissions 后切换为权限分级子菜单
+  - [x] SubTask 3.2: 权限分级子菜单极简风格 — 每行只显示图标和模式名，无描述文字
+  - [x] SubTask 3.3: 当前模式 `*` 标记
+  - [x] SubTask 3.4: 键盘导航 — ↑↓ 选择、Enter 确认切换模式、Esc 返回命令列表
+  - [x] SubTask 3.5: 选择后切换权限模式，关闭菜单，清空输入框
 
-- [ ] Task 4: 清理旧逻辑和更新提示文字
-  - [ ] SubTask 4.1: 移除旧的 `showModeMenu` 与权限模式直接关联的代码（表格表头、描述列、footer 提示等）
-  - [ ] SubTask 4.2: 更新 placeholder 文字 — 从 "/ to switch mode" 改为 "/ for commands"
-  - [ ] SubTask 4.3: 更新状态栏底部提示 — 从 "/ mode" 改为 "/ commands"
+- [x] Task 4: 清理旧逻辑和更新提示文字
+  - [x] SubTask 4.1: 移除旧的 `showModeMenu` 与权限模式直接关联的代码（表格表头、描述列、footer 提示等）
+  - [x] SubTask 4.2: 更新 placeholder 文字 — 从 "/ to switch mode" 改为 "/ for commands"
+  - [x] SubTask 4.3: 更新状态栏底部提示 — 从 "/ mode" 改为 "/ commands"
 
-- [ ] Task 5: 构建验证
-  - [ ] SubTask 5.1: `npm run build` 通过
-  - [ ] SubTask 5.2: `npm run lint` 无错误
+- [ ] Task 5: 编写单元测试
+  - [ ] SubTask 5.1: 安装 vitest 及 @testing-library/react 依赖
+  - [ ] SubTask 5.2: 创建 `chat-input.test.tsx`，测试 SLASH_COMMANDS 数据结构包含所有10个命令
+  - [ ] SubTask 5.3: 测试模糊搜索过滤逻辑（/co → compact/context/cost，/p → permissions，/xyz → 空）
+  - [ ] SubTask 5.4: 测试 /permissions 子菜单切换逻辑
+  - [ ] SubTask 5.5: 测试选择普通命令后填入文本逻辑
+  - [ ] SubTask 5.6: 测试选择权限模式后切换模式、关闭菜单、清空输入框
+
+- [ ] Task 6: 构建验证
+  - [ ] SubTask 6.1: `npm run build` 通过
+  - [ ] SubTask 6.2: `npm run lint` 无错误
+  - [ ] SubTask 6.3: `npx vitest run` 所有测试通过
 
 # Task Dependencies
 - [Task 1] depends on nothing
@@ -33,3 +42,4 @@
 - [Task 3] depends on [Task 2]
 - [Task 4] depends on [Task 2, Task 3]
 - [Task 5] depends on [Task 1, Task 2, Task 3, Task 4]
+- [Task 6] depends on [Task 5]
