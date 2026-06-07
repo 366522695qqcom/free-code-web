@@ -61,11 +61,20 @@ export function ChatLayout() {
           const models: ModelOption[] = [];
           for (const provider of data.providers) {
             for (const model of provider.models || []) {
+              // capabilities 可能是对象 {vision, reasoning, toolUse} 或字符串数组
+              let caps: string[] = [];
+              if (Array.isArray(model.capabilities)) {
+                caps = model.capabilities;
+              } else if (model.capabilities && typeof model.capabilities === "object") {
+                caps = Object.entries(model.capabilities)
+                  .filter(([, v]) => v === true)
+                  .map(([k]) => k);
+              }
               models.push({
                 id: model.modelId,
                 name: model.displayName || model.modelId,
                 provider: provider.name,
-                capabilities: model.capabilities || [],
+                capabilities: caps,
               });
             }
           }
@@ -499,6 +508,13 @@ export function ChatLayout() {
             usage={usage}
             contextPercentage={contextPercentage}
             onProviderDialogOpen={() => setProviderDialogOpen(true)}
+            models={allModels}
+            onModelSelect={(modelId) => {
+              setCurrentModel(modelId);
+              const modelName = allModels.find((m) => m.id === modelId)?.name || modelId;
+              setSystemMessage(`Model switched to ${modelName}`);
+              setTimeout(() => setSystemMessage(null), 3000);
+            }}
           />
         </div>
       </div>

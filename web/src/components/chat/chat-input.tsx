@@ -45,7 +45,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   { name: "/context", hasSubmenu: false },
   { name: "/cost", hasSubmenu: false },
   { name: "/help", hasSubmenu: false },
-  { name: "/model", hasSubmenu: false },
+  { name: "/model", hasSubmenu: true },
   { name: "/permissions", hasSubmenu: true },
   { name: "/review", hasSubmenu: false },
   { name: "/status", hasSubmenu: false },
@@ -74,6 +74,8 @@ interface FileEntry {
   type: "file" | "dir";
 }
 
+import type { ModelOption } from "@/types";
+
 interface ChatInputProps {
   onSend: (content: string) => void;
   onStop: () => void;
@@ -94,6 +96,10 @@ interface ChatInputProps {
   contextPercentage?: number;
   /** 打开 Provider 管理对话框 */
   onProviderDialogOpen?: () => void;
+  /** 可用模型列表（用于 /model 子菜单） */
+  models?: ModelOption[];
+  /** 模型选择回调 */
+  onModelSelect?: (modelId: string) => void;
 }
 
 export function ChatInput({
@@ -109,10 +115,13 @@ export function ChatInput({
   usage,
   contextPercentage,
   onProviderDialogOpen,
+  models = [],
+  onModelSelect,
 }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [showCommandMenu, setShowCommandMenu] = useState(false);
   const [showPermissionSubmenu, setShowPermissionSubmenu] = useState(false);
+  const [showModelSubmenu, setShowModelSubmenu] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [commandFilter, setCommandFilter] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -235,10 +244,23 @@ export function ChatInput({
       onPermissionModeChange?.(mode);
       setShowCommandMenu(false);
       setShowPermissionSubmenu(false);
+      setShowModelSubmenu(false);
       setValue("");
       textareaRef.current?.focus();
     },
     [onPermissionModeChange]
+  );
+
+  const handleSelectModel = useCallback(
+    (modelId: string) => {
+      onModelSelect?.(modelId);
+      setShowCommandMenu(false);
+      setShowPermissionSubmenu(false);
+      setShowModelSubmenu(false);
+      setValue("");
+      textareaRef.current?.focus();
+    },
+    [onModelSelect]
   );
 
   // Filtered command list based on user input
@@ -246,10 +268,19 @@ export function ChatInput({
 
   const handleSelectCommand = useCallback(
     (cmd: { name: string; hasSubmenu: boolean }) => {
-      if (cmd.hasSubmenu) {
+      if (cmd.name === "/permissions") {
         // Switch to permission submenu
         setShowPermissionSubmenu(true);
         setShowCommandMenu(false);
+        setShowModelSubmenu(false);
+        setSelectedIndex(0);
+        return;
+      }
+      if (cmd.name === "/model") {
+        // Switch to model submenu
+        setShowModelSubmenu(true);
+        setShowCommandMenu(false);
+        setShowPermissionSubmenu(false);
         setSelectedIndex(0);
         return;
       }
@@ -258,6 +289,7 @@ export function ChatInput({
       setValue(newValue);
       setShowCommandMenu(false);
       setShowPermissionSubmenu(false);
+      setShowModelSubmenu(false);
       setCommandFilter("");
       requestAnimationFrame(() => {
         const textarea = textareaRef.current;
@@ -408,6 +440,42 @@ export function ChatInput({
         }
       }
 
+      // Model submenu navigation
+      if (showModelSubmenu) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            prev < models.length - 1 ? prev + 1 : 0
+          );
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            prev > 0 ? prev - 1 : models.length - 1
+          );
+          return;
+        }
+        if (e.key === "Enter" || e.key === "Tab") {
+          e.preventDefault();
+          const selected = models[selectedIndex];
+          if (selected) {
+            handleSelectModel(selected.id);
+          }
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          // Return to command list
+          setShowModelSubmenu(false);
+          setShowCommandMenu(true);
+          setValue("");
+          setCommandFilter("/");
+          setSelectedIndex(0);
+          return;
+        }
+      }
+
       // Command menu navigation
       if (showCommandMenu) {
         if (e.key === "ArrowDown") {
@@ -448,7 +516,7 @@ export function ChatInput({
       }
 
       // Command history navigation (only when not showing any menu)
-      if (!showCommandMenu && !showPermissionSubmenu && !showFileMenu && !isStreaming) {
+      if (!showCommandMenu && !showPermissionSubmenu && !showModelSubmenu && !showFileMenu && !isStreaming) {
         if (e.key === "ArrowUp" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
           // Only navigate history if cursor is at the start of the textarea
           const textarea = textareaRef.current;
@@ -495,6 +563,7 @@ export function ChatInput({
       handleSend,
       showCommandMenu,
       showPermissionSubmenu,
+      showModelSubmenu,
       showFileMenu,
       selectedIndex,
       fileSelectedIndex,
@@ -502,7 +571,9 @@ export function ChatInput({
       filteredCommands,
       handleSelectCommand,
       handleSelectPermission,
+      handleSelectModel,
       handleSelectFile,
+      models,
       isStreaming,
       onStop,
       value,
@@ -511,14 +582,14 @@ export function ChatInput({
 
   // Scroll selected item into view
   useEffect(() => {
-    if ((showCommandMenu || showPermissionSubmenu) && menuRef.current) {
-      const attr = showCommandMenu ? "data-cmd-index" : "data-mode-index";
+    if ((showCommandMenu || showPermissionSubmenu || showModelSubmenu) && menuRef.current) {
+      const attr = showCommandMenu ? "data-cmd-index" : showPermissionSubmenu ? "data-mode-index" : "data-model-index";
       const selectedEl = menuRef.current.querySelector(
         `[${attr}="${selectedIndex}"]`
       );
       selectedEl?.scrollIntoView({ block: "nearest" });
     }
-  }, [selectedIndex, showCommandMenu, showPermissionSubmenu]);
+  }, [selectedIndex, showCommandMenu, showPermissionSubmenu, showModelSubmenu]);
 
   // Scroll selected item into view (file menu)
   useEffect(() => {
@@ -605,7 +676,7 @@ export function ChatInput({
       )}
 
       {/* Command Menu (CC 风格极简) */}
-      {showCommandMenu && !showPermissionSubmenu && (
+      {showCommandMenu && !showPermissionSubmenu && !showModelSubmenu && (
         <div
           ref={menuRef}
           className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50"
@@ -664,6 +735,38 @@ export function ChatInput({
               )}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Model Submenu (极简风格) */}
+      {showModelSubmenu && (
+        <div
+          ref={menuRef}
+          className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
+        >
+          {models.length === 0 ? (
+            <div className="px-3 py-2 font-mono text-xs text-muted-foreground/60">
+              No models available
+            </div>
+          ) : (
+            models.map((model, idx) => (
+              <button
+                key={model.id}
+                data-model-index={idx}
+                onClick={() => handleSelectModel(model.id)}
+                onMouseEnter={() => setSelectedIndex(idx)}
+                className={cn(
+                  "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border last:border-b-0",
+                  idx === selectedIndex
+                    ? "bg-accent text-accent-foreground"
+                    : "hover:bg-accent/30"
+                )}
+              >
+                <span className="font-mono text-sm truncate">{model.name}</span>
+                <span className="ml-auto text-[0.6rem] text-muted-foreground/40 shrink-0">{model.provider}</span>
+              </button>
+            ))
+          )}
         </div>
       )}
 

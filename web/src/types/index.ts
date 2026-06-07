@@ -186,5 +186,5 @@ export interface ModelOption {
   id: string;
   name: string;
   provider: string;
-  capabilities?: string[];
+  capabilities?: string[] | Record<string, boolean>;
 }
