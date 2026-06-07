@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Server,
@@ -14,8 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 const SIDEBAR_ITEMS = [
-  { icon: Server, label: "模型提供商", href: "/settings/providers" },
   { icon: Cpu, label: "对话设置", href: "/settings" },
+  { icon: Server, label: "模型提供商", href: "/settings/providers" },
   { icon: Palette, label: "外观", href: "/settings" },
   { icon: Box, label: "沙箱", href: "/settings" },
   { icon: Shield, label: "权限", href: "/settings" },
@@ -51,10 +51,9 @@ export default function SettingsLayout({
         {/* Nav items */}
         <nav className="flex-1 space-y-0.5 p-2">
           {SIDEBAR_ITEMS.map((item) => {
-            const isActive =
-              item.href === "/settings/providers"
-                ? pathname === "/settings/providers"
-                : pathname === "/settings" && item.href === "/settings" && item.label === "对话设置";
+            const isActive = item.href === "/settings/providers"
+              ? pathname === "/settings/providers"
+              : pathname === "/settings" && item.href === "/settings";
             return (
               <button
                 key={item.label}

@@ -253,22 +253,16 @@ export default function SettingsPage() {
 
   if (!mounted) {
     return (
-      <div className="flex items-center justify-center p-6">
+      <div className="flex items-center justify-center py-20">
         <div className="text-sm text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-sm text-terminal-green">$</span>
-        <h2 className="text-lg font-medium">对话设置</h2>
-      </div>
-
+    <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
       {/* Model Providers */}
-        <Card>
+      <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Server className="size-4 text-terminal-cyan" />
