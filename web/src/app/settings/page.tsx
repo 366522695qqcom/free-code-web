@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
-  ArrowLeft,
   Cpu,
   Palette,
   Shield,
@@ -254,32 +253,21 @@ export default function SettingsPage() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex items-center justify-center p-6">
         <div className="text-sm text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="mx-auto max-w-3xl space-y-6 p-6">
       {/* Header */}
-      <div className="border-b border-border bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => router.push("/")}
-            title="Back to chat"
-          >
-            <ArrowLeft className="size-4" />
-          </Button>
-          <h1 className="text-sm font-medium">Settings</h1>
-        </div>
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-sm text-terminal-green">$</span>
+        <h2 className="text-lg font-medium">对话设置</h2>
       </div>
 
-      {/* Content */}
-      <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
-        {/* Model Providers */}
+      {/* Model Providers */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -805,6 +793,5 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
   );
 }

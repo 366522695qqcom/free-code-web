@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Server,
   Plus,
   Trash2,
@@ -15,11 +13,6 @@ import {
   X,
   Loader2,
   Cpu,
-  Palette,
-  MessageSquare,
-  Box,
-  Shield,
-  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,18 +54,7 @@ interface FetchedModel {
 
 type ConnectionStatus = "idle" | "testing" | "connected" | "error";
 
-const SIDEBAR_ITEMS = [
-  { icon: Server, label: "模型提供商", href: "/settings/providers", active: true },
-  { icon: Cpu, label: "对话设置", href: "/settings", active: false },
-  { icon: Palette, label: "外观", href: "/settings", active: false },
-  { icon: Box, label: "沙箱", href: "/settings", active: false },
-  { icon: Shield, label: "权限", href: "/settings", active: false },
-  { icon: MessageSquare, label: "会话", href: "/settings", active: false },
-  { icon: Info, label: "关于", href: "/settings", active: false },
-];
-
 export default function ProvidersPage() {
-  const router = useRouter();
   const [providers, setProviders] = useState<CustomProvider[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
@@ -366,7 +348,7 @@ export default function ProvidersPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex items-center justify-center p-6">
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="font-mono text-sm text-terminal-green">$</span>
           <span className="font-mono text-sm">Loading...</span>
@@ -377,51 +359,14 @@ export default function ProvidersPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Left Sidebar */}
-      <div className="flex w-52 shrink-0 flex-col border-r border-border bg-background">
-        {/* Header */}
-        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => router.push("/")}
-            title="返回聊天"
-          >
-            <ArrowLeft className="size-4" />
-          </Button>
-          <h1 className="text-sm font-medium">设置</h1>
-        </div>
-
-        {/* Nav items */}
-        <nav className="flex-1 space-y-0.5 p-2">
-          {SIDEBAR_ITEMS.map((item) => (
-            <button
-              key={item.label}
-              onClick={() => router.push(item.href)}
-              className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
-                item.active
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <item.icon className="size-4" />
-              {item.label}
-            </button>
-          ))}
-        </nav>
+    <div className="mx-auto max-w-3xl space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-sm text-terminal-green">$</span>
+        <h2 className="text-lg font-medium">模型提供商</h2>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl space-y-6 p-6">
-          {/* Header */}
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-terminal-green">$</span>
-            <h2 className="text-lg font-medium">模型提供商</h2>
-          </div>
-
-          {/* Provider List Section */}
+      {/* Provider List Section */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -820,8 +765,6 @@ export default function ProvidersPage() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </div>
 
       {/* Model Dialog */}
       <ModelDialog

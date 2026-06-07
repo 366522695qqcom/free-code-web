@@ -1,0 +1,8 @@
+- [x] settings/layout.tsx 包含共享侧边栏和内容区域
+- [x] 侧边栏根据当前路由高亮对应导航项
+- [x] settings/page.tsx 不再有独立头部，只渲染卡片内容
+- [x] settings/providers/page.tsx 不再有内置侧边栏，只渲染提供商内容
+- [x] 从 /settings 切换到 /settings/providers 时布局不变
+- [x] 从 /settings/providers 切换到 /settings 时布局不变
+- [x] `npm run build` 构建通过
+- [x] `npm run lint` 无新增错误
