@@ -32,7 +32,7 @@ export async function GET(
     });
   }
 
-  return new Response(JSON.stringify(provider), {
+  return new Response(JSON.stringify({ provider }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
@@ -63,7 +63,7 @@ export async function PUT(
       });
     }
 
-    return new Response(JSON.stringify(provider), {
+    return new Response(JSON.stringify({ provider }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
