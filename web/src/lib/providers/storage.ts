@@ -123,6 +123,16 @@ export async function createModel(
 ): Promise<CustomModel> {
   await initDb();
   const db = getDb();
+
+  // 检查同一 provider 下是否已存在相同 modelId
+  const existing = await db.execute({
+    sql: "SELECT id FROM models WHERE provider_id = ? AND model_id = ?",
+    args: [model.providerId, model.modelId],
+  });
+  if (existing.rows.length > 0) {
+    return rowToModel(existing.rows[0] as Record<string, unknown>);
+  }
+
   const now = Date.now();
   const id = uuidv4();
 

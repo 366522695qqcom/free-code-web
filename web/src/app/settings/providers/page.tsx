@@ -281,7 +281,10 @@ export default function ProvidersPage() {
     const providerId = selectedProviderId;
     if (!providerId || selectedFetchedModels.size === 0) return;
 
+    const existingIds = new Set(selectedProvider?.models.map((m) => m.modelId));
+
     for (const modelId of selectedFetchedModels) {
+      if (existingIds.has(modelId)) continue;
       await fetch(`/api/providers/${providerId}/models/manage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
