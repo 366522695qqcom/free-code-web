@@ -1,0 +1,6 @@
+- [x] 前端 CustomModel.capabilities 类型为 `{vision: boolean; reasoning: boolean; toolUse: boolean}`
+- [x] capabilities 渲染使用条件判断而非 `.map()`
+- [x] handleAddSelectedModels 发送对象格式的 capabilities
+- [x] 页面加载不再报 `capabilities.map is not a function` 错误
+- [x] `npm run build` 构建通过
+- [x] `npm run lint` 无新增错误

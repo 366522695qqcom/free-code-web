@@ -38,7 +38,7 @@ interface CustomModel {
   modelId: string;
   displayName?: string;
   type: "chat" | "embedding" | "image";
-  capabilities: string[];
+  capabilities: { vision: boolean; reasoning: boolean; toolUse: boolean };
   contextWindow?: number;
   maxOutputTokens?: number;
 }
@@ -288,7 +288,7 @@ export default function ProvidersPage() {
         body: JSON.stringify({
           modelId,
           type: "chat",
-          capabilities: [],
+          capabilities: { vision: false, reasoning: false, toolUse: false },
         }),
       });
     }
@@ -779,14 +779,21 @@ export default function ProvidersPage() {
                           <span className="rounded bg-muted px-1.5 py-0.5 text-[0.6rem] text-muted-foreground">
                             {model.type === "chat" ? "聊天" : model.type === "embedding" ? "嵌入" : "图像"}
                           </span>
-                          {model.capabilities.map((cap) => (
-                            <span
-                              key={cap}
-                              className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan"
-                            >
-                              {cap === "vision" ? "视觉" : cap === "reasoning" ? "推理" : "工具使用"}
+                          {model.capabilities.vision && (
+                            <span className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan">
+                              视觉
                             </span>
-                          ))}
+                          )}
+                          {model.capabilities.reasoning && (
+                            <span className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan">
+                              推理
+                            </span>
+                          )}
+                          {model.capabilities.toolUse && (
+                            <span className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan">
+                              工具使用
+                            </span>
+                          )}
                         </div>
                         {(model.contextWindow || model.maxOutputTokens) && (
                           <div className="mt-0.5 flex gap-3 text-[0.65rem] text-muted-foreground">
