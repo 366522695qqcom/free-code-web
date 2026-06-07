@@ -1,0 +1,4 @@
+- [x] GET /api/providers 返回 `{ providers: [...] }` 格式
+- [x] POST /api/providers 返回 `{ provider: {...} }` 格式
+- [x] PUT /api/providers/[id] 返回 `{ provider: {...} }` 格式
+- [x] `npm run build` 构建通过

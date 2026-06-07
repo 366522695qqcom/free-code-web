@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   }
 
   const providers = await listProvidersWithModels();
-  return new Response(JSON.stringify(providers), {
+  return new Response(JSON.stringify({ providers }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       apiPath: apiPath || "/chat/completions",
     });
 
-    return new Response(JSON.stringify(provider), {
+    return new Response(JSON.stringify({ provider }), {
       status: 201,
       headers: { "Content-Type": "application/json" },
     });
