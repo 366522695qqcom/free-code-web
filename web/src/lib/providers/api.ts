@@ -2,16 +2,27 @@
  * Provider API utilities — test connection and fetch models from OpenAI-compatible APIs.
  */
 
+export function extractBaseUrl(baseUrl: string, apiPath?: string): string {
+  let base = baseUrl.replace(/\/+$/, "");
+  if (apiPath) {
+    const path = apiPath.startsWith("/") ? apiPath : `/${apiPath}`;
+    if (base.endsWith(path)) {
+      base = base.slice(0, -path.length);
+    }
+  }
+  return base;
+}
+
 export async function testProviderConnection(provider: {
   baseUrl: string;
   apiKey: string;
   apiPath?: string;
 }): Promise<{ success: boolean; message: string }> {
-  const baseUrl = provider.baseUrl.replace(/\/+$/, "");
+  const base = extractBaseUrl(provider.baseUrl, provider.apiPath);
 
   // Try GET /models first
   try {
-    const response = await fetch(`${baseUrl}/models`, {
+    const response = await fetch(`${base}/models`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${provider.apiKey}`,
@@ -25,7 +36,7 @@ export async function testProviderConnection(provider: {
 
     // If /models fails, try a minimal chat completion request
     const chatPath = provider.apiPath || "/chat/completions";
-    const chatResponse = await fetch(`${baseUrl}${chatPath}`, {
+    const chatResponse = await fetch(`${base}${chatPath}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -58,15 +69,16 @@ export async function testProviderConnection(provider: {
 export async function fetchProviderModels(provider: {
   baseUrl: string;
   apiKey: string;
+  apiPath?: string;
 }): Promise<{
   success: boolean;
   models: Array<{ id: string; owned_by?: string }>;
   error?: string;
 }> {
-  const baseUrl = provider.baseUrl.replace(/\/+$/, "");
+  const base = extractBaseUrl(provider.baseUrl, provider.apiPath);
 
   try {
-    const response = await fetch(`${baseUrl}/models`, {
+    const response = await fetch(`${base}/models`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${provider.apiKey}`,
