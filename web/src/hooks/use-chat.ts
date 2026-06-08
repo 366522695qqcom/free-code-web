@@ -81,7 +81,7 @@ interface UseChatReturn {
   messages: EnhancedMessage[];
   isStreaming: boolean;
   error: string | null;
-  sendMessage: (content: string, model?: string) => Promise<void>;
+  sendMessage: (content: string, model?: string, customProvider?: { baseUrl: string; apiKey: string; apiPath: string } | null) => Promise<void>;
   stopStreaming: () => void;
   clearMessages: () => void;
   setMessages: (messages: EnhancedMessage[]) => void;
@@ -291,7 +291,7 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
   }, [autoCompactEnabled, currentModel, setMessages, resetUsage]);
 
   const sendMessage = useCallback(
-    async (content: string, model?: string) => {
+    async (content: string, model?: string, customProvider?: { baseUrl: string; apiKey: string; apiPath: string } | null) => {
       if (!sessionId || !content.trim()) return;
 
       setError(null);
@@ -351,6 +351,9 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
             model,
             sessionId,
             permissionMode,
+            customBaseUrl: customProvider?.baseUrl,
+            customApiKey: customProvider?.apiKey,
+            customApiPath: customProvider?.apiPath,
           }),
           signal: abortController.signal,
         });

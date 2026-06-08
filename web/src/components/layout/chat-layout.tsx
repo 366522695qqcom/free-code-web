@@ -49,6 +49,8 @@ export function ChatLayout() {
   const [permissionMode, setPermissionMode] = useState<PermissionMode>("default");
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
   const [customModels, setCustomModels] = useState<ModelOption[]>([]);
+  const [modelProviderMap, setModelProviderMap] = useState<Record<string, { providerId: string; baseUrl: string; apiKey: string; apiPath: string }>>({});
+  const [customProviderInfo, setCustomProviderInfo] = useState<{ providerId: string; baseUrl: string; apiKey: string; apiPath: string } | null>(null);
   const [providerDialogOpen, setProviderDialogOpen] = useState(false);
   const router = useRouter();
 
@@ -59,6 +61,7 @@ export function ChatLayout() {
       .then((data) => {
         if (data.providers) {
           const models: ModelOption[] = [];
+          const providerMap: Record<string, { providerId: string; baseUrl: string; apiKey: string; apiPath: string }> = {};
           for (const provider of data.providers) {
             for (const model of provider.models || []) {
               // capabilities 可能是对象 {vision, reasoning, toolUse} 或字符串数组
@@ -76,9 +79,16 @@ export function ChatLayout() {
                 provider: provider.name,
                 capabilities: caps,
               });
+              providerMap[model.modelId] = {
+                providerId: provider.id,
+                baseUrl: provider.baseUrl,
+                apiKey: provider.apiKey,
+                apiPath: provider.apiPath,
+              };
             }
           }
           setCustomModels(models);
+          setModelProviderMap(providerMap);
         }
       })
       .catch(() => {
@@ -203,15 +213,15 @@ export function ChatLayout() {
         try {
           await createSession("New Chat");
           await new Promise((r) => setTimeout(r, 50));
-          await sendMessage(content, currentModel);
+          await sendMessage(content, currentModel, customProviderInfo);
         } catch {
           // Error handled in hook
         }
         return;
       }
-      await sendMessage(content, currentModel);
+      await sendMessage(content, currentModel, customProviderInfo);
     },
-    [currentSessionId, createSession, sendMessage, currentModel]
+    [currentSessionId, createSession, sendMessage, currentModel, customProviderInfo]
   );
 
   const handleSlashCommand = useCallback(
@@ -359,7 +369,8 @@ export function ChatLayout() {
           if (currentSessionId && messages.length > 0) {
             sendMessage(
               "Review the code changes made in this session. Analyze each file modification for potential bugs, style issues, and improvements.",
-              currentModel
+              currentModel,
+              customProviderInfo
             );
           } else {
             setSystemMessage("No conversation to review.");
@@ -397,7 +408,7 @@ export function ChatLayout() {
       // Auto-dismiss system message after 5 seconds
       setTimeout(() => setSystemMessage(null), 5000);
     },
-    [clearMessages, currentModel, currentSessionId, messages, sendMessage, usage, allModels, contextPercentage, permissionMode, setMessages, resetUsage]
+    [clearMessages, currentModel, currentSessionId, messages, sendMessage, usage, allModels, contextPercentage, permissionMode, setMessages, resetUsage, customProviderInfo]
   );
 
   const handleLogout = useCallback(async () => {
@@ -511,6 +522,11 @@ export function ChatLayout() {
             models={allModels}
             onModelSelect={(modelId) => {
               setCurrentModel(modelId);
+              if (modelProviderMap[modelId]) {
+                setCustomProviderInfo(modelProviderMap[modelId]);
+              } else {
+                setCustomProviderInfo(null);
+              }
               const modelName = allModels.find((m) => m.id === modelId)?.name || modelId;
               setSystemMessage(`Model switched to ${modelName}`);
               setTimeout(() => setSystemMessage(null), 3000);

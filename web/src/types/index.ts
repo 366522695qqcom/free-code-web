@@ -97,6 +97,9 @@ export interface ChatRequest {
   model?: string;
   sessionId?: string;
   permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
+  customBaseUrl?: string;
+  customApiKey?: string;
+  customApiPath?: string;
 }
 
 /**

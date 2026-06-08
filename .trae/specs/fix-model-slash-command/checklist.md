@@ -1,9 +1,0 @@
-- [x] `/model` 命令 `hasSubmenu` 为 `true`
-- [x] 选择 `/model` 后显示模型列表子菜单
-- [x] 上下键可在模型列表中导航
-- [x] Enter/Tab 可选择模型并切换
-- [x] Esc 可返回斜杠命令列表
-- [x] 自定义模型正确显示在模型列表中
-- [x] capabilities 对象格式被正确转换为字符串数组
-- [x] `npm run build` 构建通过
-- [x] `npm run lint` 无新增错误

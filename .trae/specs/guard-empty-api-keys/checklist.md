@@ -1,0 +1,6 @@
+- [x] streamAnthropic：apiKey 为空时返回友好错误而非 SDK 崩溃
+- [x] createQueryEngine：apiKey 为空时返回友好错误而非 SDK 崩溃
+- [x] agent-stream.ts runAnthropicLoop：已有 guard（fix-custom-model-chat-auth 已添加）
+- [x] llm/openai.ts streamOpenAI：已有 guard（第 64-71 行）
+- [x] npm run build 通过
+- [x] npm run lint 通过

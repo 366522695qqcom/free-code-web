@@ -33,7 +33,6 @@ export async function GET(
   const result = await fetchProviderModels({
     baseUrl: provider.baseUrl,
     apiKey: provider.apiKey,
-    apiPath: provider.apiPath,
   });
 
   return new Response(JSON.stringify(result), {

@@ -28,6 +28,9 @@ export async function POST(request: NextRequest) {
       model: body.model,
       sessionId: body.sessionId,
       permissionMode: body.permissionMode,
+      customBaseUrl: body.customBaseUrl,
+      customApiKey: body.customApiKey,
+      customApiPath: body.customApiPath,
     });
 
     return createSSEResponse(stream);

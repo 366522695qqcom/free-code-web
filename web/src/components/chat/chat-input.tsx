@@ -11,6 +11,7 @@ import { Shield, ShieldCheck, ShieldAlert, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculateTokenWarningState } from "@/lib/context";
 import type { Usage } from "@/types";
+import type { ModelOption } from "@/types";
 
 /** 四档权限模式 — 参考 Claude Code 权限体系 */
 export type PermissionMode =
@@ -73,8 +74,6 @@ interface FileEntry {
   path: string;
   type: "file" | "dir";
 }
-
-import type { ModelOption } from "@/types";
 
 interface ChatInputProps {
   onSend: (content: string) => void;
@@ -269,7 +268,6 @@ export function ChatInput({
   const handleSelectCommand = useCallback(
     (cmd: { name: string; hasSubmenu: boolean }) => {
       if (cmd.name === "/permissions") {
-        // Switch to permission submenu
         setShowPermissionSubmenu(true);
         setShowCommandMenu(false);
         setShowModelSubmenu(false);
@@ -277,7 +275,6 @@ export function ChatInput({
         return;
       }
       if (cmd.name === "/model") {
-        // Switch to model submenu
         setShowModelSubmenu(true);
         setShowCommandMenu(false);
         setShowPermissionSubmenu(false);
@@ -466,7 +463,6 @@ export function ChatInput({
         }
         if (e.key === "Escape") {
           e.preventDefault();
-          // Return to command list
           setShowModelSubmenu(false);
           setShowCommandMenu(true);
           setValue("");

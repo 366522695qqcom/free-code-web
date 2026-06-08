@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
+  ArrowLeft,
   Server,
   Plus,
   Trash2,
@@ -13,6 +15,11 @@ import {
   X,
   Loader2,
   Cpu,
+  Palette,
+  MessageSquare,
+  Box,
+  Shield,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +38,7 @@ interface CustomModel {
   modelId: string;
   displayName?: string;
   type: "chat" | "embedding" | "image";
-  capabilities: string[] | Record<string, boolean>;
+  capabilities: string[];
   contextWindow?: number;
   maxOutputTokens?: number;
 }
@@ -54,27 +61,18 @@ interface FetchedModel {
 
 type ConnectionStatus = "idle" | "testing" | "connected" | "error";
 
-/** 将 capabilities 统一为字符串数组用于渲染 */
-function getCapabilityList(capabilities: string[] | Record<string, boolean>): string[] {
-  if (Array.isArray(capabilities)) return capabilities;
-  if (capabilities && typeof capabilities === "object") {
-    return Object.entries(capabilities)
-      .filter(([, v]) => v === true)
-      .map(([k]) => k);
-  }
-  return [];
-}
-
-function formatCapabilityLabel(cap: string): string {
-  switch (cap) {
-    case "vision": return "视觉";
-    case "reasoning": return "推理";
-    case "toolUse": return "工具使用";
-    default: return cap;
-  }
-}
+const SIDEBAR_ITEMS = [
+  { icon: Server, label: "模型提供商", href: "/settings/providers", active: true },
+  { icon: Cpu, label: "对话设置", href: "/settings", active: false },
+  { icon: Palette, label: "外观", href: "/settings", active: false },
+  { icon: Box, label: "沙箱", href: "/settings", active: false },
+  { icon: Shield, label: "权限", href: "/settings", active: false },
+  { icon: MessageSquare, label: "会话", href: "/settings", active: false },
+  { icon: Info, label: "关于", href: "/settings", active: false },
+];
 
 export default function ProvidersPage() {
+  const router = useRouter();
   const [providers, setProviders] = useState<CustomProvider[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
@@ -222,6 +220,7 @@ export default function ProvidersPage() {
   };
 
   const handleTestConnection = async () => {
+    // If adding new provider, need to save first or test with form data
     const providerId = selectedProviderId;
     if (!providerId) return;
 
@@ -364,7 +363,7 @@ export default function ProvidersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="font-mono text-sm text-terminal-green">$</span>
           <span className="font-mono text-sm">Loading...</span>
@@ -375,408 +374,444 @@ export default function ProvidersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-sm text-terminal-green">$</span>
-        <h2 className="text-lg font-medium">模型提供商</h2>
+    <div className="flex min-h-screen bg-background">
+      {/* Left Sidebar */}
+      <div className="flex w-52 shrink-0 flex-col border-r border-border bg-background">
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => router.push("/")}
+            title="返回聊天"
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
+          <h1 className="text-sm font-medium">设置</h1>
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex-1 space-y-0.5 p-2">
+          {SIDEBAR_ITEMS.map((item) => (
+            <button
+              key={item.label}
+              onClick={() => router.push(item.href)}
+              className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
+                item.active
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <item.icon className="size-4" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* Provider List Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Server className="size-4 text-terminal-cyan" />
-              <CardTitle>已添加服务商</CardTitle>
-            </div>
-            <Button size="sm" variant="outline" onClick={handleAddProvider}>
-              <Plus className="mr-1 size-3.5" />
-              添加提供商
-            </Button>
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-3xl space-y-6 p-6">
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-sm text-terminal-green">$</span>
+            <h2 className="text-lg font-medium">模型提供商</h2>
           </div>
-          <CardDescription>
-            管理自定义模型提供商，连接 OpenAI 兼容 API。
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {providers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-              <Server className="mb-2 size-8 opacity-30" />
-              <p className="text-sm">暂无提供商</p>
-              <p className="text-xs text-muted-foreground/60">
-                点击上方按钮添加第一个模型提供商
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {providers.map((provider) => (
-                <div
-                  key={provider.id}
-                  className={`flex items-center justify-between rounded-lg border px-4 py-3 transition-colors cursor-pointer ${
-                    selectedProviderId === provider.id && !isAdding
-                      ? "border-terminal-cyan/30 bg-terminal-cyan/5"
-                      : "border-border hover:bg-muted/50"
-                  }`}
-                  onClick={() => {
-                    if (!isAdding) {
-                      setSelectedProviderId(provider.id);
-                      setIsEditing(false);
-                      resetForm();
-                      setConnectionStatus("idle");
-                      setFetchedModels([]);
-                      setFetchError(null);
-                    }
-                  }}
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{provider.name}</span>
-                      <span className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan">
-                        {provider.models.length} 模型
-                      </span>
-                    </div>
-                    <p className="truncate text-xs text-muted-foreground font-mono">
-                      {provider.baseUrl}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0 ml-3">
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditProvider(provider);
-                      }}
-                      title="编辑"
-                    >
-                      <Edit className="size-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteProvider(provider.id);
-                      }}
-                      title="删除"
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  </div>
+
+          {/* Provider List Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Server className="size-4 text-terminal-cyan" />
+                  <CardTitle>已添加服务商</CardTitle>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Provider Configuration Section */}
-      {showConfigPanel && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Server className="size-4 text-terminal-cyan" />
-              <CardTitle>
-                {isAdding ? "添加提供商" : isEditing ? "编辑提供商" : selectedProvider?.name || "提供商配置"}
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Name */}
-              {(isAdding || isEditing) && (
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">名称</Label>
-                  <Input
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    placeholder="My Provider"
-                  />
-                </div>
-              )}
-
-              {/* BaseURL */}
-              <div className="grid gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">BaseURL</Label>
-                <Input
-                  value={isAdding || isEditing ? formBaseUrl : (selectedProvider?.baseUrl || "")}
-                  onChange={(e) => setFormBaseUrl(e.target.value)}
-                  placeholder="https://api.openai.com/v1"
-                  readOnly={!isAdding && !isEditing}
-                  className="font-mono text-sm"
-                />
-              </div>
-
-              {/* API Key */}
-              <div className="grid gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">API Key</Label>
-                <div className="relative">
-                  <Input
-                    type={showApiKey ? "text" : "password"}
-                    value={isAdding || isEditing ? formApiKey : "••••••••"}
-                    onChange={(e) => setFormApiKey(e.target.value)}
-                    placeholder={isEditing ? "留空则保持不变" : "sk-..."}
-                    readOnly={!isAdding && !isEditing}
-                    className="pr-9 font-mono text-sm"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    className="absolute right-1 top-1/2 -translate-y-1/2"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    title={showApiKey ? "隐藏" : "显示"}
-                  >
-                    {showApiKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                  </Button>
-                </div>
-              </div>
-
-              {/* API Path */}
-              <div className="grid gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">API路径</Label>
-                <Input
-                  value={isAdding || isEditing ? formApiPath : (selectedProvider?.apiPath || "")}
-                  onChange={(e) => setFormApiPath(e.target.value)}
-                  placeholder="/chat/completions"
-                  readOnly={!isAdding && !isEditing}
-                  className="font-mono text-sm"
-                />
-              </div>
-
-              {/* Connection status indicator */}
-              {connectionStatus !== "idle" && (
-                <div
-                  className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs ${
-                    connectionStatus === "testing"
-                      ? "border-terminal-amber/30 bg-terminal-amber/5 text-terminal-amber"
-                      : connectionStatus === "connected"
-                        ? "border-terminal-green/30 bg-terminal-green/5 text-terminal-green"
-                        : "border-terminal-red/30 bg-terminal-red/5 text-terminal-red"
-                  }`}
-                >
-                  {connectionStatus === "testing" && <Loader2 className="size-3.5 animate-spin" />}
-                  {connectionStatus === "connected" && <Check className="size-3.5" />}
-                  {connectionStatus === "error" && <X className="size-3.5" />}
-                  {connectionStatus === "testing" && "正在测试连接..."}
-                  {connectionStatus === "connected" && "连接成功"}
-                  {connectionStatus === "error" && (connectionError || "连接失败")}
-                </div>
-              )}
-
-              {/* Action buttons */}
-              <div className="flex items-center gap-2">
-                {(isAdding || isEditing) && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancelForm}
-                    >
-                      取消
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleSaveProvider}
-                      disabled={
-                        isAdding
-                          ? !formName.trim() || !formBaseUrl.trim() || !formApiKey.trim()
-                          : !formName.trim() || !formBaseUrl.trim()
-                      }
-                    >
-                      保存
-                    </Button>
-                  </>
-                )}
-                {!(isAdding || isEditing) && selectedProviderId && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleTestConnection}
-                      disabled={connectionStatus === "testing"}
-                    >
-                      {connectionStatus === "testing" ? (
-                        <Loader2 className="mr-1 size-3.5 animate-spin" />
-                      ) : null}
-                      测试连接
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleFetchModels}
-                      disabled={fetchingModels}
-                    >
-                      {fetchingModels ? (
-                        <Loader2 className="mr-1 size-3.5 animate-spin" />
-                      ) : (
-                        <RefreshCw className="mr-1 size-3.5" />
-                      )}
-                      获取模型
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleNewModel}
-                    >
-                      <Plus className="mr-1 size-3.5" />
-                      新建模型
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Fetched Models Section */}
-      {fetchedModels.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <RefreshCw className="size-4 text-terminal-cyan" />
-              <CardTitle>可用模型</CardTitle>
-            </div>
-            <CardDescription>
-              从提供商 API 获取的模型列表，勾选后点击添加。
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              {fetchedModels.map((model) => {
-                const alreadyAdded = selectedProvider?.models.some(
-                  (m) => m.modelId === model.id
-                );
-                return (
-                  <div
-                    key={model.id}
-                    className={`flex items-center gap-3 rounded-md border px-3 py-2 transition-colors ${
-                      alreadyAdded
-                        ? "border-border/50 bg-muted/30 opacity-60"
-                        : selectedFetchedModels.has(model.id)
-                          ? "border-terminal-cyan/30 bg-terminal-cyan/5"
-                          : "border-border hover:bg-muted/50"
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      disabled={alreadyAdded}
-                      onClick={() => handleToggleFetchedModel(model.id)}
-                      className={`flex size-4 items-center justify-center rounded border transition-colors ${
-                        alreadyAdded
-                          ? "border-terminal-green bg-terminal-green text-background"
-                          : selectedFetchedModels.has(model.id)
-                            ? "border-terminal-cyan bg-terminal-cyan text-background"
-                            : "border-muted-foreground/40 hover:border-muted-foreground"
-                      }`}
-                    >
-                      {(selectedFetchedModels.has(model.id) || alreadyAdded) && (
-                        <Check className="size-3" />
-                      )}
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <span className="font-mono text-sm">{model.id}</span>
-                      {model.owned_by && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          ({model.owned_by})
-                        </span>
-                      )}
-                    </div>
-                    {alreadyAdded && (
-                      <span className="text-[0.6rem] text-terminal-green">已添加</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {selectedFetchedModels.size > 0 && (
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  已选择 {selectedFetchedModels.size} 个模型
-                </span>
-                <Button size="sm" onClick={handleAddSelectedModels}>
+                <Button size="sm" variant="outline" onClick={handleAddProvider}>
                   <Plus className="mr-1 size-3.5" />
-                  添加选中的模型
+                  添加提供商
                 </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Fetch error */}
-      {fetchError && (
-        <div className="rounded-lg border border-terminal-red/30 bg-terminal-red/5 px-4 py-3 text-sm text-terminal-red">
-          {fetchError}
-        </div>
-      )}
-
-      {/* Existing Models for selected provider */}
-      {selectedProvider && selectedProvider.models.length > 0 && !isAdding && !isEditing && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Cpu className="size-4 text-terminal-cyan" />
-              <CardTitle>已添加模型</CardTitle>
-            </div>
-            <CardDescription>
-              {selectedProvider.name} 的模型列表。
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              {selectedProvider.models.map((model) => {
-                const caps = getCapabilityList(model.capabilities);
-                return (
-                  <div
-                    key={model.id}
-                    className="flex items-center justify-between rounded-md border border-border px-3 py-2"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm">{model.modelId}</span>
-                        {model.displayName && (
-                          <span className="text-xs text-muted-foreground">
-                            ({model.displayName})
-                          </span>
-                        )}
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[0.6rem] text-muted-foreground">
-                          {model.type === "chat" ? "聊天" : model.type === "embedding" ? "嵌入" : "图像"}
-                        </span>
-                        {caps.map((cap) => (
-                          <span
-                            key={cap}
-                            className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan"
-                          >
-                            {formatCapabilityLabel(cap)}
-                          </span>
-                        ))}
-                      </div>
-                      {(model.contextWindow || model.maxOutputTokens) && (
-                        <div className="mt-0.5 flex gap-3 text-[0.65rem] text-muted-foreground">
-                          {model.contextWindow && <span>上下文: {model.contextWindow.toLocaleString()}</span>}
-                          {model.maxOutputTokens && <span>最大输出: {model.maxOutputTokens.toLocaleString()}</span>}
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => handleDeleteModel(model.id)}
-                      title="删除模型"
-                      className="shrink-0 text-muted-foreground hover:text-destructive"
+              <CardDescription>
+                管理自定义模型提供商，连接 OpenAI 兼容 API。
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {providers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                  <Server className="mb-2 size-8 opacity-30" />
+                  <p className="text-sm">暂无提供商</p>
+                  <p className="text-xs text-muted-foreground/60">
+                    点击上方按钮添加第一个模型提供商
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {providers.map((provider) => (
+                    <div
+                      key={provider.id}
+                      className={`flex items-center justify-between rounded-lg border px-4 py-3 transition-colors cursor-pointer ${
+                        selectedProviderId === provider.id && !isAdding
+                          ? "border-terminal-cyan/30 bg-terminal-cyan/5"
+                          : "border-border hover:bg-muted/50"
+                      }`}
+                      onClick={() => {
+                        if (!isAdding) {
+                          setSelectedProviderId(provider.id);
+                          setIsEditing(false);
+                          resetForm();
+                          setConnectionStatus("idle");
+                          setFetchedModels([]);
+                          setFetchError(null);
+                        }
+                      }}
                     >
-                      <Trash2 className="size-3.5" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{provider.name}</span>
+                          <span className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan">
+                            {provider.models.length} 模型
+                          </span>
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground font-mono">
+                          {provider.baseUrl}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0 ml-3">
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProvider(provider);
+                          }}
+                          title="编辑"
+                        >
+                          <Edit className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProvider(provider.id);
+                          }}
+                          title="删除"
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Provider Configuration Section */}
+          {showConfigPanel && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Server className="size-4 text-terminal-cyan" />
+                  <CardTitle>
+                    {isAdding ? "添加提供商" : isEditing ? "编辑提供商" : selectedProvider?.name || "提供商配置"}
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Name */}
+                  {(isAdding || isEditing) && (
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs font-medium text-muted-foreground">名称</Label>
+                      <Input
+                        value={formName}
+                        onChange={(e) => setFormName(e.target.value)}
+                        placeholder="My Provider"
+                      />
+                    </div>
+                  )}
+
+                  {/* BaseURL */}
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">BaseURL</Label>
+                    <Input
+                      value={isAdding || isEditing ? formBaseUrl : (selectedProvider?.baseUrl || "")}
+                      onChange={(e) => setFormBaseUrl(e.target.value)}
+                      placeholder="https://api.openai.com/v1"
+                      readOnly={!isAdding && !isEditing}
+                      className="font-mono text-sm"
+                    />
+                  </div>
+
+                  {/* API Key */}
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">API Key</Label>
+                    <div className="relative">
+                      <Input
+                        type={showApiKey ? "text" : "password"}
+                        value={isAdding || isEditing ? formApiKey : "••••••••"}
+                        onChange={(e) => setFormApiKey(e.target.value)}
+                        placeholder={isEditing ? "留空则保持不变" : "sk-..."}
+                        readOnly={!isAdding && !isEditing}
+                        className="pr-9 font-mono text-sm"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="absolute right-1 top-1/2 -translate-y-1/2"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        title={showApiKey ? "隐藏" : "显示"}
+                      >
+                        {showApiKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* API Path */}
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">API路径</Label>
+                    <Input
+                      value={isAdding || isEditing ? formApiPath : (selectedProvider?.apiPath || "")}
+                      onChange={(e) => setFormApiPath(e.target.value)}
+                      placeholder="/chat/completions"
+                      readOnly={!isAdding && !isEditing}
+                      className="font-mono text-sm"
+                    />
+                  </div>
+
+                  {/* Connection status indicator */}
+                  {connectionStatus !== "idle" && (
+                    <div
+                      className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs ${
+                        connectionStatus === "testing"
+                          ? "border-terminal-amber/30 bg-terminal-amber/5 text-terminal-amber"
+                          : connectionStatus === "connected"
+                            ? "border-terminal-green/30 bg-terminal-green/5 text-terminal-green"
+                            : "border-terminal-red/30 bg-terminal-red/5 text-terminal-red"
+                      }`}
+                    >
+                      {connectionStatus === "testing" && <Loader2 className="size-3.5 animate-spin" />}
+                      {connectionStatus === "connected" && <Check className="size-3.5" />}
+                      {connectionStatus === "error" && <X className="size-3.5" />}
+                      {connectionStatus === "testing" && "正在测试连接..."}
+                      {connectionStatus === "connected" && "连接成功"}
+                      {connectionStatus === "error" && (connectionError || "连接失败")}
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2">
+                    {(isAdding || isEditing) && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCancelForm}
+                        >
+                          取消
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveProvider}
+                          disabled={
+                            isAdding
+                              ? !formName.trim() || !formBaseUrl.trim() || !formApiKey.trim()
+                              : !formName.trim() || !formBaseUrl.trim()
+                          }
+                        >
+                          保存
+                        </Button>
+                      </>
+                    )}
+                    {!(isAdding || isEditing) && selectedProviderId && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleTestConnection}
+                          disabled={connectionStatus === "testing"}
+                        >
+                          {connectionStatus === "testing" ? (
+                            <Loader2 className="mr-1 size-3.5 animate-spin" />
+                          ) : null}
+                          测试连接
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleFetchModels}
+                          disabled={fetchingModels}
+                        >
+                          {fetchingModels ? (
+                            <Loader2 className="mr-1 size-3.5 animate-spin" />
+                          ) : (
+                            <RefreshCw className="mr-1 size-3.5" />
+                          )}
+                          获取模型
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleNewModel}
+                        >
+                          <Plus className="mr-1 size-3.5" />
+                          新建模型
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Fetched Models Section */}
+          {fetchedModels.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="size-4 text-terminal-cyan" />
+                  <CardTitle>可用模型</CardTitle>
+                </div>
+                <CardDescription>
+                  从提供商 API 获取的模型列表，勾选后点击添加。
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  {fetchedModels.map((model) => {
+                    const alreadyAdded = selectedProvider?.models.some(
+                      (m) => m.modelId === model.id
+                    );
+                    return (
+                      <div
+                        key={model.id}
+                        className={`flex items-center gap-3 rounded-md border px-3 py-2 transition-colors ${
+                          alreadyAdded
+                            ? "border-border/50 bg-muted/30 opacity-60"
+                            : selectedFetchedModels.has(model.id)
+                              ? "border-terminal-cyan/30 bg-terminal-cyan/5"
+                              : "border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          disabled={alreadyAdded}
+                          onClick={() => handleToggleFetchedModel(model.id)}
+                          className={`flex size-4 items-center justify-center rounded border transition-colors ${
+                            alreadyAdded
+                              ? "border-terminal-green bg-terminal-green text-background"
+                              : selectedFetchedModels.has(model.id)
+                                ? "border-terminal-cyan bg-terminal-cyan text-background"
+                                : "border-muted-foreground/40 hover:border-muted-foreground"
+                          }`}
+                        >
+                          {(selectedFetchedModels.has(model.id) || alreadyAdded) && (
+                            <Check className="size-3" />
+                          )}
+                        </button>
+                        <div className="min-w-0 flex-1">
+                          <span className="font-mono text-sm">{model.id}</span>
+                          {model.owned_by && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              ({model.owned_by})
+                            </span>
+                          )}
+                        </div>
+                        {alreadyAdded && (
+                          <span className="text-[0.6rem] text-terminal-green">已添加</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {selectedFetchedModels.size > 0 && (
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      已选择 {selectedFetchedModels.size} 个模型
+                    </span>
+                    <Button size="sm" onClick={handleAddSelectedModels}>
+                      <Plus className="mr-1 size-3.5" />
+                      添加选中的模型
                     </Button>
                   </div>
-                );
-              })}
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Fetch error */}
+          {fetchError && (
+            <div className="rounded-lg border border-terminal-red/30 bg-terminal-red/5 px-4 py-3 text-sm text-terminal-red">
+              {fetchError}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+
+          {/* Existing Models for selected provider */}
+          {selectedProvider && selectedProvider.models.length > 0 && !isAdding && !isEditing && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Cpu className="size-4 text-terminal-cyan" />
+                  <CardTitle>已添加模型</CardTitle>
+                </div>
+                <CardDescription>
+                  {selectedProvider.name} 的模型列表。
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  {selectedProvider.models.map((model) => (
+                    <div
+                      key={model.id}
+                      className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm">{model.modelId}</span>
+                          {model.displayName && (
+                            <span className="text-xs text-muted-foreground">
+                              ({model.displayName})
+                            </span>
+                          )}
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-[0.6rem] text-muted-foreground">
+                            {model.type === "chat" ? "聊天" : model.type === "embedding" ? "嵌入" : "图像"}
+                          </span>
+                          {model.capabilities.map((cap) => (
+                            <span
+                              key={cap}
+                              className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan"
+                            >
+                              {cap === "vision" ? "视觉" : cap === "reasoning" ? "推理" : "工具使用"}
+                            </span>
+                          ))}
+                        </div>
+                        {(model.contextWindow || model.maxOutputTokens) && (
+                          <div className="mt-0.5 flex gap-3 text-[0.65rem] text-muted-foreground">
+                            {model.contextWindow && <span>上下文: {model.contextWindow.toLocaleString()}</span>}
+                            {model.maxOutputTokens && <span>最大输出: {model.maxOutputTokens.toLocaleString()}</span>}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => handleDeleteModel(model.id)}
+                        title="删除模型"
+                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
 
       {/* Model Dialog */}
       <ModelDialog

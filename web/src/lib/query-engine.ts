@@ -57,10 +57,19 @@ function messageToAnthropic(message: Message): Anthropic.MessageParam {
 export function createQueryEngine(options: QueryEngineOptions = {}) {
   const model = options.model || DEFAULT_MODEL;
   const maxTurns = options.maxTurns || DEFAULT_MAX_TURNS;
-  const apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY || "";
 
   return {
     async *run(messages: Message[]): AsyncGenerator<QueryEngineEvent> {
+      const apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY || "";
+
+      if (!apiKey) {
+        yield {
+          event: "error",
+          data: JSON.stringify({ error: "ANTHROPIC_API_KEY is not configured. Please set it in your environment variables or use a custom model provider." }),
+        };
+        return;
+      }
+
       const client = new Anthropic({ apiKey });
 
       const anthropicMessages: Anthropic.MessageParam[] = messages.map(

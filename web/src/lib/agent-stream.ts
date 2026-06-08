@@ -33,6 +33,9 @@ interface AgenticStreamOptions {
   maxTokens?: number;
   sessionId?: string;
   permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
+  customBaseUrl?: string;
+  customApiKey?: string;
+  customApiPath?: string;
 }
 
 type EmitFn = (event: string, data: unknown) => void;
@@ -98,6 +101,12 @@ async function runAnthropicLoop(
   emit: EmitFn
 ): Promise<void> {
   const apiKey = process.env.ANTHROPIC_API_KEY || "";
+
+  if (!apiKey) {
+    emit("error", { error: "ANTHROPIC_API_KEY is not configured. Please set it in your environment variables or use a custom model provider." });
+    return;
+  }
+
   const model = resolveModel(options.model, "anthropic");
   const maxTokens = options.maxTokens || DEFAULT_MAX_TOKENS;
   const client = new Anthropic({ apiKey });
@@ -333,11 +342,11 @@ async function runOpenAILoop(
   options: AgenticStreamOptions,
   emit: EmitFn
 ): Promise<void> {
-  const apiKey = process.env.OPENAI_API_KEY || "";
+  const apiKey = options.customApiKey || process.env.OPENAI_API_KEY || "";
   const model = resolveModel(options.model, "openai");
 
   if (!apiKey) {
-    emit("error", { error: "OPENAI_API_KEY is not configured" });
+    emit("error", { error: "API key is not configured. Please set OPENAI_API_KEY or provide a custom API key." });
     return;
   }
 
@@ -363,8 +372,10 @@ async function runOpenAILoop(
   let totalOutputTokens = 0;
 
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+    const baseUrl = options.customBaseUrl || "https://api.openai.com/v1";
+    const apiPath = options.customApiPath || "/chat/completions";
     const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
+      `${baseUrl}${apiPath}`,
       {
         method: "POST",
         headers: {
@@ -743,7 +754,6 @@ export function createAgenticStream(
 ): ReadableStream<Uint8Array> {
   initializeTools();
 
-  const provider = getActiveProvider();
   const encoder = new TextEncoder();
   const tools = getToolDefinitions();
 
@@ -756,14 +766,20 @@ export function createAgenticStream(
       };
 
       try {
-        if (provider === "anthropic") {
-          await runAnthropicLoop(messages, tools, options, emit);
-        } else if (provider === "openai") {
+        // Custom provider: always use OpenAI-compatible streaming
+        if (options.customBaseUrl) {
           await runOpenAILoop(messages, tools, options, emit);
         } else {
-          emit("error", {
-            error: `Provider "${provider}" is not yet supported for agentic mode. Supported: anthropic, openai.`,
-          });
+          const provider = getActiveProvider();
+          if (provider === "anthropic") {
+            await runAnthropicLoop(messages, tools, options, emit);
+          } else if (provider === "openai") {
+            await runOpenAILoop(messages, tools, options, emit);
+          } else {
+            emit("error", {
+              error: `Provider "${provider}" is not yet supported for agentic mode. Supported: anthropic, openai.`,
+            });
+          }
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";

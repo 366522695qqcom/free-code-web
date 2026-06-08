@@ -73,6 +73,16 @@ export async function* streamAnthropic(
   options: AnthropicStreamOptions = {}
 ): AsyncGenerator<StreamEvent> {
   const apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY || "";
+
+  if (!apiKey) {
+    yield {
+      type: "error",
+      data: { error: "ANTHROPIC_API_KEY is not configured. Please set it in your environment variables or use a custom model provider." },
+    };
+    yield { type: "done", data: null };
+    return;
+  }
+
   const model = resolveModel(options.model, "anthropic");
   const maxTokens = options.maxTokens || DEFAULT_MAX_TOKENS;
   const client = new Anthropic({ apiKey });

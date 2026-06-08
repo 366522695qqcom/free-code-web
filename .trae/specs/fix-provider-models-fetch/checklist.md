@@ -1,9 +1,0 @@
-- [x] `extractBaseUrl` 工具函数的单元测试全部通过
-- [x] `fetchProviderModels` 接受可选 apiPath 参数，正确拼接 `/models` URL
-- [x] `testProviderConnection` 使用 `extractBaseUrl` 正确拼接 URL
-- [x] 调用方（models route、test route）正确传入 apiPath
-- [x] 使用 `https://apihub.agnes-ai.com/v1/chat/completions` 作为 baseUrl 时，获取模型请求 URL 为 `https://apihub.agnes-ai.com/v1/models`
-- [x] 使用标准 baseUrl `https://api.openai.com/v1` 时，行为不变
-- [x] `npm run build` 构建通过
-- [x] `npm run lint` 无错误（3 个预存 warning，0 error）
-- [x] `npx vitest run` 测试通过（18/18）

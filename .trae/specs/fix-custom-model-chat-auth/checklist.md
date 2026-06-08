@@ -1,0 +1,4 @@
+- [x] 选择自定义模型发送消息时，后端使用 OpenAI 兼容 API 路径（而非 Anthropic SDK）
+- [x] ANTHROPIC_API_KEY 未配置时返回友好错误而非 SDK 崩溃
+- [x] npm run build 通过
+- [x] npm run lint 通过
