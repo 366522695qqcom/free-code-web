@@ -79,7 +79,13 @@ export function UltraplanChoiceDialog({
   return (
     <Dialog
       title="Ultraplan ready"
+      color="planMode"
       onCancel={() => handleChoice('dismiss')}
+      inputGuide={() => (
+        <Text dimColor>
+          [↵] confirm   [esc] cancel
+        </Text>
+      )}
     >
       <Box flexDirection="column" gap={1}>
         <Box

@@ -17,9 +17,15 @@ export function UltraplanLaunchDialog({ onChoice }: Props): React.ReactNode {
   return (
     <Dialog
       title="Launch ultraplan?"
+      color="planMode"
       onCancel={() => onChoice('cancel')}
+      inputGuide={() => (
+        <Text dimColor>
+          [↵] confirm   [esc] cancel
+        </Text>
+      )}
     >
-      <Box flexDirection="column" gap={1}>
+      <Box flexDirection="column" gap={0}>
         <Text>
           This will start a remote Claude Code session on the web to draft an
           advanced plan using Opus. The plan typically takes 10–30 minutes.
