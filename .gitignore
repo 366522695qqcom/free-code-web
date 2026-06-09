@@ -3,3 +3,12 @@ dist/
 cli
 cli-dev
 openclaw/
+# Local SQLite database files (created by libsql client)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+# Local env files (contain secrets)
+.env.local
+.env.*.local
+
