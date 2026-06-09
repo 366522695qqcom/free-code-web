@@ -19,6 +19,11 @@ export function UltraplanLaunchDialog({ onChoice }: Props): React.ReactNode {
       title="Launch ultraplan?"
       color="planMode"
       onCancel={() => onChoice('cancel')}
+      inputGuide={() => (
+        <Text dimColor>
+          [↵] confirm   [esc] cancel
+        </Text>
+      )}
     >
       <Box flexDirection="column" gap={0}>
         <Text>

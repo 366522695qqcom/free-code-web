@@ -36,6 +36,7 @@ type Segments = {
 const MOUTH = '  ‿  ';
 const POSES: Record<ClawdPose, Segments> = {
   default: {
+<<<<<<< HEAD
     r1L: ' │',
     r1E: ' ● ● ',
     r1R: '│ ',
@@ -62,6 +63,34 @@ const POSES: Record<ClawdPose, Segments> = {
     r1R: '│o',
     r2L: ' │',
     r2R: '│ '
+=======
+    r1L: ' ▐',
+    r1E: 'o███o',
+    r1R: '▌',
+    r2L: '▝▜',
+    r2R: '▛▘'
+  },
+  'look-left': {
+    r1L: ' ▐',
+    r1E: '●███o',
+    r1R: '▌',
+    r2L: '▝▜',
+    r2R: '▛▘'
+  },
+  'look-right': {
+    r1L: ' ▐',
+    r1E: 'o███●',
+    r1R: '▌',
+    r2L: '▝▜',
+    r2R: '▛▘'
+  },
+  'arms-up': {
+    r1L: '▗▟',
+    r1E: 'o███o',
+    r1R: '▙▖',
+    r2L: ' ▜',
+    r2R: '▛ '
+>>>>>>> 90a5d27 (feat: redesign CLI welcome screen to Anthropic brand)
   }
 };
 
