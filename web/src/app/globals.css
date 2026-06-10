@@ -51,6 +51,7 @@
   --color-terminal-cyan: var(--terminal-cyan);
   --color-terminal-amber: var(--terminal-amber);
   --color-terminal-red: var(--terminal-red);
+  --color-brand: var(--brand);
 }
 
 :root {
@@ -90,6 +91,7 @@
   --terminal-cyan: oklch(0.75 0.15 200);
   --terminal-amber: oklch(0.78 0.16 85);
   --terminal-red: oklch(0.65 0.22 25);
+  --brand: oklch(0.65 0.13 50);
 }
 
 .dark {
@@ -128,6 +130,7 @@
   --terminal-cyan: oklch(0.75 0.15 200);
   --terminal-amber: oklch(0.78 0.16 85);
   --terminal-red: oklch(0.65 0.22 25);
+  --brand: oklch(0.70 0.12 45);
 }
 
 @layer base {

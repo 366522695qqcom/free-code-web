@@ -398,7 +398,7 @@ export default function ProvidersPage() {
               onClick={() => router.push(item.href)}
               className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
                 item.active
-                  ? "bg-accent text-accent-foreground"
+                  ? "bg-brand/10 text-brand"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
@@ -415,6 +415,7 @@ export default function ProvidersPage() {
           {/* Header */}
           <div className="flex items-center gap-2">
             <span className="font-mono text-sm text-terminal-green">$</span>
+            <span className="font-mono text-sm text-brand mr-1">▌</span>
             <h2 className="text-lg font-medium">模型提供商</h2>
           </div>
 
@@ -423,10 +424,10 @@ export default function ProvidersPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Server className="size-4 text-terminal-cyan" />
+                  <Server className="size-4 text-brand" />
                   <CardTitle>已添加服务商</CardTitle>
                 </div>
-                <Button size="sm" variant="outline" onClick={handleAddProvider}>
+                <Button size="sm" className="bg-brand text-white border-brand hover:bg-brand/90" onClick={handleAddProvider}>
                   <Plus className="mr-1 size-3.5" />
                   添加提供商
                 </Button>
@@ -451,7 +452,7 @@ export default function ProvidersPage() {
                       key={provider.id}
                       className={`flex items-center justify-between rounded-lg border px-4 py-3 transition-colors cursor-pointer ${
                         selectedProviderId === provider.id && !isAdding
-                          ? "border-terminal-cyan/30 bg-terminal-cyan/5"
+                          ? "border-brand/30 bg-brand/5"
                           : "border-border hover:bg-muted/50"
                       }`}
                       onClick={() => {
@@ -468,7 +469,7 @@ export default function ProvidersPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">{provider.name}</span>
-                          <span className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan">
+                          <span className="rounded bg-brand/10 px-1.5 py-0.5 text-[0.6rem] text-brand">
                             {provider.models.length} 模型
                           </span>
                         </div>
@@ -513,7 +514,7 @@ export default function ProvidersPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <Server className="size-4 text-terminal-cyan" />
+                  <Server className="size-4 text-brand" />
                   <CardTitle>
                     {isAdding ? "添加提供商" : isEditing ? "编辑提供商" : selectedProvider?.name || "提供商配置"}
                   </CardTitle>
@@ -672,7 +673,7 @@ export default function ProvidersPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <RefreshCw className="size-4 text-terminal-cyan" />
+                  <RefreshCw className="size-4 text-brand" />
                   <CardTitle>可用模型</CardTitle>
                 </div>
                 <CardDescription>
@@ -704,7 +705,7 @@ export default function ProvidersPage() {
                             alreadyAdded
                               ? "border-terminal-green bg-terminal-green text-background"
                               : selectedFetchedModels.has(model.id)
-                                ? "border-terminal-cyan bg-terminal-cyan text-background"
+                                ? "border-brand bg-brand text-white"
                                 : "border-muted-foreground/40 hover:border-muted-foreground"
                           }`}
                         >
@@ -732,7 +733,7 @@ export default function ProvidersPage() {
                     <span className="text-xs text-muted-foreground">
                       已选择 {selectedFetchedModels.size} 个模型
                     </span>
-                    <Button size="sm" onClick={handleAddSelectedModels}>
+                    <Button size="sm" className="bg-brand text-white hover:bg-brand/90" onClick={handleAddSelectedModels}>
                       <Plus className="mr-1 size-3.5" />
                       添加选中的模型
                     </Button>
@@ -754,7 +755,7 @@ export default function ProvidersPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <Cpu className="size-4 text-terminal-cyan" />
+                  <Cpu className="size-4 text-brand" />
                   <CardTitle>已添加模型</CardTitle>
                 </div>
                 <CardDescription>
