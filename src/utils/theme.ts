@@ -116,14 +116,14 @@ export type ThemeSetting = (typeof THEME_SETTINGS)[number]
 const lightTheme: Theme = {
   autoAccept: 'rgb(135,0,255)', // Electric violet
   bashBorder: 'rgb(255,0,135)', // Vibrant pink
-  claude: 'rgb(20,20,19)', // Brand dark
-  startupAccent: 'rgb(217,119,87)', // Brand orange
-  claudeShimmer: 'rgb(58,58,55)', // Dark gray for shimmer effect
+  claude: 'rgb(215,119,87)', // Claude orange
+  startupAccent: 'rgb(124,176,133)', // Free Code pastel green
+  claudeShimmer: 'rgb(245,149,117)', // Lighter claude orange for shimmer effect
   claudeBlue_FOR_SYSTEM_SPINNER: 'rgb(87,105,247)', // Medium blue for system spinner
   claudeBlueShimmer_FOR_SYSTEM_SPINNER: 'rgb(117,135,255)', // Lighter blue for system spinner shimmer
-  permission: 'rgb(106,155,204)', // Brand blue
+  permission: 'rgb(87,105,247)', // Medium blue
   permissionShimmer: 'rgb(137,155,255)', // Lighter blue for shimmer effect
-  planMode: 'rgb(217,119,87)', // Brand orange
+  planMode: 'rgb(0,102,102)', // Muted teal
   ide: 'rgb(71,130,200)', // Muted blue
   promptBorder: 'rgb(153,153,153)', // Medium gray
   promptBorderShimmer: 'rgb(183,183,183)', // Lighter gray for shimmer effect
@@ -135,9 +135,9 @@ const lightTheme: Theme = {
   suggestion: 'rgb(87,105,247)', // Medium blue
   remember: 'rgb(0,0,255)', // Blue
   background: 'rgb(0,153,153)', // Cyan
-  success: 'rgb(120,140,93)', // Brand green
-  error: 'rgb(193,69,69)', // Deep red
-  warning: 'rgb(217,162,89)', // Warm amber
+  success: 'rgb(44,122,57)', // Green
+  error: 'rgb(171,43,63)', // Red
+  warning: 'rgb(150,108,30)', // Amber
   merged: 'rgb(135,0,255)', // Electric violet (matches autoAccept)
   warningShimmer: 'rgb(200,158,80)', // Lighter amber for shimmer effect
   diffAdded: 'rgb(105,219,124)', // Light green
@@ -199,14 +199,14 @@ const lightTheme: Theme = {
 const lightAnsiTheme: Theme = {
   autoAccept: 'ansi:magenta',
   bashBorder: 'ansi:magenta',
-  claude: 'ansi:black',
-  startupAccent: 'ansi:redBright',
-  claudeShimmer: 'ansi:white',
+  claude: 'ansi:redBright',
+  startupAccent: 'ansi:greenBright',
+  claudeShimmer: 'ansi:yellowBright',
   claudeBlue_FOR_SYSTEM_SPINNER: 'ansi:blue',
   claudeBlueShimmer_FOR_SYSTEM_SPINNER: 'ansi:blueBright',
   permission: 'ansi:blue',
   permissionShimmer: 'ansi:blueBright',
-  planMode: 'ansi:redBright',
+  planMode: 'ansi:cyan',
   ide: 'ansi:blueBright',
   promptBorder: 'ansi:white',
   promptBorderShimmer: 'ansi:whiteBright',
@@ -281,14 +281,14 @@ const lightAnsiTheme: Theme = {
 const darkAnsiTheme: Theme = {
   autoAccept: 'ansi:magentaBright',
   bashBorder: 'ansi:magentaBright',
-  claude: 'ansi:white',
-  startupAccent: 'ansi:redBright',
-  claudeShimmer: 'ansi:whiteBright',
+  claude: 'ansi:redBright',
+  startupAccent: 'ansi:greenBright',
+  claudeShimmer: 'ansi:yellowBright',
   claudeBlue_FOR_SYSTEM_SPINNER: 'ansi:blueBright',
   claudeBlueShimmer_FOR_SYSTEM_SPINNER: 'ansi:blueBright',
   permission: 'ansi:blueBright',
   permissionShimmer: 'ansi:blueBright',
-  planMode: 'ansi:redBright',
+  planMode: 'ansi:cyanBright',
   ide: 'ansi:blue',
   promptBorder: 'ansi:white',
   promptBorderShimmer: 'ansi:whiteBright',
@@ -363,14 +363,14 @@ const darkAnsiTheme: Theme = {
 const lightDaltonizedTheme: Theme = {
   autoAccept: 'rgb(135,0,255)', // Electric violet
   bashBorder: 'rgb(0,102,204)', // Blue instead of pink
-  claude: 'rgb(20,20,19)', // Brand dark
-  startupAccent: 'rgb(217,119,87)', // Brand orange
-  claudeShimmer: 'rgb(58,58,55)', // Dark gray for shimmer effect
+  claude: 'rgb(255,153,51)', // Orange adjusted for deuteranopia
+  startupAccent: 'rgb(124,176,133)', // Free Code pastel green
+  claudeShimmer: 'rgb(255,183,101)', // Lighter orange for shimmer effect
   claudeBlue_FOR_SYSTEM_SPINNER: 'rgb(51,102,255)', // Bright blue for system spinner
   claudeBlueShimmer_FOR_SYSTEM_SPINNER: 'rgb(101,152,255)', // Lighter bright blue for system spinner shimmer
-  permission: 'rgb(106,155,204)', // Brand blue
+  permission: 'rgb(51,102,255)', // Bright blue
   permissionShimmer: 'rgb(101,152,255)', // Lighter bright blue for shimmer
-  planMode: 'rgb(217,119,87)', // Brand orange
+  planMode: 'rgb(51,102,102)', // Muted blue-gray (works for color-blind)
   ide: 'rgb(71,130,200)', // Muted blue
   promptBorder: 'rgb(153,153,153)', // Medium gray
   promptBorderShimmer: 'rgb(183,183,183)', // Lighter gray for shimmer
@@ -382,9 +382,9 @@ const lightDaltonizedTheme: Theme = {
   suggestion: 'rgb(51,102,255)', // Bright blue
   remember: 'rgb(51,102,255)', // Bright blue
   background: 'rgb(0,153,153)', // Cyan (color-blind friendly)
-  success: 'rgb(120,140,93)', // Brand green
-  error: 'rgb(193,69,69)', // Deep red
-  warning: 'rgb(217,162,89)', // Warm amber
+  success: 'rgb(0,102,153)', // Blue instead of green for deuteranopia
+  error: 'rgb(204,0,0)', // Pure red for better distinction
+  warning: 'rgb(255,153,0)', // Orange adjusted for deuteranopia
   merged: 'rgb(135,0,255)', // Electric violet (matches autoAccept)
   warningShimmer: 'rgb(255,183,50)', // Lighter orange for shimmer
   diffAdded: 'rgb(153,204,255)', // Light blue instead of green
@@ -445,14 +445,14 @@ const lightDaltonizedTheme: Theme = {
 const darkTheme: Theme = {
   autoAccept: 'rgb(175,135,255)', // Electric violet
   bashBorder: 'rgb(253,93,177)', // Bright pink
-  claude: 'rgb(250,249,245)', // Brand light
-  startupAccent: 'rgb(224,135,105)', // Light orange
-  claudeShimmer: 'rgb(176,174,165)', // Light gray for shimmer effect
+  claude: 'rgb(215,119,87)', // Claude orange
+  startupAccent: 'rgb(184,225,174)', // Free Code pastel green
+  claudeShimmer: 'rgb(235,159,127)', // Lighter claude orange for shimmer effect
   claudeBlue_FOR_SYSTEM_SPINNER: 'rgb(147,165,255)', // Blue for system spinner
   claudeBlueShimmer_FOR_SYSTEM_SPINNER: 'rgb(177,195,255)', // Lighter blue for system spinner shimmer
-  permission: 'rgb(122,171,224)', // Light brand blue
+  permission: 'rgb(177,185,249)', // Light blue-purple
   permissionShimmer: 'rgb(207,215,255)', // Lighter blue-purple for shimmer
-  planMode: 'rgb(224,135,105)', // Light orange
+  planMode: 'rgb(72,150,140)', // Muted sage green
   ide: 'rgb(71,130,200)', // Muted blue
   promptBorder: 'rgb(136,136,136)', // Medium gray
   promptBorderShimmer: 'rgb(166,166,166)', // Lighter gray for shimmer
@@ -464,9 +464,9 @@ const darkTheme: Theme = {
   suggestion: 'rgb(177,185,249)', // Light blue-purple
   remember: 'rgb(177,185,249)', // Light blue-purple
   background: 'rgb(0,204,204)', // Bright cyan
-  success: 'rgb(138,160,113)', // Light brand green
-  error: 'rgb(217,101,101)', // Light red
-  warning: 'rgb(232,183,116)', // Light amber
+  success: 'rgb(78,186,101)', // Bright green
+  error: 'rgb(255,107,128)', // Bright red
+  warning: 'rgb(255,193,7)', // Bright amber
   merged: 'rgb(175,135,255)', // Electric violet (matches autoAccept)
   warningShimmer: 'rgb(255,223,57)', // Lighter amber for shimmer
   diffAdded: 'rgb(34,92,43)', // Dark green
@@ -527,14 +527,14 @@ const darkTheme: Theme = {
 const darkDaltonizedTheme: Theme = {
   autoAccept: 'rgb(175,135,255)', // Electric violet
   bashBorder: 'rgb(51,153,255)', // Bright blue
-  claude: 'rgb(250,249,245)', // Brand light
-  startupAccent: 'rgb(224,135,105)', // Light orange
-  claudeShimmer: 'rgb(176,174,165)', // Light gray for shimmer effect
+  claude: 'rgb(255,153,51)', // Orange adjusted for deuteranopia
+  startupAccent: 'rgb(184,225,174)', // Free Code pastel green
+  claudeShimmer: 'rgb(255,183,101)', // Lighter orange for shimmer effect
   claudeBlue_FOR_SYSTEM_SPINNER: 'rgb(153,204,255)', // Light blue for system spinner
   claudeBlueShimmer_FOR_SYSTEM_SPINNER: 'rgb(183,224,255)', // Lighter blue for system spinner shimmer
-  permission: 'rgb(122,171,224)', // Light brand blue
+  permission: 'rgb(153,204,255)', // Light blue
   permissionShimmer: 'rgb(183,224,255)', // Lighter blue for shimmer
-  planMode: 'rgb(224,135,105)', // Light orange
+  planMode: 'rgb(102,153,153)', // Muted gray-teal (works for color-blind)
   ide: 'rgb(71,130,200)', // Muted blue
   promptBorder: 'rgb(136,136,136)', // Medium gray
   promptBorderShimmer: 'rgb(166,166,166)', // Lighter gray for shimmer
@@ -546,9 +546,9 @@ const darkDaltonizedTheme: Theme = {
   suggestion: 'rgb(153,204,255)', // Light blue
   remember: 'rgb(153,204,255)', // Light blue
   background: 'rgb(0,204,204)', // Bright cyan (color-blind friendly)
-  success: 'rgb(138,160,113)', // Light brand green
-  error: 'rgb(217,101,101)', // Light red
-  warning: 'rgb(232,183,116)', // Light amber
+  success: 'rgb(51,153,255)', // Blue instead of green
+  error: 'rgb(255,102,102)', // Bright red
+  warning: 'rgb(255,204,0)', // Yellow-orange for deuteranopia
   merged: 'rgb(175,135,255)', // Electric violet (matches autoAccept)
   warningShimmer: 'rgb(255,234,50)', // Lighter yellow-orange for shimmer
   diffAdded: 'rgb(0,68,102)', // Dark blue
