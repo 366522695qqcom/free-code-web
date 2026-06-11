@@ -19,7 +19,7 @@ export function TokenWarning({ tokenUsage, model, autoCompactEnabled = true }: T
   if (autoCompactEnabled) {
     return (
       <div className="px-4 py-1 font-mono text-xs text-muted-foreground/50">
-        {state.percentLeft}% until auto-compact
+        距离自动压缩还有 {state.percentLeft}%
       </div>
     );
   }
@@ -29,7 +29,7 @@ export function TokenWarning({ tokenUsage, model, autoCompactEnabled = true }: T
 
   return (
     <div className={`px-4 py-1 font-mono text-xs ${colorClass}`}>
-      Context low ({state.percentLeft}% remaining) · /compact to compact &amp; continue
+      上下文不足（剩余 {state.percentLeft}%）· 输入 /压缩 以压缩并继续
     </div>
   );
 }

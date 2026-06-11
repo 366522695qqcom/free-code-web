@@ -37,15 +37,6 @@ interface EnhancedModelOption extends ModelOption {
   capabilities?: string[];
 }
 
-const BUILT_IN_MODELS: EnhancedModelOption[] = [
-  { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", provider: "Anthropic", capabilities: [] },
-  { id: "claude-opus-4-20250514", name: "Claude Opus 4", provider: "Anthropic", capabilities: ["Extended Thinking"] },
-  { id: "claude-haiku-3.5-20241022", name: "Claude 3.5 Haiku", provider: "Anthropic", capabilities: [] },
-  { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI", capabilities: [] },
-  { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI", capabilities: [] },
-  { id: "o3-mini", name: "o3-mini", provider: "OpenAI", capabilities: ["Reasoning"] },
-];
-
 function ThemeIcon({ theme }: { theme: string | undefined }) {
   switch (theme) {
     case "light":
@@ -69,14 +60,11 @@ export function Topbar({
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
-  // Merge built-in and custom models
-  const allModels: EnhancedModelOption[] = [
-    ...BUILT_IN_MODELS,
-    ...customModels.map((m) => ({
-      ...m,
-      capabilities: (m as EnhancedModelOption).capabilities || [],
-    })),
-  ];
+  // Models come exclusively from configured providers
+  const allModels: EnhancedModelOption[] = customModels.map((m) => ({
+    ...m,
+    capabilities: (m as EnhancedModelOption).capabilities || [],
+  }));
 
   // Group models by provider
   const modelGroups = allModels.reduce<Record<string, EnhancedModelOption[]>>(

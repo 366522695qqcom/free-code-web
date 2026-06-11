@@ -41,16 +41,16 @@ export interface SlashCommand {
 
 /** CC 风格极简斜杠命令列表 */
 export const SLASH_COMMANDS: SlashCommand[] = [
-  { name: "/clear", hasSubmenu: false },
-  { name: "/compact", hasSubmenu: false },
-  { name: "/context", hasSubmenu: false },
-  { name: "/cost", hasSubmenu: false },
-  { name: "/help", hasSubmenu: false },
-  { name: "/model", hasSubmenu: true },
-  { name: "/permissions", hasSubmenu: true },
-  { name: "/review", hasSubmenu: false },
-  { name: "/status", hasSubmenu: false },
-  { name: "/tools", hasSubmenu: false },
+  { name: "/清空", hasSubmenu: false },
+  { name: "/压缩", hasSubmenu: false },
+  { name: "/上下文", hasSubmenu: false },
+  { name: "/费用", hasSubmenu: false },
+  { name: "/帮助", hasSubmenu: false },
+  { name: "/模型", hasSubmenu: true },
+  { name: "/权限", hasSubmenu: true },
+  { name: "/审查", hasSubmenu: false },
+  { name: "/状态", hasSubmenu: false },
+  { name: "/工具", hasSubmenu: false },
 ] as const;
 
 /** 模糊搜索过滤斜杠命令 */
@@ -267,14 +267,14 @@ export function ChatInput({
 
   const handleSelectCommand = useCallback(
     (cmd: { name: string; hasSubmenu: boolean }) => {
-      if (cmd.name === "/permissions") {
+      if (cmd.name === "/权限") {
         setShowPermissionSubmenu(true);
         setShowCommandMenu(false);
         setShowModelSubmenu(false);
         setSelectedIndex(0);
         return;
       }
-      if (cmd.name === "/model") {
+      if (cmd.name === "/模型") {
         setShowModelSubmenu(true);
         setShowCommandMenu(false);
         setShowPermissionSubmenu(false);

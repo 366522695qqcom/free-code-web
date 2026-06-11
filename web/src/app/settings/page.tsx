@@ -39,15 +39,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { BrandHeader } from "@/components/ui/brand-header";
 
-const MODELS = [
-  { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", provider: "Anthropic" },
-  { id: "claude-opus-4-20250514", name: "Claude Opus 4", provider: "Anthropic" },
-  { id: "claude-haiku-3.5-20241022", name: "Claude 3.5 Haiku", provider: "Anthropic" },
-  { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI" },
-  { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI" },
-  { id: "o3-mini", name: "o3-mini", provider: "OpenAI" },
-];
-
 const TOOLS = [
   { id: "bash", name: "Bash", description: "Execute shell commands", defaultConfirm: true },
   { id: "write", name: "File Write", description: "Write files to disk", defaultConfirm: true },
@@ -109,7 +100,8 @@ export default function SettingsPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [defaultModel, setDefaultModel] = useState("claude-sonnet-4-20250514");
+  const [defaultModel, setDefaultModel] = useState("");
+  const [providerModels, setProviderModels] = useState<Array<{ id: string; name: string; provider: string }>>([]);
   const [autoTitle, setAutoTitle] = useState(true);
   const [toolConfirmations, setToolConfirmations] = useState<Record<string, boolean>>(() => {
     const defaults: Record<string, boolean> = {};
@@ -137,7 +129,7 @@ export default function SettingsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    setDefaultModel(getStoredValue("free-code-default-model", "claude-sonnet-4-20250514"));
+    setDefaultModel(getStoredValue("free-code-default-model", ""));
     setAutoTitle(getStoredValue("free-code-auto-title", true));
     setToolConfirmations(
       getStoredValue("free-code-tool-confirmations", Object.fromEntries(TOOLS.map((t) => [t.id, t.defaultConfirm])))
@@ -149,6 +141,24 @@ export default function SettingsPage() {
     setSandboxTimeout(getStoredValue("free-code-sandbox-timeout", 5));
     setSandboxPersistent(getStoredValue("free-code-sandbox-persistent", true));
     setCustomRules(getStoredValue<CustomPermissionRule[]>("customPermissionRules", []));
+
+    // Fetch configured providers → derive available models
+    fetch("/api/providers")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.providers) {
+          const all: Array<{ id: string; name: string; provider: string }> = [];
+          for (const p of data.providers) {
+            for (const m of p.models || []) {
+              all.push({ id: m.modelId, name: m.displayName || m.modelId, provider: p.name });
+            }
+          }
+          setProviderModels(all);
+        }
+      })
+      .catch(() => {
+        // Ignore fetch errors — leave providerModels empty
+      });
   }, []);
 
   const handleDefaultModelChange = (modelId: string | null) => {
@@ -315,13 +325,13 @@ export default function SettingsPage() {
               <CardTitle>Model</CardTitle>
             </div>
             <CardDescription>
-              Choose the default model for new conversations.
+              选择新对话的默认模型。
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="default-model">Default Model</Label>
+                <Label htmlFor="default-model">默认模型</Label>
                 <Select
                   value={defaultModel}
                   onValueChange={handleDefaultModelChange}
@@ -330,22 +340,26 @@ export default function SettingsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Anthropic</SelectLabel>
-                      {MODELS.filter((m) => m.provider === "Anthropic").map((model) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          {model.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                    <SelectGroup>
-                      <SelectLabel>OpenAI</SelectLabel>
-                      {MODELS.filter((m) => m.provider === "OpenAI").map((model) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          {model.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
+                    {Object.entries(
+                      providerModels.reduce((acc, m) => {
+                        (acc[m.provider] ??= []).push(m);
+                        return acc;
+                      }, {} as Record<string, typeof providerModels>)
+                    ).map(([providerName, models]) => (
+                      <SelectGroup key={providerName}>
+                        <SelectLabel>{providerName}</SelectLabel>
+                        {models.map((model) => (
+                          <SelectItem key={model.id} value={model.id}>
+                            {model.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                    {providerModels.length === 0 && (
+                      <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                        还没有模型，请先在<a href="/settings/providers" className="text-brand hover:underline">模型提供商</a>添加
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

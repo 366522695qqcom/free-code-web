@@ -18,15 +18,6 @@ import { useFileTree } from "@/hooks/use-file-tree";
 import type { ModelOption } from "@/types";
 import { calculateTokenWarningState, getAutoCompactThreshold, getEffectiveContextWindowSize, getContextWindowSize } from "@/lib/context";
 
-const AVAILABLE_MODELS = [
-  { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", provider: "Anthropic", capabilities: [] as string[] },
-  { id: "claude-opus-4-20250514", name: "Claude Opus 4", provider: "Anthropic", capabilities: ["Extended Thinking"] },
-  { id: "claude-haiku-3.5-20241022", name: "Claude 3.5 Haiku", provider: "Anthropic", capabilities: [] as string[] },
-  { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI", capabilities: [] as string[] },
-  { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI", capabilities: [] as string[] },
-  { id: "o3-mini", name: "o3-mini", provider: "OpenAI", capabilities: ["Reasoning"] },
-];
-
 const TOOL_NAMES = [
   "bash", "read", "write", "edit", "multiEdit", "glob", "grep",
   "listDirectory", "webSearch", "webFetch",
@@ -45,7 +36,7 @@ export function ChatLayout() {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showFileTree, setShowFileTree] = useState(true);
-  const [currentModel, setCurrentModel] = useState("claude-sonnet-4-20250514");
+  const [currentModel, setCurrentModel] = useState("");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>("default");
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
   const [customModels, setCustomModels] = useState<ModelOption[]>([]);
@@ -100,8 +91,8 @@ export function ChatLayout() {
     refreshCustomModels();
   }, [refreshCustomModels]);
 
-  // Merge built-in and custom models for /model command
-  const allModels = useMemo(() => [...AVAILABLE_MODELS, ...customModels], [customModels]);
+  // Models are sourced exclusively from configured providers (no built-in fallback)
+  const allModels = useMemo(() => customModels, [customModels]);
 
   const {
     messages,
@@ -227,34 +218,35 @@ export function ChatLayout() {
   const handleSlashCommand = useCallback(
     async (command: string, args: string) => {
       switch (command) {
-        case "/clear":
+        case "/清空":
           clearMessages();
-          setSystemMessage("Chat cleared.");
+          setSystemMessage("对话已清空。");
           break;
 
-        case "/help": {
+        case "/帮助": {
           const helpText = [
-            "Available commands:",
-            "  /clear    — Clear the current chat",
-            "  /help     — Show available commands",
-            "  /model    — Switch model (e.g., /model claude-opus-4-6)",
-            "  /compact  — Compact/summarize conversation",
-            "  /cost     — Show current session cost",
-            "  /tools    — List available tools",
-            "  /context  — Show context usage details",
-            "  /review   — Ask AI to review code changes in this session",
-            "  /status   — Show system status",
+            "可用命令：",
+            "  /清空      — 清空当前对话",
+            "  /帮助      — 显示可用命令",
+            "  /模型      — 切换模型（如 /模型 claude-sonnet-4）",
+            "  /压缩      — 压缩/总结当前对话",
+            "  /费用      — 显示当前会话费用",
+            "  /工具      — 列出可用工具",
+            "  /上下文    — 显示上下文使用情况",
+            "  /审查      — 让 AI 审查本会话的代码变更",
+            "  /状态      — 显示系统状态",
+            "  /权限      — 切换权限模式（默认/规划/接受编辑/全部放行）",
           ].join("\n");
           setSystemMessage(helpText);
           break;
         }
 
-        case "/model": {
+        case "/模型": {
           if (!args.trim()) {
             const modelList = allModels
               .map((m) => `  ${m.id}  (${m.provider})`)
               .join("\n");
-            setSystemMessage(`Available models:\n${modelList}`);
+            setSystemMessage(`可用模型：\n${modelList}`);
             break;
           }
           // Try to find model by partial match
@@ -263,16 +255,16 @@ export function ChatLayout() {
           );
           if (match) {
             setCurrentModel(match.id);
-            setSystemMessage(`Model switched to ${match.name}`);
+            setSystemMessage(`已切换到模型 ${match.name}`);
           } else {
-            setSystemMessage(`Unknown model: ${args.trim()}. Type /model to see available models.`);
+            setSystemMessage(`未知模型: ${args.trim()}。输入 /模型 查看可用模型。`);
           }
           break;
         }
 
-        case "/compact":
+        case "/压缩":
           if (currentSessionId && messages.length > 0) {
-            setSystemMessage("Compacting conversation...");
+            setSystemMessage("正在压缩对话...");
             try {
               const messagesPayload = messages.map((m) => ({
                 role: m.role,
@@ -300,35 +292,35 @@ export function ChatLayout() {
                     }))
                   );
                   resetUsage();
-                  setSystemMessage("Conversation compacted successfully.");
+                  setSystemMessage("对话压缩成功。");
                 }
               } else {
-                setSystemMessage("Compaction failed.");
+                setSystemMessage("压缩失败。");
               }
             } catch {
-              setSystemMessage("Compaction failed.");
+              setSystemMessage("压缩失败。");
             }
           } else {
-            setSystemMessage("No conversation to compact.");
+            setSystemMessage("没有可压缩的对话。");
           }
           break;
 
-        case "/cost": {
+        case "/费用": {
           const { inputTokens, outputTokens, cost } = usage;
           const costStr = cost < 0.01 ? `$${cost.toFixed(4)}` : `$${cost.toFixed(2)}`;
           setSystemMessage(
-            `Session cost:\n  Input tokens:  ${inputTokens.toLocaleString()}\n  Output tokens: ${outputTokens.toLocaleString()}\n  Estimated cost: ${costStr}`
+            `当前会话费用：\n  输入 Token：  ${inputTokens.toLocaleString()}\n  输出 Token： ${outputTokens.toLocaleString()}\n  预估费用： ${costStr}`
           );
           break;
         }
 
-        case "/tools":
+        case "/工具":
           setSystemMessage(
-            `Available tools:\n${TOOL_NAMES.map((t) => `  ${t}`).join("\n")}`
+            `可用工具：\n${TOOL_NAMES.map((t) => `  ${t}`).join("\n")}`
           );
           break;
 
-        case "/context": {
+        case "/上下文": {
           const { inputTokens, outputTokens, cacheCreationInputTokens, cacheReadInputTokens } = usage;
           const totalInputTokens = inputTokens + cacheCreationInputTokens + cacheReadInputTokens;
           const totalTokens = totalInputTokens + outputTokens;
@@ -341,31 +333,31 @@ export function ChatLayout() {
           const effectiveWindow = getEffectiveContextWindowSize(currentModel);
 
           const lines = [
-            `Context Usage:`,
-            `  Input tokens:           ${inputTokens.toLocaleString()}`,
-            `  Cache creation tokens:  ${cacheCreationInputTokens.toLocaleString()}`,
-            `  Cache read tokens:      ${cacheReadInputTokens.toLocaleString()}`,
-            `  Output tokens:          ${outputTokens.toLocaleString()}`,
-            `  Total input (context):  ${totalInputTokens.toLocaleString()}`,
-            `  Total (all):            ${totalTokens.toLocaleString()}`,
+            `上下文使用情况：`,
+            `  输入 Token：           ${inputTokens.toLocaleString()}`,
+            `  缓存写入 Token：  ${cacheCreationInputTokens.toLocaleString()}`,
+            `  缓存读取 Token：      ${cacheReadInputTokens.toLocaleString()}`,
+            `  输出 Token：          ${outputTokens.toLocaleString()}`,
+            `  输入合计（上下文）：  ${totalInputTokens.toLocaleString()}`,
+            `  全部合计：            ${totalTokens.toLocaleString()}`,
             ``,
-            `Context window: ${ctxPct}% of ${maxContext.toLocaleString()} (${modelName})`,
-            `Effective window: ${effectiveWindow.toLocaleString()} tokens`,
-            `Auto-compact at: ${autoCompactThreshold.toLocaleString()} tokens (${warningState.percentLeft}% remaining)`,
+            `上下文窗口：${ctxPct}% / ${maxContext.toLocaleString()}（${modelName}）`,
+            `有效窗口：${effectiveWindow.toLocaleString()} Token`,
+            `自动压缩阈值：${autoCompactThreshold.toLocaleString()} Token（剩余 ${warningState.percentLeft}%）`,
           ];
 
           if (warningState.isAboveWarningThreshold) {
             lines.push(``);
             lines.push(warningState.isAboveAutoCompactThreshold
-              ? `⚠ Context exceeds auto-compact threshold`
-              : `⚠ Context approaching limit`);
+              ? `⚠ 上下文已超过自动压缩阈值`
+              : `⚠ 上下文接近上限`);
           }
 
           setSystemMessage(lines.join("\n"));
           break;
         }
 
-        case "/review":
+        case "/审查":
           if (currentSessionId && messages.length > 0) {
             sendMessage(
               "Review the code changes made in this session. Analyze each file modification for potential bugs, style issues, and improvements.",
@@ -373,28 +365,28 @@ export function ChatLayout() {
               customProviderInfo
             );
           } else {
-            setSystemMessage("No conversation to review.");
+            setSystemMessage("没有可审查的对话。");
           }
           break;
 
-        case "/status": {
+        case "/状态": {
           const modelName = allModels.find((m) => m.id === currentModel)?.name || currentModel;
           // Fetch status info from API, then display
           fetch("/api/status")
             .then((res) => res.json())
             .then((data) => {
-              const sandboxStr = data.sandboxEnabled ? "enabled" : "disabled";
+              const sandboxStr = data.sandboxEnabled ? "已启用" : "未启用";
               const mcpCount = data.mcpConnections ?? 0;
-              const sessionId = currentSessionId || "none";
+              const sessionId = currentSessionId || "无";
               setSystemMessage(
-                `System Status:\nModel: ${modelName}\nPermission: ${permissionMode}\nSandbox: ${sandboxStr}\nMCP: ${mcpCount} connection${mcpCount !== 1 ? "s" : ""}\nSession: ${sessionId}`
+                `系统状态：\n模型：${modelName}\n权限模式：${permissionMode}\n沙箱：${sandboxStr}\nMCP：${mcpCount} 个连接\n会话：${sessionId}`
               );
               setTimeout(() => setSystemMessage(null), 5000);
             })
             .catch(() => {
-              const sessionId = currentSessionId || "none";
+              const sessionId = currentSessionId || "无";
               setSystemMessage(
-                `System Status:\nModel: ${modelName}\nPermission: ${permissionMode}\nSandbox: unknown\nMCP: unknown\nSession: ${sessionId}`
+                `系统状态：\n模型：${modelName}\n权限模式：${permissionMode}\n沙箱：未知\nMCP：未知\n会话：${sessionId}`
               );
               setTimeout(() => setSystemMessage(null), 5000);
             });
@@ -402,7 +394,7 @@ export function ChatLayout() {
         }
 
         default:
-          setSystemMessage(`Unknown command: ${command}. Type /help for available commands.`);
+          setSystemMessage(`未知命令: ${command}。输入 /帮助 查看可用命令。`);
       }
 
       // Auto-dismiss system message after 5 seconds
