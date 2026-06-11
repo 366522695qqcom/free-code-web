@@ -1,18 +1,27 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import {
   Plus,
   Trash2,
-  PanelLeftClose,
   PanelLeft,
   Search,
   Pencil,
-  X,
   Settings,
-  LogOut,
+  Bot,
+  Wrench,
+  FileText,
+  Cog,
+  Shield,
+  Info,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { BrandHeader } from "@/components/ui/brand-header";
 import { cn } from "@/lib/utils";
 import type { ChatConversation } from "@/types";
 
@@ -55,6 +64,15 @@ interface ContextMenuState {
   sessionId: string | null;
 }
 
+const QUICK_LINKS = [
+  { href: "/settings/providers", icon: Bot, label: "Models" },
+  { href: "/settings/permissions", icon: Shield, label: "Permissions" },
+  { href: "/settings/tools", icon: Wrench, label: "Tools" },
+  { href: "/settings/sessions", icon: FileText, label: "Sessions" },
+  { href: "/mcp", icon: Cog, label: "MCP" },
+  { href: "/settings", icon: Info, label: "About" },
+];
+
 export function Sidebar({
   sessions,
   currentSessionId,
@@ -65,8 +83,6 @@ export function Sidebar({
   onDeleteSession,
   onRenameSession,
   onToggleCollapse,
-  onSettingsClick,
-  onLogout,
 }: SidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -77,8 +93,10 @@ export function Sidebar({
     y: 0,
     sessionId: null,
   });
+  const [quickOpen, setQuickOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (editingId && inputRef.current) {
@@ -138,7 +156,7 @@ export function Sidebar({
     setEditingId(null);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleRenameSubmit();
     } else if (e.key === "Escape") {
@@ -154,7 +172,7 @@ export function Sidebar({
 
   if (isCollapsed) {
     return (
-      <div className="flex h-full w-12 flex-col items-center border-r border-border bg-sidebar py-3 gap-2">
+      <div className="flex h-full w-12 flex-col items-center border-r border-border bg-card/40 py-3 gap-2">
         <Button
           variant="ghost"
           size="icon-xs"
@@ -176,137 +194,139 @@ export function Sidebar({
   }
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-border bg-sidebar">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-3 py-2">
-        <h2 className="font-mono text-xs font-medium text-sidebar-foreground/60">Chats</h2>
-        <div className="flex items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onSettingsClick}
-            title="Settings"
-          >
-            <Settings className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onLogout}
-            title="Sign out"
-          >
-            <LogOut className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onCreateSession}
-            title="New Chat"
-          >
-            <Plus className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onToggleCollapse}
-            title="Collapse sidebar"
-          >
-            <PanelLeftClose className="size-3.5" />
-          </Button>
-        </div>
+    <aside className="flex w-72 flex-col border-r border-border bg-card/40">
+      {/* Brand header + new chat */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <BrandHeader size="sm" />
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onCreateSession}
+          aria-label="New session"
+          title="New Chat"
+          className="size-8 rounded-lg text-muted-foreground hover:bg-brand-soft hover:text-brand transition-colors duration-150"
+        >
+          <Plus className="size-4" />
+        </Button>
       </div>
 
       {/* Search */}
-      <div className="px-3 py-1.5">
+      <div className="px-3 pb-2">
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/50" />
-          <input
+          <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder="Search sessions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
-            className="w-full border-0 border-b border-border/50 bg-transparent py-1 pl-7 pr-7 font-mono text-xs text-foreground placeholder:text-muted-foreground/30 outline-none focus:border-terminal-cyan/50"
+            className="h-8 rounded-lg pl-8 text-xs focus-visible:ring-1 focus-visible:ring-brand"
           />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
-            >
-              <X className="size-3" />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Session list — flat terminal style */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Quick Settings card (折叠) */}
+      <div className="px-3 pb-2">
+        <button
+          type="button"
+          onClick={() => setQuickOpen((v) => !v)}
+          className="flex w-full items-center justify-between rounded-lg border border-border bg-card/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+        >
+          <span className="flex items-center gap-2">
+            <Settings className="size-3.5" />
+            Quick Settings
+          </span>
+          {quickOpen ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+        </button>
+        {quickOpen && (
+          <div className="mt-1 flex flex-col gap-0.5 rounded-lg border border-border bg-card/50 p-1 animate-collapse-in">
+            {QUICK_LINKS.map((link) => {
+              const Icon = link.icon;
+              const active = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors duration-150",
+                    active
+                      ? "bg-brand-soft text-brand font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <Icon className="size-3.5" />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Sessions label */}
+      <div className="flex items-center justify-between px-4 pt-1 pb-1">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Chats</span>
+        <span className="text-[10px] text-muted-foreground font-mono">{filteredSessions.length}</span>
+      </div>
+
+      {/* Session list */}
+      <nav className="flex-1 overflow-y-auto px-2 pb-3">
         {isLoading && sessions.length === 0 ? (
           <div className="px-3 py-4 font-mono text-xs text-muted-foreground">
             Loading...
           </div>
         ) : filteredSessions.length === 0 ? (
-          <div className="px-3 py-4 font-mono text-xs text-muted-foreground">
-            {searchQuery ? "No matching chats" : "No conversations yet"}
+          <div className="px-3 py-6 text-center text-xs text-muted-foreground font-mono">
+            {searchQuery ? "No matching chats" : "No sessions yet"}
           </div>
         ) : (
-          <div className="py-1">
+          <ul className="flex flex-col gap-0.5">
             {filteredSessions.map((session) => {
               const isActive = currentSessionId === session.id;
               return (
-                <div
-                  key={session.id}
-                  className={cn(
-                    "group flex items-center gap-1 px-3 py-1.5 font-mono text-xs transition-colors cursor-pointer",
-                    isActive
-                      ? "text-foreground"
-                      : "text-sidebar-foreground/50 hover:text-sidebar-foreground/80"
-                  )}
-                  onClick={() => onSelectSession(session.id)}
-                  onDoubleClick={() => handleDoubleClick(session)}
-                  onContextMenu={(e) => handleContextMenu(e, session.id)}
-                >
-                  {/* Active indicator: > prefix in terminal-cyan */}
-                  <span className={cn(
-                    "shrink-0 w-3 text-right select-none",
-                    isActive ? "text-terminal-cyan" : "text-transparent"
-                  )}>
-                    &gt;
-                  </span>
-                  <div className="min-w-0 flex-1 flex items-center gap-2">
+                <li key={session.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectSession(session.id)}
+                    onDoubleClick={() => handleDoubleClick(session)}
+                    onContextMenu={(e) => handleContextMenu(e, session.id)}
+                    className={cn(
+                      "group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150",
+                      isActive
+                        ? "bg-brand-soft text-brand"
+                        : "text-foreground/80 hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "shrink-0 font-mono text-xs leading-none transition-colors",
+                        isActive ? "text-brand" : "text-muted-foreground/40"
+                      )}
+                    >
+                      {isActive ? "▌" : " "}
+                    </span>
                     {editingId === session.id ? (
                       <input
                         ref={inputRef}
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
                         onBlur={handleRenameSubmit}
-                        onKeyDown={handleKeyDown}
-                        className="w-full border-0 border-b border-terminal-cyan/50 bg-transparent px-0 py-0 font-mono text-xs outline-none"
+                        onKeyDown={handleRenameKeyDown}
                         onClick={(e) => e.stopPropagation()}
+                        className="flex-1 border-0 border-b border-brand/50 bg-transparent px-0 py-0 font-mono text-xs outline-none"
                       />
                     ) : (
-                      <span className="block truncate">{session.title}</span>
+                      <span className="flex-1 truncate font-sans">{session.title}</span>
                     )}
-                    <span className="shrink-0 text-[0.6rem] text-muted-foreground/30">
+                    <span className="shrink-0 text-[10px] text-muted-foreground/40 font-mono">
                       {formatRelativeTime(session.updatedAt)}
                     </span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteSession(session.id);
-                    }}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 h-4 w-4"
-                    title="Delete chat"
-                  >
-                    <Trash2 className="size-2.5 text-muted-foreground hover:text-destructive" />
-                  </Button>
-                </div>
+                  </button>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
-      </div>
+      </nav>
 
       {/* Context menu */}
       {contextMenu.visible && (
@@ -334,6 +354,6 @@ export function Sidebar({
           </button>
         </div>
       )}
-    </div>
+    </aside>
   );
 }

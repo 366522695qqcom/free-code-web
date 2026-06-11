@@ -52,6 +52,10 @@
   --color-terminal-amber: var(--terminal-amber);
   --color-terminal-red: var(--terminal-red);
   --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-glow: var(--brand-glow);
+  --font-display: var(--font-geist-sans);
+  --shadow-card-hover: 0 8px 24px -4px oklch(0 0 0 / 12%), 0 2px 8px -2px oklch(0 0 0 / 6%);
 }
 
 :root {
@@ -88,10 +92,12 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --terminal-green: oklch(0.72 0.19 155);
-  --terminal-cyan: oklch(0.75 0.15 200);
+  --terminal-cyan: oklch(0.65 0.13 50);
   --terminal-amber: oklch(0.78 0.16 85);
   --terminal-red: oklch(0.65 0.22 25);
   --brand: oklch(0.65 0.13 50);
+  --brand-soft: oklch(0.65 0.13 50 / 0.08);
+  --brand-glow: oklch(0.65 0.13 50 / 0.18);
 }
 
 .dark {
@@ -127,10 +133,12 @@
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.75 0.15 200);
   --terminal-green: oklch(0.72 0.19 155);
-  --terminal-cyan: oklch(0.75 0.15 200);
+  --terminal-cyan: oklch(0.70 0.12 45);
   --terminal-amber: oklch(0.78 0.16 85);
   --terminal-red: oklch(0.65 0.22 25);
   --brand: oklch(0.70 0.12 45);
+  --brand-soft: oklch(0.70 0.12 45 / 0.10);
+  --brand-glow: oklch(0.70 0.12 45 / 0.22);
 }
 
 @layer base {
@@ -141,7 +149,6 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
     scroll-behavior: smooth;
   }
 }
@@ -308,10 +315,33 @@ code:not(pre code) {
 
 /* Pulse glow for active tool */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.75 0.15 200 / 20%); }
-  50% { box-shadow: 0 0 8px 2px oklch(0.75 0.15 200 / 15%); }
+  0%, 100% { box-shadow: 0 0 0 0 var(--brand-glow); }
+  50% { box-shadow: 0 0 8px 2px var(--brand-glow); }
 }
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Card hover lift (用于 Provider 卡片等) */
+@keyframes card-hover-lift {
+  from { transform: translateY(0); box-shadow: 0 0 0 0 transparent; }
+  to   { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); }
+}
+.hover\:lift:hover {
+  animation: card-hover-lift 150ms ease-out forwards;
+}
+
+/* Brand glow pulse for focused inputs */
+@keyframes brand-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--brand-glow); }
+  50% { box-shadow: 0 0 0 4px var(--brand-glow); }
+}
+.focus\:brand-glow:focus-within {
+  animation: brand-glow-pulse 1.5s ease-in-out infinite;
+}
+
+/* Brand gradient text (用于 login 页 hero) */
+.bg-brand-gradient {
+  background: linear-gradient(135deg, var(--brand) 0%, oklch(0.75 0.12 30) 100%);
 }

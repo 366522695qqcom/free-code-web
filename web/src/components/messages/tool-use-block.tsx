@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 interface ToolUseBlockProps {
   toolUse: {
@@ -87,13 +88,19 @@ function ElapsedTimer() {
 }
 
 function StatusMarker({ status }: { status: "running" | "done" | "error" }) {
-  if (status === "running") {
-    return <span className="text-terminal-cyan animate-pulse">●</span>;
-  }
-  if (status === "done") {
-    return <span className="text-terminal-green">✓</span>;
-  }
-  return <span className="text-terminal-red">✗</span>;
+  return (
+    <span
+      className={cn(
+        "inline-block size-1.5 rounded-full",
+        status === "running"
+          ? "bg-brand animate-pulse"
+          : status === "error"
+            ? "bg-terminal-red"
+            : "bg-terminal-green"
+      )}
+      aria-label={status}
+    />
+  );
 }
 
 export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
@@ -126,11 +133,13 @@ export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
     <div id={domId} className="py-0.5">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center gap-1.5 text-left font-mono text-sm leading-relaxed"
+        className="flex w-full items-center gap-2 text-left font-mono text-sm leading-relaxed"
       >
         <span className="shrink-0">{isExpanded ? "▼" : "⏺"}</span>
         <StatusMarker status={status} />
-        <span className="text-terminal-amber shrink-0">{displayName}:</span>
+        <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
+          {displayName}
+        </span>
         {!isExpanded && (
           <span className="truncate text-muted-foreground">{collapsedPreview}</span>
         )}

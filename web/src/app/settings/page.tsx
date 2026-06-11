@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { BrandHeader } from "@/components/ui/brand-header";
 
 const MODELS = [
   { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", provider: "Anthropic" },
@@ -273,12 +274,16 @@ export default function SettingsPage() {
           >
             <ArrowLeft className="size-4" />
           </Button>
-          <h1 className="text-sm font-medium">Settings</h1>
         </div>
       </div>
 
       {/* Content */}
       <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
+        <BrandHeader
+          size="lg"
+          subtitle="Configure your Free Code instance"
+          className="mb-6"
+        />
         {/* Model Providers */}
         <Card>
           <CardHeader>

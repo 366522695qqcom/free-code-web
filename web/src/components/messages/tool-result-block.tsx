@@ -63,7 +63,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
   const languageLabel = getLanguageLabel(filePath ?? undefined);
 
   return (
-    <div className="pl-4 py-0.5">
+    <div className="border-l-2 border-brand/40 pl-3 bg-card/30 rounded-r-lg py-0.5">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center gap-1.5 font-mono text-sm text-left"

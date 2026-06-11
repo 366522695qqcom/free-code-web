@@ -32,6 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ModelDialog, type ModelFormData } from "./model-dialog";
+import { cn } from "@/lib/utils";
 
 interface CustomModel {
   id: string;
@@ -446,64 +447,71 @@ export default function ProvidersPage() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {providers.map((provider) => (
-                    <div
-                      key={provider.id}
-                      className={`flex items-center justify-between rounded-lg border px-4 py-3 transition-colors cursor-pointer ${
-                        selectedProviderId === provider.id && !isAdding
-                          ? "border-brand/30 bg-brand/5"
-                          : "border-border hover:bg-muted/50"
-                      }`}
-                      onClick={() => {
-                        if (!isAdding) {
-                          setSelectedProviderId(provider.id);
-                          setIsEditing(false);
-                          resetForm();
-                          setConnectionStatus("idle");
-                          setFetchedModels([]);
-                          setFetchError(null);
-                        }
-                      }}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{provider.name}</span>
-                          <span className="rounded bg-brand/10 px-1.5 py-0.5 text-[0.6rem] text-brand">
-                            {provider.models.length} 模型
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {providers.map((provider) => {
+                    const isActive = selectedProviderId === provider.id && !isAdding;
+                    return (
+                      <div
+                        key={provider.id}
+                        className={cn(
+                          "group relative cursor-pointer overflow-hidden rounded-xl border bg-card p-4 transition-all duration-150 hover:-translate-y-0.5",
+                          isActive
+                            ? "border-brand/50 bg-brand-soft shadow-sm"
+                            : "border-border hover:border-brand/30 hover:shadow-card-hover"
+                        )}
+                        onClick={() => {
+                          if (!isAdding) {
+                            setSelectedProviderId(provider.id);
+                            setIsEditing(false);
+                            resetForm();
+                            setConnectionStatus("idle");
+                            setFetchedModels([]);
+                            setFetchError(null);
+                          }
+                        }}
+                      >
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="font-display text-sm font-semibold tracking-tight">
+                            {provider.name}
+                          </span>
+                          <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand">
+                            {provider.models.length} {provider.models.length === 1 ? "model" : "models"}
                           </span>
                         </div>
-                        <p className="truncate text-xs text-muted-foreground font-mono">
+                        <p className="truncate font-mono text-[11px] text-muted-foreground">
                           {provider.baseUrl}
                         </p>
+                        {isActive && (
+                          <span className="absolute right-2 top-2 size-2 rounded-full bg-brand animate-pulse" />
+                        )}
+                        <div className="absolute right-2 bottom-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditProvider(provider);
+                            }}
+                            title="编辑"
+                          >
+                            <Edit className="size-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteProvider(provider.id);
+                            }}
+                            title="删除"
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0 ml-3">
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditProvider(provider);
-                          }}
-                          title="编辑"
-                        >
-                          <Edit className="size-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteProvider(provider.id);
-                          }}
-                          title="删除"
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
