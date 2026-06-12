@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ModelDialog, type ModelFormData } from "./model-dialog";
 import { cn } from "@/lib/utils";
+import { isTextModel } from "@/lib/providers/filter";
 
 interface CustomModel {
   id: string;
@@ -786,7 +787,7 @@ export default function ProvidersPage() {
                             </span>
                           )}
                           <span className="rounded bg-muted px-1.5 py-0.5 text-[0.6rem] text-muted-foreground">
-                            {model.type === "chat" ? "聊天" : model.type === "embedding" ? "嵌入" : "图像"}
+                            {model.type === "chat" ? "对话" : model.type === "embedding" ? "向量" : "图像"}
                           </span>
                           {model.capabilities.map((cap) => (
                             <span
@@ -816,6 +817,20 @@ export default function ProvidersPage() {
                     </div>
                   ))}
                 </div>
+                {(() => {
+                  const textCount = (selectedProvider.models || []).filter((m) =>
+                    isTextModel({ modelType: m.type })
+                  ).length;
+                  const total = (selectedProvider.models || []).length;
+                  if (textCount < total) {
+                    return (
+                      <p className="mt-2 text-[10px] text-muted-foreground">
+                        其中 {textCount} 个为文字模型，可在 chat 中使用
+                      </p>
+                    );
+                  }
+                  return null;
+                })()}
               </CardContent>
             </Card>
           )}

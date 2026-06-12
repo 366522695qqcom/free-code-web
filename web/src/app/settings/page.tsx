@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { BrandHeader } from "@/components/ui/brand-header";
+import { isTextModel } from "@/lib/providers/filter";
 
 const TOOLS = [
   { id: "bash", name: "Bash", description: "Execute shell commands", defaultConfirm: true },
@@ -150,6 +151,7 @@ export default function SettingsPage() {
           const all: Array<{ id: string; name: string; provider: string }> = [];
           for (const p of data.providers) {
             for (const m of p.models || []) {
+              if (!isTextModel(m)) continue;  // 新增：过滤掉 image/embedding
               all.push({ id: m.modelId, name: m.displayName || m.modelId, provider: p.name });
             }
           }
@@ -357,7 +359,11 @@ export default function SettingsPage() {
                     ))}
                     {providerModels.length === 0 && (
                       <div className="px-3 py-4 text-center text-xs text-muted-foreground">
-                        还没有模型，请先在<a href="/settings/providers" className="text-brand hover:underline">模型提供商</a>添加
+                        还没有文字模型，请先在
+                        <a href="/settings/providers" className="text-brand hover:underline mx-1">
+                          模型提供商
+                        </a>
+                        添加 chat 类型模型
                       </div>
                     )}
                   </SelectContent>

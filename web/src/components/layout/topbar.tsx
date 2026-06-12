@@ -106,6 +106,11 @@ export function Topbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
+            {customModels.length === 0 && (
+              <div className="px-3 py-4 text-center text-[10px] text-muted-foreground">
+                还没有文字模型
+              </div>
+            )}
             {Object.entries(modelGroups).map(([provider, models], groupIdx) => (
               <div key={provider}>
                 {groupIdx > 0 && <DropdownMenuSeparator />}

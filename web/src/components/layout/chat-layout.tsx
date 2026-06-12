@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FolderTree } from "lucide-react";
 import { Sidebar } from "./sidebar";
@@ -17,6 +17,7 @@ import { useChat } from "@/hooks/use-chat";
 import { useFileTree } from "@/hooks/use-file-tree";
 import type { ModelOption } from "@/types";
 import { calculateTokenWarningState, getAutoCompactThreshold, getEffectiveContextWindowSize, getContextWindowSize } from "@/lib/context";
+import { isTextModel } from "@/lib/providers/filter";
 
 const TOOL_NAMES = [
   "bash", "read", "write", "edit", "multiEdit", "glob", "grep",
@@ -55,6 +56,7 @@ export function ChatLayout() {
           const providerMap: Record<string, { providerId: string; baseUrl: string; apiKey: string; apiPath: string }> = {};
           for (const provider of data.providers) {
             for (const model of provider.models || []) {
+              if (!isTextModel(model)) continue;  // 新增：过滤掉 image/embedding
               // capabilities 可能是对象 {vision, reasoning, toolUse} 或字符串数组
               let caps: string[] = [];
               if (Array.isArray(model.capabilities)) {
@@ -198,21 +200,31 @@ export function ChatLayout() {
     [deleteSession, currentSessionId, clearMessages]
   );
 
+  // Refs mirror latest model + provider state so handleSend never reads stale closure
+  const currentModelRef = useRef(currentModel);
+  const customProviderInfoRef = useRef(customProviderInfo);
+  useEffect(() => {
+    currentModelRef.current = currentModel;
+    customProviderInfoRef.current = customProviderInfo;
+  }, [currentModel, customProviderInfo]);
+
   const handleSend = useCallback(
     async (content: string) => {
+      const modelId = currentModelRef.current;
+      const provider = customProviderInfoRef.current;
       if (!currentSessionId) {
         try {
           await createSession("New Chat");
-          await new Promise((r) => setTimeout(r, 50));
-          await sendMessage(content, currentModel, customProviderInfo);
+          await new Promise((r) => setTimeout(r, 100));
+          await sendMessage(content, modelId, provider);
         } catch {
           // Error handled in hook
         }
         return;
       }
-      await sendMessage(content, currentModel, customProviderInfo);
+      await sendMessage(content, modelId, provider);
     },
-    [currentSessionId, createSession, sendMessage, currentModel, customProviderInfo]
+    [currentSessionId, createSession, sendMessage]
   );
 
   const handleSlashCommand = useCallback(
