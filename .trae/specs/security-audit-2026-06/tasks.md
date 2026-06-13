@@ -12,10 +12,9 @@
   - [ ] 子任务 H-1.1：`lib/mcp/manager.ts` `executeTool`/`readResource` 前校验 `toolName` ∈ `config.tools` 且 `uri` 匹配 `config.resources` 中前缀
   - [ ] 子任务 H-1.2：`mcp__*` 工具 `requiresConfirmation` 默认 `true`，按 server 来源白名单
 
-- [ ] H-2：未认证访问 `/api/mcp/*` GET 路由
-  - [ ] 子任务 H-2.1：`middleware.ts` 移除隐式放行（任何非 `/api/auth/*` `/api/health` `/login` `/_next/*` 静态资源的请求必须经 session 校验）
-  - [ ] 子任务 H-2.2：`/api/mcp/servers/route.ts` `GET`、`/api/mcp/servers/[id]/route.ts` `GET`、`/api/mcp/servers/[id]/tools/route.ts` `GET`、`/api/mcp/servers/[id]/resources/route.ts` `GET` 全部加上 `getSession()` 校验
-  - [ ] 子任务 H-2.3：返回时脱敏 `env` 字段（`***`）
+- [ ] H-2：MCP GET 路由 handler 缺乏内部 session 校验（防御纵深不足，Medium）
+  - [ ] 子任务 H-2.1：`/api/mcp/servers/route.ts` `GET`、`/api/mcp/servers/[id]/route.ts` `GET`、`/api/mcp/servers/[id]/tools/route.ts` `GET`、`/api/mcp/servers/[id]/resources/route.ts` `GET` 全部加上 `getSession()` 校验（与 POST/DELETE 对齐）
+  - [ ] 子任务 H-2.2：`listServers()` 和 `getServer()` 返回时脱敏 `env` 字段（`***`）
 
 - [ ] H-3：`/api/tools/execute` 越权执行
   - [ ] 子任务 H-3.1：`api/tools/execute/route.ts` 执行前调用 `assessToolExecution`，对 `high`/`outside-sandbox` 风险走 `setPendingConfirmation` + 用户确认
@@ -35,6 +34,5 @@
 
 # 任务依赖
 
-- H-2.1（中间件收窄）必须在 H-2.2（路由加 session 校验）之前实施，避免"路由加校验但中间件不收窄"导致仍被未认证访问
 - C-1.3（env 裁剪）应与 H-1（白名单校验）并行，但需在同一 patch 中保证子进程不再泄露运行时密钥
 - M-1.1（启动期硬退出）应在 M-2.1（限速）之前，因默认凭据下任何限速都形同虚设

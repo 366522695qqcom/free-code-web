@@ -76,23 +76,6 @@
   2. `mcp__*` 工具默认 `requiresConfirmation: true`，按 MCP server 来源或工具名风险分级
   3. 对 `readResource` URI 做 scheme/host 校验，禁止 `file://` 等敏感 scheme
 
-### H-2：未认证访问 `/api/mcp/servers` 列表（信息泄露）— [x] 已确认
-
-- **位置**：
-  - [web/src/app/api/mcp/servers/route.ts](file:///workspace/web/src/app/api/mcp/servers/route.ts) L9-L17
-- **攻击者画像**：未认证外部用户
-- **可控输入向量**：`GET /api/mcp/servers`（无需 session cookie）
-- **完整代码路径**：
-  1. 攻击者直接 `curl https://target/api/mcp/servers`，无 cookie
-  2. `middleware.ts:8-10` 白名单 `/api/auth/*`，**未白名单 `/api/mcp/*`**，但本路由 handler 内部也未做 `getSession()` 校验（`route.ts:9-17` 直接 `manager.listServers()` 返回）
-  3. 返回所有 MCP server 配置（含 `command`、`url`、`env` 字典，其中可能含 `AUTH_TOKEN` 等凭据，`manager.ts:642-655` 持久化时未脱敏）
-  4. 类似缺陷存在于 `GET /api/mcp/servers/[id]`（`[id]/route.ts:9-28`，未调用 `getSession`）和 `GET /api/mcp/servers/[id]/tools`、`GET /api/mcp/servers/[id]/resources`
-- **影响**：未认证用户可枚举全部 MCP server（含凭据）、可遍历所有已注册工具名/资源 URI
-- **修复建议**：
-  1. 在 `middleware.ts:5-30` 收窄白名单，仅允许 `/api/auth/*`、`/api/health`、`/login`、`/_next/*`、静态资源；MCP 路由必须经 session 校验
-  2. `GET /api/mcp/servers`、`GET /api/mcp/servers/[id]` 等所有 handler 顶部加 `getSession()` 校验（与 `POST/DELETE` 对齐）
-  3. 返回时脱敏 `env` 字段（`***`）
-
 ### H-3：`/api/tools/execute` 越权执行需确认工具（绕过人工确认）
 
 - **位置**：
@@ -163,6 +146,25 @@
   2. 文件权限设为 `0600`
   3. 优先把 MCP server 配置存到 libSQL（与 providers 存储一致）
 
+### H-2：MCP GET 路由 handler 缺乏内部 session 校验（防御纵深不足）— [x] 已确认
+
+- **位置**：
+  - [web/src/app/api/mcp/servers/route.ts](file:///workspace/web/src/app/api/mcp/servers/route.ts) L9-L17（GET 无 session 校验）
+  - [web/src/app/api/mcp/servers/[id]/route.ts](file:///workspace/web/src/app/api/mcp/servers/[id]/route.ts) L9-L28（GET 无 session 校验，而 POST/DELETE 有）
+  - [web/src/app/api/mcp/servers/[id]/tools/route.ts](file:///workspace/web/src/app/api/mcp/servers/[id]/tools/route.ts) L9-L21（GET 无 session 校验）
+  - [web/src/app/api/mcp/servers/[id]/resources/route.ts](file:///workspace/web/src/app/api/mcp/servers/[id]/resources/route.ts) L9-L21（GET 无 session 校验）
+- **严重度**：Medium
+- **攻击者画像**：已认证用户 + 中间件配置错误场景
+- **可控输入向量**：`GET /api/mcp/servers`、`GET /api/mcp/servers/{id}` 等
+- **完整代码路径**：
+  1. [middleware.ts](file:///workspace/web/src/middleware.ts) L4-L58 的 matcher 匹配所有路径，session 校验逻辑正确：`/api/auth/*` `/api/health` `/login` `/_next/*` 和静态资源直接放行，其余路径查 session cookie。**因此未认证外部用户无法直接访问 `/api/mcp/*` 路由**（修正：原审计错误地认为 middleware 未覆盖此路径）
+  2. 但路由 handler 内部安全性不一致：`POST/DELETE` 有 `getSession()` 校验，而 `GET` 无；`listServers()` 和 `getServer()` 返回 `env` 字段未脱敏
+  3. 若中间件被绕过或配置错误，凭据（如 `AUTH_TOKEN`）直接暴露
+- **影响**：防御纵深不足 — 中间件是唯一防线；一旦中间件 matcher 被误配置或未来变更移除校验，所有 MCP server 配置、工具名、资源 URI 和 `env` 凭据即对任意用户暴露
+- **修复建议**：
+  1. 所有 GET handler 顶部加 `getSession()` 校验（与 POST/DELETE 对齐），确保防御纵深
+  2. `listServers()` 和 `getServer()` 返回时脱敏 `env` 字段（`***`）
+
 ---
 
 ## 未达中等严重度的次要发现（不计入报告，仅供后续加固参考）
@@ -176,12 +178,12 @@
 
 # 总结
 
-已确认 **1 个 Critical**、**3 个 High**、**3 个 Medium** 严重度漏洞，均具备完整端到端利用路径：
+已确认 **1 个 Critical**、**2 个 High**、**4 个 Medium** 严重度漏洞，均具备完整端到端利用路径：
 
 - **C-1**（Critical）：MCP stdio 任意命令执行 — 已认证 → RCE
 - **H-1**（High）：任意 MCP 工具/资源调用 — 已认证 → 后端能力滥用
-- **H-2**（High）：MCP GET 路由未认证访问 — 外部 → 配置/凭据泄露
-- **H-3**（High**）：`/api/tools/execute` 越权执行 — 已认证 → 绕过人工确认
+- **H-3**（High）：`/api/tools/execute` 越权执行 — 已认证 → 绕过人工确认
+- **H-2**（Medium）：MCP GET 路由 handler 缺乏内部 session 校验（防御纵深不足）— 中间件提供保护，但路由 handler 未做防御纵深
 - **M-1**（Medium）：默认凭据 — 外部 → 登录
 - **M-2**（Medium）：登录无速率限制 — 外部 → 爆破
 - **M-3**（Medium）：MCP 持久化文件含明文凭据 — 内部 → 凭据窃取

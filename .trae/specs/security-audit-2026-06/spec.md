@@ -47,10 +47,6 @@
 - **WHEN** 攻击者已注册并 connect 任意 stdio MCP server
 - **THEN** 通过 `POST /api/mcp/servers/{id}/tools` 任意 `toolName` 即可调用该 MCP 后端暴露的任意工具，无需人工确认
 
-#### Scenario: High 漏洞（H-2）
-- **WHEN** 未认证外部用户 `GET /api/mcp/servers`
-- **THEN** 返回全部 MCP server 配置（含 `command`/`url`/`env` 等可能含 `AUTH_TOKEN`），**确认** 绕过认证
-
 #### Scenario: High 漏洞（H-3）
 - **WHEN** 已认证用户 `POST /api/tools/execute {toolName:"bash", params:{command:"..."}}`
 - **THEN** `bash.exec(command)` 立即执行，**确认** 绕过 `agent-stream.ts` 中 `assessToolExecution` + `setPendingConfirmation` 流程
@@ -66,6 +62,10 @@
 #### Scenario: Medium 漏洞（M-3）
 - **WHEN** MCP server 被注册（含 `env: {AUTH_TOKEN: "..."}`）
 - **THEN** `mcp-servers.json` 以明文持久化 `env` 字段，**确认** 任何拿到进程文件系统读权限的攻击者可窃取所有用户凭据
+
+#### Scenario: Medium 漏洞（H-2）— 防御纵深不足
+- **WHEN** middleware 配置被变更或未来版本移除校验逻辑
+- **THEN** `GET /api/mcp/servers`（route handler 内部无 `getSession()` 校验）将直接返回全部 MCP server 配置（含 `env` 未经脱敏的凭据），**确认** 防御纵深不足
 
 ## MODIFIED Requirements
 
