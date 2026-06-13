@@ -40,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-[#0F172A] via-[#1E293B] to-[#0F172A] p-4 overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-[#F8FAFC] via-white to-[#F1F5F9] p-4 overflow-hidden">
       {/* Animated grid overlay */}
       <div
         className="login-grid pointer-events-none absolute inset-0"
@@ -52,7 +52,7 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-[400px] rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl shadow-brand/10"
+        className="relative z-10 w-full max-w-[400px] rounded-2xl border border-border-subtle bg-white/80 backdrop-blur-xl shadow-2xl shadow-brand/5"
       >
         <div className="p-10">
           {/* Brand header */}
@@ -73,7 +73,7 @@ export default function LoginPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
                 required
-                className="bg-white/5 border-white/10 rounded-xl text-text-subtle placeholder:text-text-subtle focus:border-brand/50 focus:ring-2 focus:ring-brand/20 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)] transition-all duration-200"
+                className="bg-white/80 border-border-subtle rounded-xl text-text-primary placeholder:text-text-subtle focus:border-brand/50 focus:ring-2 focus:ring-brand/20 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)] transition-all duration-200"
               />
             </div>
             <div className="space-y-2">
@@ -88,7 +88,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
-                className="bg-white/5 border-white/10 rounded-xl text-text-subtle placeholder:text-text-subtle focus:border-brand/50 focus:ring-2 focus:ring-brand/20 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)] transition-all duration-200"
+                className="bg-white/80 border-border-subtle rounded-xl text-text-primary placeholder:text-text-subtle focus:border-brand/50 focus:ring-2 focus:ring-brand/20 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)] transition-all duration-200"
               />
             </div>
 
@@ -124,8 +124,8 @@ export default function LoginPage() {
       <style jsx>{`
         .login-grid {
           background-image:
-            linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px);
+            linear-gradient(rgba(16,185,129,0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(16,185,129,0.06) 1px, transparent 1px);
           background-size: 40px 40px;
           animation: grid-move 20s linear infinite;
         }

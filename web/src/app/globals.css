@@ -75,39 +75,39 @@
 }
 
 /* ============================================================
- * Trae 深蓝灰色系 — Intelligent Green 品牌色
- * :root 与 .dark 指向同一组值，全站强制暗色
+ * Trae 纯白配色 — Intelligent Green 品牌色
+ * :root 与 .dark 指向同一组值，全站强制亮色
  * ============================================================ */
 :root,
 .dark {
-  /* 背景三阶 — Trae 深蓝灰色系 */
-  --bg-base: #0F172A;
-  --bg-elevated: #1E293B;
-  --bg-overlay: #334155;
+  /* 背景三阶 — 纯白配色 */
+  --bg-base: #FFFFFF;
+  --bg-elevated: #F8FAFC;
+  --bg-overlay: #F1F5F9;
 
   /* 文字三阶 */
-  --text-primary: #F1F5F9;
-  --text-muted: #94A3B8;
-  --text-subtle: #475569;
+  --text-primary: #0F172A;
+  --text-muted: #64748B;
+  --text-subtle: #94A3B8;
 
   /* 边框 */
-  --border-subtle: #1E293B;
-  --border-strong: #334155;
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
 
   /* 强调色 — Trae Intelligent Green 品牌色 */
-  --accent-yellow: #FBBF24;
-  --accent-cyan: #22D3EE;
-  --accent-green: #10B981;
-  --accent-orange: #FB923C;
-  --accent-red: #F87171;
-  --accent-purple: #A78BFA;
+  --accent-yellow: #D97706;
+  --accent-cyan: #0891B2;
+  --accent-green: #059669;
+  --accent-orange: #EA580C;
+  --accent-red: #DC2626;
+  --accent-purple: #7C3AED;
 
   /* shadcn 兼容 */
   --background: var(--bg-base);
   --foreground: var(--text-primary);
   --card: var(--bg-elevated);
   --card-foreground: var(--text-primary);
-  --popover: var(--bg-elevated);
+  --popover: var(--bg-base);
   --popover-foreground: var(--text-primary);
   --primary: var(--brand);
   --primary-foreground: #FFFFFF;
@@ -142,29 +142,29 @@
   --terminal-amber: var(--accent-orange);
   --terminal-red: var(--accent-red);
   --brand: #10B981;
-  --brand-soft: rgba(16,185,129,0.08);
-  --brand-glow: rgba(16,185,129,0.18);
+  --brand-soft: rgba(16,185,129,0.06);
+  --brand-glow: rgba(16,185,129,0.12);
 }
 
 :root {
   /* 兜底：shadcn/tailwind 可能引用 :root 选择器；与上一块完全等价 */
-  --bg-base: #0F172A;
-  --bg-elevated: #1E293B;
-  --bg-overlay: #334155;
-  --text-primary: #F1F5F9;
-  --text-muted: #94A3B8;
-  --text-subtle: #475569;
-  --border-subtle: #1E293B;
-  --border-strong: #334155;
-  --accent-yellow: #FBBF24;
-  --accent-cyan: #22D3EE;
-  --accent-green: #10B981;
-  --accent-orange: #FB923C;
-  --accent-red: #F87171;
-  --accent-purple: #A78BFA;
+  --bg-base: #FFFFFF;
+  --bg-elevated: #F8FAFC;
+  --bg-overlay: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-muted: #64748B;
+  --text-subtle: #94A3B8;
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --accent-yellow: #D97706;
+  --accent-cyan: #0891B2;
+  --accent-green: #059669;
+  --accent-orange: #EA580C;
+  --accent-red: #DC2626;
+  --accent-purple: #7C3AED;
   --brand: #10B981;
-  --brand-soft: rgba(16,185,129,0.08);
-  --brand-glow: rgba(16,185,129,0.18);
+  --brand-soft: rgba(16,185,129,0.06);
+  --brand-glow: rgba(16,185,129,0.12);
   --background: var(--bg-base);
   --foreground: var(--text-primary);
   --card: var(--bg-elevated);
