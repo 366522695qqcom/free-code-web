@@ -2,12 +2,21 @@
  * Provider API utilities — test connection and fetch models from OpenAI-compatible APIs.
  */
 
+/**
+ * Normalize a baseUrl by stripping trailing slashes and common API paths
+ * (e.g. /chat/completions) that users may accidentally include.
+ */
+function normalizeBaseUrl(url: string): string {
+  return url.replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
+}
+
 export async function testProviderConnection(provider: {
   baseUrl: string;
   apiKey: string;
   apiPath?: string;
+  model?: string;
 }): Promise<{ success: boolean; message: string }> {
-  const baseUrl = provider.baseUrl.replace(/\/+$/, "");
+  const baseUrl = normalizeBaseUrl(provider.baseUrl);
 
   // Try GET /models first
   try {
@@ -25,6 +34,7 @@ export async function testProviderConnection(provider: {
 
     // If /models fails, try a minimal chat completion request
     const chatPath = provider.apiPath || "/chat/completions";
+    const testModel = provider.model || "gpt-4o-mini";
     const chatResponse = await fetch(`${baseUrl}${chatPath}`, {
       method: "POST",
       headers: {
@@ -32,7 +42,7 @@ export async function testProviderConnection(provider: {
         Authorization: `Bearer ${provider.apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: testModel,
         messages: [{ role: "user", content: "hi" }],
         max_tokens: 1,
       }),
@@ -63,7 +73,7 @@ export async function fetchProviderModels(provider: {
   models: Array<{ id: string; owned_by?: string }>;
   error?: string;
 }> {
-  const baseUrl = provider.baseUrl.replace(/\/+$/, "");
+  const baseUrl = normalizeBaseUrl(provider.baseUrl);
 
   try {
     const response = await fetch(`${baseUrl}/models`, {

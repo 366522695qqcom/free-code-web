@@ -4,7 +4,7 @@
 
 import { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getProvider } from "@/lib/providers/storage";
+import { getProviderWithModels } from "@/lib/providers/storage";
 import { testProviderConnection } from "@/lib/providers/api";
 
 export async function POST(
@@ -20,7 +20,7 @@ export async function POST(
   }
 
   const { id } = await params;
-  const provider = await getProvider(id);
+  const provider = await getProviderWithModels(id);
 
   if (!provider) {
     return new Response(JSON.stringify({ error: "Provider not found" }), {
@@ -29,10 +29,14 @@ export async function POST(
     });
   }
 
+  // Use the first registered chat model for testing instead of hardcoded gpt-4o-mini
+  const chatModel = provider.models?.find((m) => m.modelType === "chat");
+
   const result = await testProviderConnection({
     baseUrl: provider.baseUrl,
     apiKey: provider.apiKey,
     apiPath: provider.apiPath,
+    model: chatModel?.modelId,
   });
 
   return new Response(JSON.stringify(result), {
