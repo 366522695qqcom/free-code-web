@@ -323,6 +323,7 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
       const currentMsgs = messagesRef.current;
       if (currentMsgs.length === 0) return;
       const payload = currentMsgs.map((m) => ({
+        id: m.id,
         role: m.role,
         content: m.contentBlocks
           ? m.contentBlocks

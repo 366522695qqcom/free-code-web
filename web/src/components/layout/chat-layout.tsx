@@ -174,12 +174,12 @@ export function ChatLayout() {
                   msg.timestamp as string
                 ).getTime(),
                 contentBlocks: Array.isArray(msg.content)
-                  ? data.messages.map(
+                  ? (msg.content as Record<string, unknown>[]).map(
                       (block: Record<string, unknown>) => {
                         if (block.type === "text")
                           return { type: "text" as const, text: block.text as string };
                         if (block.type === "thinking")
-                          return { type: "thinking" as const, text: block.thinking as string };
+                          return { type: "thinking" as const, text: block.thinking as string || block.text as string };
                         if (block.type === "tool_use")
                           return {
                             type: "tool_use" as const,
@@ -189,6 +189,16 @@ export function ChatLayout() {
                               input: block.input as Record<string, unknown>,
                             },
                             status: "done" as const,
+                          };
+                        if (block.type === "tool_result")
+                          return {
+                            type: "tool_result" as const,
+                            toolResult: {
+                              toolUseId: block.tool_use_id as string,
+                              output: block.content as string,
+                              isError: block.is_error as boolean,
+                            },
+                            status: block.is_error ? "error" as const : "done" as const,
                           };
                         return { type: "text" as const, text: "" };
                       }
