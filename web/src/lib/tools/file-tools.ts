@@ -8,7 +8,7 @@
 
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
-import { dirname, resolve } from "path";
+import { dirname, resolve, isAbsolute, normalize } from "path";
 import { diffLines } from "diff";
 import type { ToolExecutor, ToolResult } from "./registry";
 import type { Sandbox } from '@vercel/sandbox';
@@ -16,8 +16,16 @@ import type { Sandbox } from '@vercel/sandbox';
 const WORK_DIR = process.env.WORK_DIR || process.cwd();
 
 function resolvePath(filePath: string): string {
-  if (filePath.startsWith("/")) return filePath;
-  return resolve(WORK_DIR, filePath);
+  // H-2: reject absolute paths (would allow reading /etc/passwd, etc.)
+  if (isAbsolute(filePath)) {
+    throw new Error(`Absolute paths are not allowed: ${filePath}`);
+  }
+  // H-2: reject path traversal attempts (../ or ..)
+  const normalized = normalize(filePath);
+  if (normalized.startsWith("..")) {
+    throw new Error(`Path traversal detected: ${filePath}`);
+  }
+  return resolve(WORK_DIR, normalized);
 }
 
 // ─── FileReadTool ────────────────────────────────────────────────────────────

@@ -22,6 +22,7 @@ import {
 import { assessToolExecution, executeToolWithSandbox } from "@/lib/sandbox/tool-adapter";
 import type { ToolExecutionDecision } from "@/lib/sandbox/tool-adapter";
 import type { Message, ContentBlock } from "@/types";
+import { validateUrl } from "@/lib/utils/ssrf-guard";
 
 const DEFAULT_MAX_TOKENS = 16384;
 const THINKING_BUDGET = 10000;
@@ -374,6 +375,8 @@ async function runOpenAILoop(
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
     const baseUrl = options.customBaseUrl || "https://api.openai.com/v1";
     const apiPath = options.customApiPath || "/chat/completions";
+    // H-3: validate URL before fetching (blocks SSRF via customBaseUrl)
+    validateUrl(`${baseUrl}${apiPath}`, "customBaseUrl");
     const response = await fetch(
       `${baseUrl}${apiPath}`,
       {

@@ -5,7 +5,7 @@
  * - GrepTool: Search file contents using ripgrep or Node.js fallback
  */
 
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { resolve } from "path";
 import fg from "fast-glob";
 import { readFile, stat } from "fs/promises";
@@ -14,6 +14,7 @@ import type { ToolExecutor, ToolResult } from "./registry";
 import type { Sandbox } from '@vercel/sandbox';
 
 const WORK_DIR = process.env.WORK_DIR || process.cwd();
+const RIPGREP_BIN = "/usr/bin/rg"; // absolute path to avoid PATH issues with execFile
 
 // ─── GlobTool ────────────────────────────────────────────────────────────────
 
@@ -127,7 +128,7 @@ export const globTool: ToolExecutor = {
  */
 async function hasRipgrep(): Promise<boolean> {
   return new Promise((resolve) => {
-    exec("which rg", (error) => {
+    execFile(RIPGREP_BIN, ["--version"], (error) => {
       resolve(!error);
     });
   });
@@ -135,6 +136,7 @@ async function hasRipgrep(): Promise<boolean> {
 
 /**
  * Search using ripgrep — fast and feature-rich.
+ * Uses execFile to pass arguments as an array, avoiding shell injection.
  */
 function grepWithRipgrep(
   pattern: string,
@@ -146,19 +148,27 @@ function grepWithRipgrep(
   }
 ): Promise<ToolResult> {
   return new Promise((resolve) => {
-    let cmd = "rg";
+    const args: string[] = [
+      // --pattern 是安全的：传给 ripgrep，不是 shell
+      "--pattern", pattern,
+      "--",
+      path,
+      "--line-number",
+      "--no-heading",
+      "--color", "never",
+    ];
 
-    // Line number, no heading, no colors
-    cmd += " --line-number --no-heading --color never";
+    if (options.ignoreCase) args.push("--ignore-case");
+    if (options.glob) {
+      args.push("--glob", options.glob);
+    }
+    if (options.maxResults) {
+      args.push("--max-count", String(options.maxResults));
+    }
 
-    if (options.ignoreCase) cmd += " -i";
-    if (options.glob) cmd += ` --glob '${options.glob.replace(/'/g, "'\\''")}'`;
-    if (options.maxResults) cmd += ` --max-count ${options.maxResults}`;
-
-    cmd += ` '${pattern.replace(/'/g, "'\\''")}' '${path}'`;
-
-    exec(
-      cmd,
+    execFile(
+      RIPGREP_BIN,
+      args,
       { maxBuffer: 10 * 1024 * 1024, timeout: 30_000 },
       (error, stdout, stderr) => {
         if (error && !stdout) {

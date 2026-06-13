@@ -8,6 +8,21 @@ const AUTH_SECRET = new TextEncoder().encode(
   process.env.AUTH_SECRET || "default-secret-change-me"
 );
 
+// M-3: warn on default credentials; fatal in production
+const IS_DEFAULT_USERNAME = !process.env.AUTH_USERNAME;
+const IS_DEFAULT_PASSWORD = !process.env.AUTH_PASSWORD;
+const IS_DEFAULT_SECRET = !process.env.AUTH_SECRET;
+
+if (IS_DEFAULT_USERNAME || IS_DEFAULT_PASSWORD || IS_DEFAULT_SECRET) {
+  console.warn(
+    "[SECURITY WARNING] Using default credentials detected. " +
+      "Set AUTH_USERNAME, AUTH_PASSWORD, and AUTH_SECRET environment variables in production."
+  );
+  // Note: process.exit(1) is intentionally omitted here because auth.ts is
+  // imported by Edge Runtime (middleware). Production env-check should be done in
+  // a server-only startup script (e.g. scripts/check-env.ts) instead.
+}
+
 const COOKIE_NAME = "session";
 
 export interface SessionPayload {

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tetris (LLM Recheck)</title>
+<style>
+  body { background: #1a1a1a; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; margin: 0; }
+  canvas { border: 2px solid #fff; display: block; margin: 20px auto; }
+  .info { font-size: 18px; margin: 10px; }
+</style>
+</head>
+<body>
+<h1>Tetris (LLM-generated, recheck)</h1>
+<div class="info">Use Arrow keys: ← → move, ↓ soft drop, ↑ rotate</div>
+<script>
+// 一个简单的俄罗斯方块游戏
+
+const canvas = document.createElement('canvas');
+canvas.width = 300;
+canvas.height = 600;
+document.body.appendChild(canvas);
+const ctx = canvas.getContext('2d');
+
+const COLS = 10;
+const ROWS = 20;
+const BLOCK_SIZE = 30;
+
+// 方块形状
+const SHAPES = [
+    [[1, 1, 1, 1]], // I
+    [[1, 1], [1, 1]], // O
+    [[0, 1, 0], [1, 1, 1]], // T
+    [[1, 0, 0], [1, 1, 1]], // L
+    [[0, 0, 1], [1, 1, 1]], // J
+    [[0, 1, 1], [1, 1, 0]], // S
+    [[1, 1, 0], [0, 1, 1]] // Z
+];
+
+const COLORS = [
+    '#00FFFF', // I - Cyan
+    '#FFFF00', // O - Yellow
+    '#800080', // T - Purple
+    '#FFA500', // L - Orange
+    '#0000FF', // J - Blue
+    '#00FF00', // S - Green
+    '#FF0000'  // Z - Red
+];
+
+let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+let currentPiece = null;
+let currentX = 0;
+let currentY = 0;
+let currentColor = '';
+let gameOver = false;
+
+function newPiece() {
+    const index = Math.floor(Math.random() * SHAPES.length);
+    currentPiece = SHAPES[index];
+    currentColor = COLORS[index];
+    currentX = Math.floor((COLS - currentPiece[0].length) / 2);
+    currentY = 0;
+    if (!isValidMove(currentPiece, currentX, currentY)) {
+        gameOver = true;
+    }
+}
+
+function isValidMove(piece, x, y) {
+    for (let i = 0; i < piece.length; i++) {
+        for (let j = 0; j < piece[i].length; j++) {
+            if (piece[i][j]) {
+                const newX = x + j;
+                const newY = y + i;
+                if (newX < 0 || newX >= COLS || newY >= ROWS || (newY >= 0 && board[newY][newX])) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+function rotate(piece) {
+    const newPiece = piece[0].map((_, i) => piece.map(row => row[i]).reverse());
+    return newPiece;
+}
+
+function lockPiece() {
+    for (let i = 0; i < currentPiece.length; i++) {
+        for (let j = 0; j < currentPiece[i].length; j++) {
+            if (currentPiece[i][j]) {
+                const y = currentY + i;
+                const x = currentX + j;
+                if (y >= 0) {
+                    board[y][x] = currentColor;
+                }
+            }
+        }
+    }
+    clearLines();
+    newPiece();
+}
+
+function clearLines() {
+    let linesCleared = 0;
+    for (let i = ROWS - 1; i >= 0; i--) {
+        if (board[i].every(cell => cell !== 0)) {
+            board.splice(i, 1);
+            board.unshift(Array(COLS).fill(0));
+            linesCleared++;
+            i++; // Re-check the same row
+        }
+    }
+    if (linesCleared > 0) {
+        console.log(`Cleared ${linesCleared} line(s)!`);
+    }
+}
+
+function drawBlock(x, y, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+    ctx.strokeStyle = '#000';
+    ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+}
+
+function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw board
+    for (let i = 0; i < ROWS; i++) {
+        for (let j = 0; j < COLS; j++) {
+            if (board[i][j]) {
+                drawBlock(j, i, board[i][j]);
+            }
+        }
+    }
+
+    // Draw current piece
+    if (currentPiece) {
+        for (let i = 0; i < currentPiece.length; i++) {
+            for (let j = 0; j < currentPiece[i].length; j++) {
+                if (currentPiece[i][j]) {
+                    drawBlock(currentX + j, currentY + i, currentColor);
+                }
+            }
+        }
+    }
+
+    if (gameOver) {
+        ctx.fillStyle = 'white';
+        ctx.font = '30px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2);
+    }
+}
+
+document.addEventListener('keydown', (event) => {
+    if (gameOver) return;
+
+    if (event.key === 'ArrowLeft' && isValidMove(currentPiece, currentX - 1, currentY)) {
+        currentX--;
+    } else if (event.key === 'ArrowRight' && isValidMove(currentPiece, currentX + 1, currentY)) {
+        currentX++;
+    } else if (event.key === 'ArrowDown' && isValidMove(currentPiece, currentX, currentY + 1)) {
+        currentY++;
+    } else if (event.key === 'ArrowUp') {
+        const rotated = rotate(currentPiece);
+        if (isValidMove(rotated, currentX, currentY)) {
+            currentPiece = rotated;
+        }
+    }
+
+    draw();
+});
+
+// 自动下落
+setInterval(() => {
+    if (gameOver) return;
+
+    if (isValidMove(currentPiece, currentX, currentY + 1)) {
+        currentY++;
+    } else {
+        lockPiece();
+    }
+    draw();
+}, 500);
+
+// 初始化游戏
+newPiece();
+draw();
+
+console.log("使用方向键控制方块：左、右、下移动，上旋转");
+</script>
+</body>
+</html>

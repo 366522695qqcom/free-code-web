@@ -6,6 +6,7 @@
  */
 
 import type { ToolExecutor, ToolResult } from "./registry";
+import { validateUrl } from "@/lib/utils/ssrf-guard";
 
 // ─── WebFetchTool ────────────────────────────────────────────────────────────
 
@@ -48,6 +49,17 @@ export const webFetchTool: ToolExecutor = {
       return {
         output: "",
         error: `Invalid URL: ${url}`,
+        exitCode: 1,
+      };
+    }
+
+    // M-1: validate URL for SSRF (blocks internal/private addresses)
+    try {
+      validateUrl(url, "web_fetch");
+    } catch {
+      return {
+        output: "",
+        error: `URL is not allowed: fetches to internal/private network addresses are blocked.`,
         exitCode: 1,
       };
     }

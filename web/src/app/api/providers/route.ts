@@ -19,7 +19,12 @@ export async function GET(request: NextRequest) {
   }
 
   const providers = await listProvidersWithModels();
-  return new Response(JSON.stringify({ providers }), {
+  // M-2: mask API keys — only expose last 4 characters
+  const masked = providers.map((p) => ({
+    ...p,
+    apiKey: p.apiKey ? `***${p.apiKey.slice(-4)}` : null,
+  }));
+  return new Response(JSON.stringify({ providers: masked }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
