@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createAgenticStream } from "@/lib/agent-stream";
 import { createSSEResponse } from "@/lib/sse";
 import { getSession } from "@/lib/auth";
+import { listProvidersWithModels } from "@/lib/providers/storage";
 import type { ChatRequest } from "@/types";
 
 export async function POST(request: NextRequest) {
@@ -24,12 +25,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Resolve the real API key: the frontend receives masked keys from
+    // GET /api/providers (***xxxx), so we must look up the original from DB.
+    let resolvedApiKey = body.customApiKey;
+    if (body.customBaseUrl && (!resolvedApiKey || resolvedApiKey.startsWith("***"))) {
+      const providers = await listProvidersWithModels();
+      const match = providers.find((p) => p.baseUrl === body.customBaseUrl);
+      if (match?.apiKey) {
+        resolvedApiKey = match.apiKey;
+      }
+    }
+
     const stream = createAgenticStream(body.messages, {
       model: body.model,
       sessionId: body.sessionId,
       permissionMode: body.permissionMode,
       customBaseUrl: body.customBaseUrl,
-      customApiKey: body.customApiKey,
+      customApiKey: resolvedApiKey,
       customApiPath: body.customApiPath,
     });
 
