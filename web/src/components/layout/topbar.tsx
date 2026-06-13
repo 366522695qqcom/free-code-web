@@ -112,7 +112,7 @@ export function Topbar({
         {isStreaming && (
           <span className="flex items-center gap-1.5 text-xs">
             <span className="inline-block size-1.5 animate-pulse rounded-full bg-brand" />
-            <span className="text-brand/70">Streaming</span>
+            <span className="text-brand/70">生成中</span>
           </span>
         )}
       </div>
@@ -123,7 +123,7 @@ export function Topbar({
           variant="ghost"
           size="icon"
           onClick={onSettingsClick}
-          title="Settings"
+          title="设置"
           className="size-8 rounded-lg text-text-muted transition-colors hover:bg-overlay/50 hover:text-text-primary"
         >
           <Settings className="size-4" />
@@ -132,7 +132,7 @@ export function Topbar({
           variant="ghost"
           size="icon"
           onClick={onLogout}
-          title="Sign out"
+          title="退出登录"
           className="size-8 rounded-lg text-text-muted transition-colors hover:bg-overlay/50 hover:text-text-primary"
         >
           <LogOut className="size-4" />

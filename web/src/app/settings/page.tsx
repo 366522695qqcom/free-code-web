@@ -40,11 +40,11 @@ import { BrandHeader } from "@/components/ui/brand-header";
 import { isTextModel } from "@/lib/providers/filter";
 
 const TOOLS = [
-  { id: "bash", name: "Bash", description: "Execute shell commands", defaultConfirm: true },
-  { id: "write", name: "File Write", description: "Write files to disk", defaultConfirm: true },
-  { id: "edit", name: "File Edit", description: "Edit existing files", defaultConfirm: false },
-  { id: "webFetch", name: "Web Fetch", description: "Fetch web content", defaultConfirm: false },
-  { id: "webSearch", name: "Web Search", description: "Search the web", defaultConfirm: false },
+  { id: "bash", name: "Bash", description: "执行 Shell 命令", defaultConfirm: true },
+  { id: "write", name: "文件写入", description: "写入文件到磁盘", defaultConfirm: true },
+  { id: "edit", name: "文件编辑", description: "编辑已有文件", defaultConfirm: false },
+  { id: "webFetch", name: "Web 获取", description: "获取网页内容", defaultConfirm: false },
+  { id: "webSearch", name: "Web 搜索", description: "搜索互联网", defaultConfirm: false },
 ];
 
 const SANDBOX_RUNTIMES = [
@@ -55,17 +55,17 @@ const SANDBOX_RUNTIMES = [
 ];
 
 const RISK_LEVELS = [
-  { id: "low", name: "Low" },
-  { id: "high", name: "High" },
-  { id: "outside-sandbox", name: "Outside Sandbox" },
+  { id: "low", name: "低" },
+  { id: "high", name: "高" },
+  { id: "outside-sandbox", name: "沙箱外" },
 ];
 
 const PERMISSION_TOOLS = [
-  { id: "all", name: "All Tools" },
+  { id: "all", name: "所有工具" },
   { id: "bash", name: "Bash" },
-  { id: "file_read", name: "File Read" },
-  { id: "file_write", name: "File Write" },
-  { id: "file_edit", name: "File Edit" },
+  { id: "file_read", name: "文件读取" },
+  { id: "file_write", name: "文件写入" },
+  { id: "file_edit", name: "文件编辑" },
   { id: "glob", name: "Glob" },
   { id: "grep", name: "Grep" },
 ];
@@ -262,7 +262,7 @@ export default function SettingsPage() {
   if (!mounted) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-base">
-        <div className="text-sm text-text-muted">Loading...</div>
+        <div className="text-sm text-text-muted">加载中...</div>
       </div>
     );
   }
@@ -277,7 +277,7 @@ export default function SettingsPage() {
             variant="ghost"
             size="icon-xs"
             onClick={() => router.push("/")}
-            title="Back to chat"
+            title="返回聊天"
           >
             <ArrowLeft className="size-4" />
           </Button>
@@ -288,7 +288,7 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
         <BrandHeader
           size="lg"
-          subtitle="Configure your Free Code instance"
+          subtitle="配置你的 Free Code 实例"
           className="mb-6"
         />
         {/* Model Providers */}
@@ -322,7 +322,7 @@ export default function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Cpu className="size-4 text-brand" />
-              <CardTitle>Model</CardTitle>
+              <CardTitle>模型</CardTitle>
             </div>
             <CardDescription>
               选择新对话的默认模型。
@@ -378,10 +378,10 @@ export default function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Box className="size-4 text-brand" />
-              <CardTitle>Sandbox</CardTitle>
+              <CardTitle>沙箱</CardTitle>
             </div>
             <CardDescription>
-              Configure Vercel Sandbox for isolated tool execution.
+              配置 Vercel Sandbox 以在隔离环境中执行工具。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -389,9 +389,9 @@ export default function SettingsPage() {
               {/* Enable Sandbox */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="sandbox-enabled">Enable Sandbox</Label>
+                  <Label htmlFor="sandbox-enabled">启用沙箱</Label>
                   <p className="text-xs text-text-muted">
-                    Execute tools in an isolated Vercel Sandbox VM
+                    在隔离的 Vercel Sandbox 虚拟机中执行工具
                   </p>
                 </div>
                 <Switch
@@ -406,7 +406,7 @@ export default function SettingsPage() {
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-yellow-500" />
                     <p className="text-xs text-yellow-500/90">
-                      Enabling sandbox will execute tools in an isolated Vercel Sandbox VM. Make sure SANDBOX_ENABLED is set to true in your server environment variables.
+                      启用沙箱后，工具将在隔离的 Vercel Sandbox 虚拟机中执行。请确保服务器环境变量中 SANDBOX_ENABLED 已设为 true。
                     </p>
                   </div>
                 </div>
@@ -416,7 +416,7 @@ export default function SettingsPage() {
 
               {/* Runtime */}
               <div className="flex items-center justify-between">
-                <Label htmlFor="sandbox-runtime">Runtime</Label>
+                <Label htmlFor="sandbox-runtime">运行时</Label>
                 <Select
                   value={sandboxRuntime}
                   onValueChange={handleSandboxRuntimeChange}
@@ -439,9 +439,9 @@ export default function SettingsPage() {
               {/* vCPUs */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="sandbox-vcpus">vCPUs</Label>
+                  <Label htmlFor="sandbox-vcpus">虚拟 CPU 数</Label>
                   <p className="text-xs text-text-muted">
-                    Number of virtual CPUs (1–32)
+                    虚拟 CPU 数量（1–32）
                   </p>
                 </div>
                 <Input
@@ -460,9 +460,9 @@ export default function SettingsPage() {
               {/* Memory */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="sandbox-memory">Memory (GB)</Label>
+                  <Label htmlFor="sandbox-memory">内存 (GB)</Label>
                   <p className="text-xs text-text-muted">
-                    Allocated memory (2–64 GB)
+                    分配内存（2–64 GB）
                   </p>
                 </div>
                 <Input
@@ -481,9 +481,9 @@ export default function SettingsPage() {
               {/* Timeout */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="sandbox-timeout">Timeout (minutes)</Label>
+                  <Label htmlFor="sandbox-timeout">超时（分钟）</Label>
                   <p className="text-xs text-text-muted">
-                    Maximum execution time (1–300 min)
+                    最大执行时间（1–300 分钟）
                   </p>
                 </div>
                 <Input
@@ -502,9 +502,9 @@ export default function SettingsPage() {
               {/* Persistent */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="sandbox-persistent">Persistent</Label>
+                  <Label htmlFor="sandbox-persistent">持久化</Label>
                   <p className="text-xs text-text-muted">
-                    Keep sandbox alive between tool calls
+                    在工具调用之间保持沙箱存活
                   </p>
                 </div>
                 <Switch
@@ -515,7 +515,7 @@ export default function SettingsPage() {
               </div>
 
               <p className="text-[0.65rem] text-text-muted/50">
-                Sandbox enable/disable is controlled by the SANDBOX_ENABLED server environment variable. The switch above reflects your client-side preference.
+                沙箱的启用/禁用由服务器环境变量 SANDBOX_ENABLED 控制。上方的开关反映的是你的客户端偏好设置。
               </p>
             </div>
           </CardContent>
@@ -528,10 +528,10 @@ export default function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Shield className="size-4 text-brand" />
-              <CardTitle>Tool Permissions</CardTitle>
+              <CardTitle>工具权限</CardTitle>
             </div>
             <CardDescription>
-              Configure which tools require confirmation before execution.
+              配置哪些工具在执行前需要确认。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -557,7 +557,7 @@ export default function SettingsPage() {
                 </div>
               ))}
               <p className="text-[0.65rem] text-text-muted/50">
-                When enabled, the tool will ask for confirmation before each execution.
+                启用后，该工具在每次执行前都会请求确认。
               </p>
             </div>
           </CardContent>
@@ -570,10 +570,10 @@ export default function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Shield className="size-4 text-brand" />
-              <CardTitle>Custom Permission Rules</CardTitle>
+              <CardTitle>自定义权限规则</CardTitle>
             </div>
             <CardDescription>
-              Define custom rules to override default risk assessments for tool execution.
+              定义自定义规则以覆盖默认的工具执行风险评估。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -586,7 +586,7 @@ export default function SettingsPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-2">
-                            <Label className="text-xs text-text-muted">Pattern</Label>
+                            <Label className="text-xs text-text-muted">匹配模式</Label>
                             <Input
                               value={rule.pattern}
                               onChange={(e) => handleEditRulePattern(rule.id, e.target.value)}
@@ -594,7 +594,7 @@ export default function SettingsPage() {
                             />
                           </div>
                           <div className="flex items-center gap-2">
-                            <Label className="text-xs text-text-muted">Risk Level</Label>
+                            <Label className="text-xs text-text-muted">风险等级</Label>
                             <Select
                               value={rule.riskLevel}
                               onValueChange={(val) => handleEditRuleRiskLevel(rule.id, val)}
@@ -612,7 +612,7 @@ export default function SettingsPage() {
                             </Select>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Label className="text-xs text-text-muted">Apply to Tool</Label>
+                            <Label className="text-xs text-text-muted">适用工具</Label>
                             <Select
                               value={rule.applyToTool}
                               onValueChange={(val) => handleEditRuleApplyToTool(rule.id, val)}
@@ -634,7 +634,7 @@ export default function SettingsPage() {
                           variant="ghost"
                           size="icon-xs"
                           onClick={() => handleDeleteRule(rule.id)}
-                          title="Delete rule"
+                          title="删除规则"
                           className="mt-1 shrink-0 text-text-muted hover:text-accent-red"
                         >
                           <Trash2 className="size-3.5" />
@@ -645,7 +645,7 @@ export default function SettingsPage() {
                 ))
               ) : (
                 <p className="text-xs text-text-muted">
-                  No custom rules defined. Default risk assessments will be used.
+                  未定义自定义规则，将使用默认风险评估。
                 </p>
               )}
 
@@ -653,7 +653,7 @@ export default function SettingsPage() {
                 <div className="space-y-3 rounded-lg border border-border-subtle p-3">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label className="shrink-0 text-xs text-text-muted">Pattern</Label>
+                      <Label className="shrink-0 text-xs text-text-muted">匹配模式</Label>
                       <Input
                         placeholder='e.g., "npm test"'
                         value={newRulePattern}
@@ -662,7 +662,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label className="shrink-0 text-xs text-text-muted">Risk Level</Label>
+                      <Label className="shrink-0 text-xs text-text-muted">风险等级</Label>
                       <Select
                         value={newRuleRiskLevel}
                         onValueChange={(val) => { if (val) setNewRuleRiskLevel(val); }}
@@ -680,7 +680,7 @@ export default function SettingsPage() {
                       </Select>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label className="shrink-0 text-xs text-text-muted">Apply to Tool</Label>
+                      <Label className="shrink-0 text-xs text-text-muted">适用工具</Label>
                       <Select
                         value={newRuleApplyToTool}
                         onValueChange={(val) => { if (val) setNewRuleApplyToTool(val); }}
@@ -706,7 +706,7 @@ export default function SettingsPage() {
                       disabled={!newRulePattern.trim()}
                       className="h-7 text-xs"
                     >
-                      Save Rule
+                      保存规则
                     </Button>
                     <Button
                       size="sm"
@@ -714,7 +714,7 @@ export default function SettingsPage() {
                       onClick={() => setShowAddRule(false)}
                       className="h-7 text-xs"
                     >
-                      Cancel
+                      取消
                     </Button>
                   </div>
                 </div>
@@ -726,12 +726,12 @@ export default function SettingsPage() {
                   className="h-7 text-xs"
                 >
                   <Plus className="mr-1 size-3" />
-                  Add Rule
+                  添加规则
                 </Button>
               )}
 
               <p className="text-[0.65rem] text-text-muted/50">
-                Custom rules override default risk assessments. Rules are stored locally and sent with tool confirmation requests.
+                自定义规则会覆盖默认风险评估。规则存储在本地，并随工具确认请求一起发送。
               </p>
             </div>
           </CardContent>
@@ -744,18 +744,18 @@ export default function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <MessageSquare className="size-4 text-brand" />
-              <CardTitle>Session</CardTitle>
+              <CardTitle>会话</CardTitle>
             </div>
             <CardDescription>
-              Configure session behavior.
+              配置会话行为。
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="auto-title">Auto-generate titles</Label>
+                <Label htmlFor="auto-title">自动生成标题</Label>
                 <p className="text-xs text-text-muted">
-                  Automatically generate session titles from the first message.
+                  根据第一条消息自动生成会话标题。
                 </p>
               </div>
               <Switch
@@ -774,21 +774,21 @@ export default function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Info className="size-4 text-brand" />
-              <CardTitle>About</CardTitle>
+              <CardTitle>关于</CardTitle>
             </div>
             <CardDescription>
-              Application information.
+              应用信息。
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 font-mono text-xs text-text-muted">
               <div className="flex justify-between">
-                <span>Version</span>
+                <span>版本</span>
                 <span className="text-text-primary">0.1.0</span>
               </div>
               <Separator />
               <div className="flex justify-between">
-                <span>Repository</span>
+                <span>仓库</span>
                 <a
                   href="https://github.com/user/free-code"
                   target="_blank"
@@ -800,7 +800,7 @@ export default function SettingsPage() {
               </div>
               <Separator />
               <div className="flex justify-between">
-                <span>License</span>
+                <span>许可证</span>
                 <span className="text-text-primary">MIT</span>
               </div>
             </div>

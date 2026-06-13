@@ -29,7 +29,7 @@ export function AutoApproveToast({ toolName, reason, onClose }: AutoApproveToast
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className="font-mono text-xs text-accent-green">
-            Auto-approved: {toolName}
+            已自动批准: {toolName}
           </span>
           {reason && (
             <button

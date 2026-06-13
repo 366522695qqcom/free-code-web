@@ -47,7 +47,7 @@ export function useSessions(): UseSessionsReturn {
         conversations.sort((a, b) => b.updatedAt - a.updatedAt)
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch sessions");
+      setError(err instanceof Error ? err.message : "获取对话列表失败");
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +61,7 @@ export function useSessions(): UseSessionsReturn {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: title || "New Chat",
+            title: title || "新建对话",
           }),
         });
         if (!res.ok) throw new Error(`Failed to create session: ${res.status}`);
@@ -72,7 +72,7 @@ export function useSessions(): UseSessionsReturn {
         return conversation;
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Failed to create session";
+          err instanceof Error ? err.message : "创建对话失败";
         setError(message);
         throw err;
       }
@@ -95,7 +95,7 @@ export function useSessions(): UseSessionsReturn {
         }
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to delete session"
+          err instanceof Error ? err.message : "删除对话失败"
         );
       }
     },
@@ -118,7 +118,7 @@ export function useSessions(): UseSessionsReturn {
         );
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to rename session"
+          err instanceof Error ? err.message : "重命名对话失败"
         );
       }
     },

@@ -27,13 +27,13 @@ export default function LoginPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "Login failed");
+        setError(data.error ?? "登录失败");
         return;
       }
       router.push("/");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
+      setError(err instanceof Error ? err.message : "网络错误");
     } finally {
       setLoading(false);
     }
@@ -57,13 +57,13 @@ export default function LoginPage() {
         <div className="p-10">
           {/* Brand header */}
           <div className="mb-8 flex flex-col items-center gap-3">
-            <BrandHeader size="lg" subtitle="Self-hosted Claude Code" />
+            <BrandHeader size="lg" subtitle="自托管 Claude Code" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-xs font-medium text-text-subtle">
-                Username
+                用户名
               </Label>
               <Input
                 id="username"
@@ -78,7 +78,7 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-xs font-medium text-text-subtle">
-                Password
+                密码
               </Label>
               <Input
                 id="password"
@@ -106,10 +106,10 @@ export default function LoginPage() {
               {loading ? (
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="size-4 animate-spin" />
-                  Signing in...
+                  登录中...
                 </span>
               ) : (
-                "Sign in"
+                "登录"
               )}
             </button>
           </form>

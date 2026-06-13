@@ -81,7 +81,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
           </span>
         ) : (
           <span className={cn(isError ? "text-accent-red" : "text-accent-green")}>
-            {isError ? "✗ error" : "✓ done"}
+            {isError ? "✗ 错误" : "✓ 完成"}
           </span>
         )}
         {/* Language badge */}
@@ -91,7 +91,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
           </span>
         )}
         {!isExpanded && (
-          <span className="text-text-muted/50 text-xs">(click to expand)</span>
+          <span className="text-text-muted/50 text-xs">(点击展开)</span>
         )}
       </button>
 
@@ -129,7 +129,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
                       <AnsiRenderer content={output} />
                     ) : (
                       <div className="font-mono text-xs text-text-muted">
-                        {isError ? `Error: ${output}` : output || "(no output)"}
+                        {isError ? `错误: ${output}` : output || "(无输出)"}
                       </div>
                     )}
                   </div>
@@ -137,7 +137,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
                   <button
                     onClick={handleCopy}
                     className="absolute top-1.5 right-1.5 rounded p-1 text-text-muted/40 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-overlay/30 hover:text-text-primary"
-                    title="Copy output"
+                    title="复制输出"
                   >
                     {copied ? (
                       <span className="text-accent-green text-xs">✓</span>
@@ -150,7 +150,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
 
               {!output && !shouldShowDiff && (
                 <div className="font-mono text-xs text-text-muted/40">
-                  (no output)
+                  (无输出)
                 </div>
               )}
             </div>

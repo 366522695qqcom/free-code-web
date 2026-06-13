@@ -37,28 +37,28 @@ function StatusIndicator({ status }: { status: MCPServerInfo["status"] }) {
       return (
         <span className="flex items-center gap-1.5 text-xs text-brand">
           <span className="inline-block size-2 rounded-full bg-brand" />
-          Connected
+          已连接
         </span>
       );
     case "connecting":
       return (
         <span className="flex items-center gap-1.5 text-xs text-brand">
           <Loader2 className="size-3 animate-spin" />
-          Connecting
+          连接中
         </span>
       );
     case "error":
       return (
         <span className="flex items-center gap-1.5 text-xs text-accent-red">
           <AlertCircle className="size-3" />
-          Error
+          错误
         </span>
       );
     default:
       return (
         <span className="flex items-center gap-1.5 text-xs text-text-muted">
           <span className="inline-block size-2 rounded-full bg-overlay-foreground/40" />
-          Disconnected
+          已断开
         </span>
       );
   }
@@ -76,8 +76,8 @@ export function ServerList({
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border-subtle px-3 py-3">
-        <h2 className="text-sm font-medium text-text-primary">MCP Servers</h2>
-        <Button variant="ghost" size="icon-xs" onClick={onAdd} title="Add server">
+        <h2 className="text-sm font-medium text-text-primary">MCP 服务器</h2>
+        <Button variant="ghost" size="icon-xs" onClick={onAdd} title="添加服务器">
           <Plus className="size-4" />
         </Button>
       </div>
@@ -87,9 +87,9 @@ export function ServerList({
         {servers.length === 0 ? (
           <div className="px-3 py-8 text-center text-xs text-text-muted">
             <Server className="mx-auto mb-2 size-8 opacity-30" />
-            <p>No MCP servers configured</p>
+            <p>暂无 MCP 服务器</p>
             <p className="mt-1 text-text-muted/60">
-              Click + to add one
+              点击 + 添加
             </p>
           </div>
         ) : (
@@ -124,7 +124,7 @@ export function ServerList({
                       );
                     }}
                     title={
-                      server.status === "connected" ? "Disconnect" : "Connect"
+                      server.status === "connected" ? "断开连接" : "连接"
                     }
                   >
                     {server.status === "connected" ? (
@@ -140,7 +140,7 @@ export function ServerList({
                       e.stopPropagation();
                       onDelete(server.id);
                     }}
-                    title="Delete server"
+                    title="删除服务器"
                   >
                     <Trash2 className="size-3 text-text-muted hover:text-accent-red" />
                   </Button>

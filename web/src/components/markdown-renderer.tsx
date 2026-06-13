@@ -21,12 +21,12 @@ function CopyButton({ text }: { text: string }) {
       {copied ? (
         <>
           <Check className="size-3" />
-          <span>Copied!</span>
+          <span>已复制!</span>
         </>
       ) : (
         <>
           <Copy className="size-3" />
-          <span>Copy</span>
+          <span>复制</span>
         </>
       )}
     </button>
@@ -80,7 +80,7 @@ function FencedCodeBlock({
       {/* Header bar */}
       <div className="flex items-center justify-between bg-overlay/50 px-4 py-2 border-b border-border-subtle">
         <span className="text-xs font-mono text-text-subtle">
-          {language || "code"}
+          {language || "代码"}
         </span>
         <CopyButton text={codeText} />
       </div>

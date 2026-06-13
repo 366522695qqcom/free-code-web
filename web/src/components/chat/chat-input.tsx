@@ -28,10 +28,10 @@ interface ModeOption {
 }
 
 const MODE_OPTIONS: ModeOption[] = [
-  { value: "default", label: "default", icon: <Shield className="size-4" /> },
-  { value: "plan", label: "plan", icon: <ShieldCheck className="size-4" /> },
-  { value: "acceptEdits", label: "acceptEdits", icon: <ShieldAlert className="size-4" /> },
-  { value: "bypassPermissions", label: "bypassPermissions", icon: <ShieldOff className="size-4" /> },
+  { value: "default", label: "默认", icon: <Shield className="size-4" /> },
+  { value: "plan", label: "规划", icon: <ShieldCheck className="size-4" /> },
+  { value: "acceptEdits", label: "接受编辑", icon: <ShieldAlert className="size-4" /> },
+  { value: "bypassPermissions", label: "跳过权限", icon: <ShieldOff className="size-4" /> },
 ];
 
 /** 斜杠命令数据结构 */
@@ -661,16 +661,16 @@ export function ChatInput({
             className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
           >
             <div className="border-b border-border-subtle bg-overlay/20 px-3 py-1 flex items-center justify-between">
-              <span className="text-[0.65rem] text-text-muted/60">Files</span>
+              <span className="text-[0.65rem] text-text-muted/60">文件</span>
               <div className="flex items-center gap-2 text-[0.6rem] text-text-muted/40">
                 <kbd className="border border-border-subtle px-1 rounded">↑↓</kbd>
-                <span>navigate</span>
+                <span>导航</span>
                 <span>·</span>
                 <kbd className="border border-border-subtle px-1 rounded">Tab</kbd>
-                <span>select</span>
+                <span>选择</span>
                 <span>·</span>
                 <kbd className="border border-border-subtle px-1 rounded">Esc</kbd>
-                <span>close</span>
+                <span>关闭</span>
               </div>
             </div>
             {fileResults.map((file, idx) => (
@@ -718,7 +718,7 @@ export function ChatInput({
           >
             {filteredCommands.length === 0 ? (
               <div className="px-3 py-2 font-mono text-xs text-text-muted/60">
-                No matches
+                无匹配命令
               </div>
             ) : (
               filteredCommands.map((cmd, idx) => (
@@ -795,7 +795,7 @@ export function ChatInput({
           >
             {models.length === 0 ? (
               <div className="px-3 py-2 font-mono text-xs text-text-muted/60">
-                No models available
+                暂无可用模型
               </div>
             ) : (
               models.map((model, idx) => (
@@ -850,8 +850,8 @@ export function ChatInput({
             onKeyDown={handleKeyDown}
             placeholder={
               isStreaming
-                ? "Waiting for response..."
-                : "Type a message... (Enter to send · / for commands · @ to reference file)"
+                ? "等待响应中..."
+                : "输入消息... (Enter 发送 · / 命令 · @ 引用文件)"
             }
             disabled={disabled}
             rows={1}
@@ -890,8 +890,8 @@ export function ChatInput({
               <span className="text-text-muted/30">·</span>
               <span className={ctxColor}>
                 {warningState.isAboveAutoCompactThreshold
-                  ? `${warningState.percentLeft}% until auto-compact`
-                  : `ctx: ${ctxPct.toFixed(0)}%`}
+                  ? `${warningState.percentLeft}% 后自动压缩`
+                  : `上下文: ${ctxPct.toFixed(0)}%`}
               </span>
               {historyIndicator && (
                 <>
@@ -904,7 +904,7 @@ export function ChatInput({
             {isStreaming ? (
               <button
                 onClick={onStop}
-                title="Stop generating (Ctrl+C)"
+                title="停止生成 (Ctrl+C)"
                 className="size-8 rounded-lg bg-accent-red/90 text-white flex items-center justify-center hover:bg-accent-red active:scale-95 transition-all duration-150"
               >
                 <span className="text-sm font-bold leading-none">■</span>
@@ -913,7 +913,7 @@ export function ChatInput({
               <button
                 onClick={handleSend}
                 disabled={!hasValue || disabled}
-                title="Send message (Enter)"
+                title="发送消息 (Enter)"
                 className={cn(
                   "size-8 rounded-lg bg-brand text-white flex items-center justify-center",
                   "hover:bg-brand/90 hover:shadow-[0_0_12px_rgba(16,185,129,0.2)]",

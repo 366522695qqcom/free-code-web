@@ -20,7 +20,7 @@ export function ThinkingBlock({ text }: ThinkingBlockProps) {
       >
         <span className="text-accent-orange">{isExpanded ? "▼" : "◌"}</span>
         <span className="truncate text-sm italic">
-          {isExpanded ? "Thinking" : "Thinking..."}
+          {isExpanded ? "思考中" : "思考中..."}
         </span>
       </button>
       <AnimatePresence initial={false}>

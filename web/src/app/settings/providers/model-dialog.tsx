@@ -95,7 +95,7 @@ export function ModelDialog({
       });
       setTestResult(result);
     } catch {
-      setTestResult({ success: false, error: "Test failed" });
+      setTestResult({ success: false, error: "测试失败" });
     } finally {
       setTesting(false);
     }

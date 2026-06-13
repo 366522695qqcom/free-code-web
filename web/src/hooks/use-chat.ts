@@ -148,7 +148,7 @@ function normalizeSSEEvent(eventType: string, rawData: Record<string, unknown>):
       };
     }
     case "error":
-      return { type: "error", content: String(rawData.error || rawData.content || "Unknown error") };
+      return { type: "error", content: String(rawData.error || rawData.content || "未知错误") };
     case "done":
       return { type: "done" };
     default:
@@ -638,7 +638,7 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
         if (err instanceof DOMException && err.name === "AbortError") {
           // User cancelled, ignore
         } else {
-          setError(err instanceof Error ? err.message : "Streaming failed");
+          setError(err instanceof Error ? err.message : "流式响应失败");
         }
       } finally {
         setIsStreaming(false);

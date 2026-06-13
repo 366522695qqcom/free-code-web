@@ -106,12 +106,12 @@ export function MCPPanel({ onBack }: MCPPanelProps) {
       const data = await res.json();
       // Show result in a simple alert for now
       if (data.output) {
-        alert(`Tool result:\n${data.output}`);
+        alert(`工具结果:\n${data.output}`);
       } else if (data.error) {
-        alert(`Tool error:\n${data.error}`);
+        alert(`工具错误:\n${data.error}`);
       }
     } catch (err) {
-      alert(`Failed to execute tool: ${err}`);
+      alert(`工具执行失败: ${err}`);
     }
   };
 
@@ -125,12 +125,12 @@ export function MCPPanel({ onBack }: MCPPanelProps) {
 
       const data = await res.json();
       if (data.content) {
-        alert(`Resource content:\n${data.content}`);
+        alert(`资源内容:\n${data.content}`);
       } else if (data.error) {
-        alert(`Resource error:\n${data.error}`);
+        alert(`资源错误:\n${data.error}`);
       }
     } catch (err) {
-      alert(`Failed to read resource: ${err}`);
+      alert(`读取资源失败: ${err}`);
     }
   };
 
@@ -147,7 +147,7 @@ export function MCPPanel({ onBack }: MCPPanelProps) {
         )}
         <div className="flex items-center gap-2">
           <span className="font-mono text-sm text-brand">$</span>
-          <h1 className="text-sm font-medium">MCP Server Management</h1>
+          <h1 className="text-sm font-medium">MCP 服务器管理</h1>
         </div>
       </div>
 

@@ -183,7 +183,7 @@ export function Sidebar({
               ? "text-brand bg-brand/10"
               : "text-text-muted hover:text-text-primary hover:bg-overlay"
           )}
-          title="Chat"
+          title="对话"
         >
           <MessageSquare className="size-4" />
         </button>
@@ -197,7 +197,7 @@ export function Sidebar({
               ? "text-brand bg-brand/10"
               : "text-text-muted hover:text-text-primary hover:bg-overlay"
           )}
-          title="Settings"
+          title="设置"
         >
           <Settings className="size-4" />
         </button>
@@ -224,7 +224,7 @@ export function Sidebar({
             "size-9 rounded-lg flex items-center justify-center transition-colors duration-150",
             "text-text-muted hover:text-text-primary hover:bg-overlay"
           )}
-          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={isCollapsed ? "展开侧边栏" : "收起侧边栏"}
         >
           {isCollapsed ? (
             <ChevronRight className="size-4" />
@@ -241,7 +241,7 @@ export function Sidebar({
           type="button"
           onClick={onLogout}
           className="size-9 rounded-lg flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-overlay transition-colors duration-150"
-          title="Logout"
+          title="退出登录"
         >
           <div className="size-6 rounded-full bg-brand/20 text-brand flex items-center justify-center text-xs font-semibold">
             U
@@ -263,14 +263,14 @@ export function Sidebar({
               {/* Header: Chats label + Plus button */}
               <div className="flex items-center justify-between px-3 py-3">
                 <span className="text-[10px] font-medium uppercase tracking-wider text-text-subtle">
-                  Chats
+                  对话
                 </span>
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={onCreateSession}
-                  aria-label="New session"
-                  title="New Chat"
+                  aria-label="新建对话"
+                  title="新建对话"
                   className="size-7 rounded-lg text-brand hover:bg-brand/10 transition-colors duration-150"
                 >
                   <Plus className="size-4" />
@@ -283,7 +283,7 @@ export function Sidebar({
                   <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-muted pointer-events-none" />
                   <Input
                     type="search"
-                    placeholder="Search sessions..."
+                    placeholder="搜索对话..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="h-8 rounded-lg pl-8 text-xs focus-visible:ring-1 focus-visible:ring-brand"
@@ -295,11 +295,11 @@ export function Sidebar({
               <nav className="flex-1 overflow-y-auto px-2 pb-3">
                 {isLoading && sessions.length === 0 ? (
                   <div className="px-3 py-4 font-mono text-xs text-text-muted">
-                    Loading...
+                    加载中...
                   </div>
                 ) : filteredSessions.length === 0 ? (
                   <div className="px-3 py-6 text-center text-xs text-text-muted font-mono">
-                    {searchQuery ? "No matching chats" : "No sessions yet"}
+                    {searchQuery ? "无匹配对话" : "暂无对话"}
                   </div>
                 ) : (
                   <ul className="flex flex-col gap-0.5">
@@ -371,14 +371,14 @@ export function Sidebar({
             className="flex w-full items-center gap-2 px-2 py-1 text-left font-mono text-xs transition-colors hover:bg-overlay"
           >
             <Pencil className="size-3 text-text-muted" />
-            <span>Rename</span>
+            <span>重命名</span>
           </button>
           <button
             onClick={handleDeleteFromMenu}
             className="flex w-full items-center gap-2 px-2 py-1 text-left font-mono text-xs transition-colors hover:bg-overlay text-accent-red"
           >
             <Trash2 className="size-3" />
-            <span>Delete</span>
+            <span>删除</span>
           </button>
         </div>
       )}

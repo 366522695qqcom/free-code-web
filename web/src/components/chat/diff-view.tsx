@@ -254,8 +254,8 @@ export function DiffView({
             )}
           />
           {isExpanded
-            ? "Show less"
-            : `Show ${diffLines.length - maxCollapsedLines} more lines`}
+            ? "收起"
+            : `展开 ${diffLines.length - maxCollapsedLines} 行`}
         </button>
       )}
     </div>

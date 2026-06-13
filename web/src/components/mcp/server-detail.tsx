@@ -81,7 +81,7 @@ function ToolCard({
             variant="ghost"
             size="icon-xs"
             onClick={() => setExpanded(!expanded)}
-            title="Show schema"
+            title="显示 Schema"
           >
             {expanded ? (
               <ChevronDown className="size-3" />
@@ -93,7 +93,7 @@ function ToolCard({
             variant="ghost"
             size="xs"
             onClick={() => onTest(serverId, tool.name)}
-            title="Test tool"
+            title="测试工具"
           >
             <Play className="size-3" />
           </Button>
@@ -103,7 +103,7 @@ function ToolCard({
       {expanded && Object.keys(properties).length > 0 && (
         <div className="mt-2 space-y-1 border-t border-border-subtle pt-2">
           <p className="text-[0.65rem] font-medium uppercase tracking-wider text-text-muted/60">
-            Parameters
+            参数
           </p>
           {Object.entries(properties).map(([key, schema]) => (
             <div key={key} className="flex items-start gap-2 text-xs">
@@ -156,9 +156,9 @@ function ResourceItem({
         variant="ghost"
         size="xs"
         onClick={() => onRead(serverId, resource.uri)}
-        title="Read resource"
+        title="读取资源"
       >
-        Read
+        读取
       </Button>
     </div>
   );
@@ -174,7 +174,7 @@ export function ServerDetail({
       <div className="flex h-full items-center justify-center text-text-muted">
         <div className="text-center">
           <Server className="mx-auto mb-2 size-10 opacity-20" />
-          <p className="text-sm">Select a server to view details</p>
+          <p className="text-sm">选择服务器以查看详情</p>
         </div>
       </div>
     );
@@ -205,13 +205,13 @@ export function ServerDetail({
         <div>
           <h3 className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-text-muted/60">
             <Wrench className="size-3" />
-            Tools ({server.tools.length})
+            工具 ({server.tools.length})
           </h3>
           {server.tools.length === 0 ? (
             <p className="mt-2 text-xs text-text-muted">
               {server.status === "connected"
-                ? "No tools available"
-                : "Connect to see available tools"}
+                ? "暂无可用工具"
+                : "连接后查看可用工具"}
             </p>
           ) : (
             <div className="mt-2 space-y-2">
@@ -231,13 +231,13 @@ export function ServerDetail({
         <div>
           <h3 className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-text-muted/60">
             <FileText className="size-3" />
-            Resources ({server.resources.length})
+            资源 ({server.resources.length})
           </h3>
           {server.resources.length === 0 ? (
             <p className="mt-2 text-xs text-text-muted">
               {server.status === "connected"
-                ? "No resources available"
-                : "Connect to see available resources"}
+                ? "暂无可用资源"
+                : "连接后查看可用资源"}
             </p>
           ) : (
             <div className="mt-2 space-y-2">

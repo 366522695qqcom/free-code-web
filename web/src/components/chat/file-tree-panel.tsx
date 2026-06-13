@@ -104,12 +104,12 @@ export function FileTreePanel({ tree, onFileClick }: FileTreePanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border-subtle px-2 py-1.5">
         <span className="font-mono text-[0.65rem] font-medium text-text-muted/60 uppercase tracking-wider">
-          Files
+          文件
         </span>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="text-text-muted/40 hover:text-text-primary transition-colors"
-          title={isCollapsed ? "Expand file tree" : "Collapse file tree"}
+          title={isCollapsed ? "展开文件树" : "收起文件树"}
         >
           {isCollapsed ? (
             <ChevronRight className="size-3" />

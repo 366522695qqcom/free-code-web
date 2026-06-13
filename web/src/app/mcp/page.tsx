@@ -37,7 +37,7 @@ export default function MCPPage() {
       <div className="flex min-h-screen items-center justify-center bg-base">
         <div className="flex items-center gap-2 text-text-muted">
           <span className="font-mono text-sm text-accent-green">$</span>
-          <span className="font-mono text-sm">Loading...</span>
+          <span className="font-mono text-sm">加载中...</span>
           <span className="inline-block size-2 animate-cursor-blink bg-accent-green" />
         </div>
       </div>

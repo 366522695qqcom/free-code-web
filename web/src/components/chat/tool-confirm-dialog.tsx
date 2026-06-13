@@ -98,7 +98,7 @@ export function ToolConfirmDialog({
       {/* Warning for outside-sandbox */}
       {isOutsideSandbox && (
         <div className="pl-4 text-accent-red text-xs">
-          ⚠ Runs on host, not in sandbox
+          ⚠ 在宿主机运行，不在沙箱中
         </div>
       )}
 
@@ -111,7 +111,7 @@ export function ToolConfirmDialog({
 
       {/* Prompt line */}
       <div className="pl-4 flex items-center gap-1">
-        <span className="text-text-muted">Allow?</span>
+        <span className="text-text-muted">允许？</span>
         <span className="text-text-muted/60">[</span>
         <button
           onClick={() => onAllow(confirmation.toolCallId)}
@@ -135,7 +135,7 @@ export function ToolConfirmDialog({
             >
               a
             </button>
-            <span className="text-text-muted/50 text-xs">(always)</span>
+            <span className="text-text-muted/50 text-xs">(始终)</span>
           </>
         )}
         <span className="text-text-muted/60">]</span>

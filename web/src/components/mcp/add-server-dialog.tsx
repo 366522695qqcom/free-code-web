@@ -84,9 +84,9 @@ export function AddServerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-elevated border-border-subtle rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Add MCP Server</DialogTitle>
+          <DialogTitle>添加 MCP 服务器</DialogTitle>
           <DialogDescription>
-            Connect to an MCP server via stdio or SSE transport.
+            通过 stdio 或 SSE 传输方式连接 MCP 服务器。
           </DialogDescription>
         </DialogHeader>
 
@@ -94,7 +94,7 @@ export function AddServerDialog({
           {/* Name */}
           <div className="grid gap-1.5">
             <label className="text-xs font-medium text-text-muted">
-              Name
+              名称
             </label>
             <input
               type="text"
@@ -108,7 +108,7 @@ export function AddServerDialog({
           {/* Type */}
           <div className="grid gap-1.5">
             <label className="text-xs font-medium text-text-muted">
-              Transport Type
+              传输类型
             </label>
             <div className="flex gap-2">
               <Button
@@ -135,7 +135,7 @@ export function AddServerDialog({
             <>
               <div className="grid gap-1.5">
                 <label className="text-xs font-medium text-text-muted">
-                  Command
+                  命令
                 </label>
                 <input
                   type="text"
@@ -147,7 +147,7 @@ export function AddServerDialog({
               </div>
               <div className="grid gap-1.5">
                 <label className="text-xs font-medium text-text-muted">
-                  Arguments <span className="text-text-muted/50">(space-separated)</span>
+                  参数 <span className="text-text-muted/50">(空格分隔)</span>
                 </label>
                 <input
                   type="text"
@@ -164,7 +164,7 @@ export function AddServerDialog({
           {type === "sse" && (
             <div className="grid gap-1.5">
               <label className="text-xs font-medium text-text-muted">
-                Server URL
+                服务器 URL
               </label>
               <input
                 type="text"
@@ -179,7 +179,7 @@ export function AddServerDialog({
           {/* Environment variables */}
           <div className="grid gap-1.5">
             <label className="text-xs font-medium text-text-muted">
-              Environment Variables <span className="text-text-muted/50">(KEY=VALUE per line)</span>
+              环境变量 <span className="text-text-muted/50">(每行 KEY=VALUE)</span>
             </label>
             <textarea
               value={envText}
@@ -193,10 +193,10 @@ export function AddServerDialog({
 
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>
-            Cancel
+            取消
           </DialogClose>
           <Button onClick={handleSubmit} disabled={!isValid}>
-            Add Server
+            添加服务器
           </Button>
         </DialogFooter>
       </DialogContent>

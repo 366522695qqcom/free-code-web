@@ -255,7 +255,7 @@ export function ChatLayout() {
 
   const handleCreateSession = useCallback(async () => {
     try {
-      await createSession("New Chat");
+      await createSession("新建对话");
     } catch {
       // Error handled in hook
     }
@@ -285,7 +285,7 @@ export function ChatLayout() {
       const provider = customProviderInfoRef.current;
       if (!currentSessionId) {
         try {
-          await createSession("New Chat");
+          await createSession("新建对话");
           await new Promise((r) => setTimeout(r, 100));
           await sendMessage(content, modelId, provider);
         } catch {
@@ -541,7 +541,7 @@ export function ChatLayout() {
             className={`flex items-center gap-1 font-mono text-xs transition-colors ${
               showFileTree ? "text-accent-cyan" : "text-text-muted/50 hover:text-text-primary"
             }`}
-            title={showFileTree ? "Hide file tree" : "Show file tree"}
+            title={showFileTree ? "隐藏文件树" : "显示文件树"}
           >
             <FolderTree className="size-3.5" />
           </button>
@@ -603,7 +603,7 @@ export function ChatLayout() {
                 setCustomProviderInfo(null);
               }
               const modelName = allModels.find((m) => m.id === modelId)?.name || modelId;
-              setSystemMessage(`Model switched to ${modelName}`);
+              setSystemMessage(`已切换到模型 ${modelName}`);
               setTimeout(() => setSystemMessage(null), 3000);
             }}
           />

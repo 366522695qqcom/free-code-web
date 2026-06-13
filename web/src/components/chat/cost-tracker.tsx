@@ -40,9 +40,9 @@ export function CostTracker({ usage }: CostTrackerProps) {
       </TooltipTrigger>
       <TooltipContent side="top">
         <div className="font-mono text-xs space-y-0.5">
-          <div>Input tokens: {inputTokens.toLocaleString()}</div>
-          <div>Output tokens: {outputTokens.toLocaleString()}</div>
-          <div>Estimated cost: {formatCost(cost)}</div>
+          <div>输入 Token: {inputTokens.toLocaleString()}</div>
+          <div>输出 Token: {outputTokens.toLocaleString()}</div>
+          <div>预估费用: {formatCost(cost)}</div>
         </div>
       </TooltipContent>
     </Tooltip>
