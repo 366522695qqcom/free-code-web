@@ -26,13 +26,13 @@ export function AssistantMessage({ message, isStreaming, className }: AssistantM
   return (
     <div
       className={cn(
-        "group rounded-2xl border border-border bg-card/60 p-4 transition-all duration-150 hover:border-brand/30 hover:shadow-sm",
+        "group rounded-2xl border border-border-subtle bg-elevated/60 p-4 transition-all duration-150 hover:border-brand/30 hover:shadow-sm",
         className
       )}
     >
       <div className="mb-3 flex items-center justify-between">
         <BrandHeader size="sm" />
-        <span className="text-[10px] font-mono text-muted-foreground/60">
+        <span className="text-[10px] font-mono text-text-muted/60">
           {formatTimestamp(message.timestamp)}
         </span>
       </div>

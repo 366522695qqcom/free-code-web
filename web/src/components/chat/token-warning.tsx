@@ -18,14 +18,14 @@ export function TokenWarning({ tokenUsage, model, autoCompactEnabled = true }: T
   // Auto-compact enabled: show "XX% until auto-compact" (dimmed)
   if (autoCompactEnabled) {
     return (
-      <div className="px-4 py-1 font-mono text-xs text-muted-foreground/50">
+      <div className="px-4 py-1 font-mono text-xs text-text-muted/50">
         距离自动压缩还有 {state.percentLeft}%
       </div>
     );
   }
 
   // Auto-compact disabled: show warning/error
-  const colorClass = state.isAboveErrorThreshold ? "text-destructive" : "text-yellow-500";
+  const colorClass = state.isAboveErrorThreshold ? "text-accent-red" : "text-yellow-500";
 
   return (
     <div className={`px-4 py-1 font-mono text-xs ${colorClass}`}>

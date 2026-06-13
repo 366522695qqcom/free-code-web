@@ -445,7 +445,7 @@ export function ChatLayout() {
   const totalInputTokens = usage.inputTokens + usage.cacheCreationInputTokens + usage.cacheReadInputTokens;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background font-mono">
+    <div className="flex h-screen overflow-hidden bg-base font-mono">
       {/* Sidebar */}
       <Sidebar
         sessions={sessions}
@@ -464,11 +464,11 @@ export function ChatLayout() {
       {/* Main content — continuous terminal session */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar with file tree toggle */}
-        <div className="flex items-center border-b border-border px-2 py-1">
+        <div className="flex items-center border-b border-border-subtle px-2 py-1">
           <button
             onClick={() => setShowFileTree(!showFileTree)}
             className={`flex items-center gap-1 font-mono text-xs transition-colors ${
-              showFileTree ? "text-terminal-cyan" : "text-muted-foreground/50 hover:text-foreground"
+              showFileTree ? "text-accent-cyan" : "text-text-muted/50 hover:text-text-primary"
             }`}
             title={showFileTree ? "Hide file tree" : "Show file tree"}
           >
@@ -488,14 +488,14 @@ export function ChatLayout() {
 
         {/* System message — terminal echo line */}
         {systemMessage && (
-          <div className="px-4 py-1.5 font-mono text-xs text-terminal-cyan/70 whitespace-pre-wrap">
+          <div className="px-4 py-1.5 font-mono text-xs text-accent-cyan/70 whitespace-pre-wrap">
             {systemMessage}
           </div>
         )}
 
         {/* Error bar */}
         {error && (
-          <div className="px-4 py-1.5 text-sm text-destructive font-mono">
+          <div className="px-4 py-1.5 text-sm text-accent-red font-mono">
             {error}
           </div>
         )}

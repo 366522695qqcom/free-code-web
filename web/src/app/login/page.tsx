@@ -42,14 +42,14 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-brand-soft p-4">
-      <Card className="w-full max-w-[360px] border-border/60 shadow-card-hover">
+      <Card className="w-full max-w-[360px] border-border-subtle/60 shadow-card-hover">
         <div className="p-8">
           <div className="mb-6 flex flex-col items-center gap-2">
             <BrandHeader size="lg" subtitle="Self-hosted Claude Code" />
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-xs font-medium text-muted-foreground">Username</Label>
+              <Label htmlFor="username" className="text-xs font-medium text-text-muted">Username</Label>
               <Input
                 id="username"
                 type="text"
@@ -62,7 +62,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">Password</Label>
+              <Label htmlFor="password" className="text-xs font-medium text-text-muted">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -75,7 +75,7 @@ export default function LoginPage() {
               />
             </div>
             {error && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+              <div className="rounded-lg border border-destructive/30 bg-accent-red/15/5 px-3 py-2 text-xs text-accent-red">
                 {error}
               </div>
             )}
@@ -94,7 +94,7 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-          <p className="mt-6 text-center text-[10px] text-muted-foreground font-mono">
+          <p className="mt-6 text-center text-[10px] text-text-muted font-mono">
             Free Code · {new Date().getFullYear()}
           </p>
         </div>

@@ -149,20 +149,20 @@ export function DiffView({
   const lineNumWidth = String(maxLineNum).length;
 
   return (
-    <div className="rounded-lg border border-border/50 bg-black/40 overflow-hidden">
+    <div className="rounded-lg border border-border-subtle/50 bg-black/40 overflow-hidden">
       {/* Header */}
       {(filePath || hasMore) && (
-        <div className="flex items-center justify-between border-b border-border/30 px-3 py-1.5">
+        <div className="flex items-center justify-between border-b border-border-subtle/30 px-3 py-1.5">
           {filePath && (
-            <span className="font-mono text-xs text-terminal-cyan truncate">
+            <span className="font-mono text-xs text-accent-cyan truncate">
               {filePath}
             </span>
           )}
           <div className="flex items-center gap-3 ml-auto">
-            <span className="font-mono text-xs text-terminal-green">
+            <span className="font-mono text-xs text-accent-green">
               +{addCount}
             </span>
-            <span className="font-mono text-xs text-terminal-red">
+            <span className="font-mono text-xs text-accent-red">
               -{removeCount}
             </span>
           </div>
@@ -179,17 +179,17 @@ export function DiffView({
                 <tr
                   key={idx}
                   className={cn(
-                    line.type === "add" && "bg-terminal-green/10",
-                    line.type === "remove" && "bg-terminal-red/10"
+                    line.type === "add" && "bg-accent-green/10",
+                    line.type === "remove" && "bg-accent-red/10"
                   )}
                 >
                   {/* Line number */}
                   <td
                     className={cn(
-                      "select-none border-r px-1 text-right text-muted-foreground/40",
-                      line.type === "add" && "border-terminal-green/30",
-                      line.type === "remove" && "border-terminal-red/30",
-                      line.type === "unchanged" && "border-border/20"
+                      "select-none border-r px-1 text-right text-text-muted/40",
+                      line.type === "add" && "border-accent-green/30",
+                      line.type === "remove" && "border-accent-red/30",
+                      line.type === "unchanged" && "border-border-subtle/20"
                     )}
                     style={{ width: `${Math.max(lineNumWidth, 3) + 1.5}ch` }}
                   >
@@ -203,28 +203,28 @@ export function DiffView({
                   <td
                     className={cn(
                       "w-4 select-none text-center border-r",
-                      line.type === "add" && "border-terminal-green/30",
-                      line.type === "remove" && "border-terminal-red/30",
-                      line.type === "unchanged" && "border-border/20"
+                      line.type === "add" && "border-accent-green/30",
+                      line.type === "remove" && "border-accent-red/30",
+                      line.type === "unchanged" && "border-border-subtle/20"
                     )}
                   >
                     {line.type === "add" && (
-                      <span className="text-terminal-green">+</span>
+                      <span className="text-accent-green">+</span>
                     )}
                     {line.type === "remove" && (
-                      <span className="text-terminal-red">-</span>
+                      <span className="text-accent-red">-</span>
                     )}
                     {line.type === "unchanged" && (
-                      <span className="text-muted-foreground/20"> </span>
+                      <span className="text-text-muted/20"> </span>
                     )}
                   </td>
                   {/* Content with syntax highlighting */}
                   <td
                     className={cn(
                       "px-2 whitespace-pre",
-                      line.type === "add" && "text-terminal-green border-l-2 border-terminal-green/50",
-                      line.type === "remove" && "text-terminal-red border-l-2 border-terminal-red/50",
-                      line.type === "unchanged" && "text-muted-foreground/60"
+                      line.type === "add" && "text-accent-green border-l-2 border-accent-green/50",
+                      line.type === "remove" && "text-accent-red border-l-2 border-accent-red/50",
+                      line.type === "unchanged" && "text-text-muted/60"
                     )}
                     dangerouslySetInnerHTML={
                       highlighted
@@ -245,7 +245,7 @@ export function DiffView({
       {hasMore && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex w-full items-center justify-center gap-1 border-t border-border/30 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/20 hover:text-foreground"
+          className="flex w-full items-center justify-center gap-1 border-t border-border-subtle/30 py-1.5 text-xs text-text-muted transition-colors hover:bg-overlay/20 hover:text-text-primary"
         >
           <ChevronDown
             className={cn(

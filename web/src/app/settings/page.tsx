@@ -267,16 +267,16 @@ export default function SettingsPage() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-sm text-muted-foreground">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-base">
+        <div className="text-sm text-text-muted">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-base">
       {/* Header */}
-      <div className="border-b border-border bg-background/80 backdrop-blur-sm">
+      <div className="border-b border-border-subtle bg-base/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
           <Button
             variant="ghost"
@@ -300,7 +300,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Server className="size-4 text-terminal-cyan" />
+              <Server className="size-4 text-accent-cyan" />
               <CardTitle>模型提供商</CardTitle>
             </div>
             <CardDescription>
@@ -323,7 +323,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Cpu className="size-4 text-terminal-cyan" />
+              <Cpu className="size-4 text-accent-cyan" />
               <CardTitle>Model</CardTitle>
             </div>
             <CardDescription>
@@ -358,7 +358,7 @@ export default function SettingsPage() {
                       </SelectGroup>
                     ))}
                     {providerModels.length === 0 && (
-                      <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                      <div className="px-3 py-4 text-center text-xs text-text-muted">
                         还没有文字模型，请先在
                         <a href="/settings/providers" className="text-brand hover:underline mx-1">
                           模型提供商
@@ -377,7 +377,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Palette className="size-4 text-terminal-cyan" />
+              <Palette className="size-4 text-accent-cyan" />
               <CardTitle>Theme</CardTitle>
             </div>
             <CardDescription>
@@ -408,7 +408,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Box className="size-4 text-terminal-cyan" />
+              <Box className="size-4 text-accent-cyan" />
               <CardTitle>Sandbox</CardTitle>
             </div>
             <CardDescription>
@@ -421,7 +421,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="sandbox-enabled">Enable Sandbox</Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-text-muted">
                     Execute tools in an isolated Vercel Sandbox VM
                   </p>
                 </div>
@@ -471,7 +471,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="sandbox-vcpus">vCPUs</Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-text-muted">
                     Number of virtual CPUs (1–32)
                   </p>
                 </div>
@@ -492,7 +492,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="sandbox-memory">Memory (GB)</Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-text-muted">
                     Allocated memory (2–64 GB)
                   </p>
                 </div>
@@ -513,7 +513,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="sandbox-timeout">Timeout (minutes)</Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-text-muted">
                     Maximum execution time (1–300 min)
                   </p>
                 </div>
@@ -534,7 +534,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="sandbox-persistent">Persistent</Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-text-muted">
                     Keep sandbox alive between tool calls
                   </p>
                 </div>
@@ -545,7 +545,7 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <p className="text-[0.65rem] text-muted-foreground/50">
+              <p className="text-[0.65rem] text-text-muted/50">
                 Sandbox enable/disable is controlled by the SANDBOX_ENABLED server environment variable. The switch above reflects your client-side preference.
               </p>
             </div>
@@ -556,7 +556,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Shield className="size-4 text-terminal-cyan" />
+              <Shield className="size-4 text-accent-cyan" />
               <CardTitle>Tool Permissions</CardTitle>
             </div>
             <CardDescription>
@@ -571,7 +571,7 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor={`tool-${tool.id}`}>{tool.name}</Label>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-text-muted">
                         {tool.description}
                       </p>
                     </div>
@@ -585,7 +585,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               ))}
-              <p className="text-[0.65rem] text-muted-foreground/50">
+              <p className="text-[0.65rem] text-text-muted/50">
                 When enabled, the tool will ask for confirmation before each execution.
               </p>
             </div>
@@ -596,7 +596,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Shield className="size-4 text-terminal-cyan" />
+              <Shield className="size-4 text-accent-cyan" />
               <CardTitle>Custom Permission Rules</CardTitle>
             </div>
             <CardDescription>
@@ -613,7 +613,7 @@ export default function SettingsPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-2">
-                            <Label className="text-xs text-muted-foreground">Pattern</Label>
+                            <Label className="text-xs text-text-muted">Pattern</Label>
                             <Input
                               value={rule.pattern}
                               onChange={(e) => handleEditRulePattern(rule.id, e.target.value)}
@@ -621,7 +621,7 @@ export default function SettingsPage() {
                             />
                           </div>
                           <div className="flex items-center gap-2">
-                            <Label className="text-xs text-muted-foreground">Risk Level</Label>
+                            <Label className="text-xs text-text-muted">Risk Level</Label>
                             <Select
                               value={rule.riskLevel}
                               onValueChange={(val) => handleEditRuleRiskLevel(rule.id, val)}
@@ -639,7 +639,7 @@ export default function SettingsPage() {
                             </Select>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Label className="text-xs text-muted-foreground">Apply to Tool</Label>
+                            <Label className="text-xs text-text-muted">Apply to Tool</Label>
                             <Select
                               value={rule.applyToTool}
                               onValueChange={(val) => handleEditRuleApplyToTool(rule.id, val)}
@@ -662,7 +662,7 @@ export default function SettingsPage() {
                           size="icon-xs"
                           onClick={() => handleDeleteRule(rule.id)}
                           title="Delete rule"
-                          className="mt-1 shrink-0 text-muted-foreground hover:text-destructive"
+                          className="mt-1 shrink-0 text-text-muted hover:text-accent-red"
                         >
                           <Trash2 className="size-3.5" />
                         </Button>
@@ -671,16 +671,16 @@ export default function SettingsPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-text-muted">
                   No custom rules defined. Default risk assessments will be used.
                 </p>
               )}
 
               {showAddRule ? (
-                <div className="space-y-3 rounded-lg border border-border p-3">
+                <div className="space-y-3 rounded-lg border border-border-subtle p-3">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label className="shrink-0 text-xs text-muted-foreground">Pattern</Label>
+                      <Label className="shrink-0 text-xs text-text-muted">Pattern</Label>
                       <Input
                         placeholder='e.g., "npm test"'
                         value={newRulePattern}
@@ -689,7 +689,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label className="shrink-0 text-xs text-muted-foreground">Risk Level</Label>
+                      <Label className="shrink-0 text-xs text-text-muted">Risk Level</Label>
                       <Select
                         value={newRuleRiskLevel}
                         onValueChange={(val) => { if (val) setNewRuleRiskLevel(val); }}
@@ -707,7 +707,7 @@ export default function SettingsPage() {
                       </Select>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label className="shrink-0 text-xs text-muted-foreground">Apply to Tool</Label>
+                      <Label className="shrink-0 text-xs text-text-muted">Apply to Tool</Label>
                       <Select
                         value={newRuleApplyToTool}
                         onValueChange={(val) => { if (val) setNewRuleApplyToTool(val); }}
@@ -757,7 +757,7 @@ export default function SettingsPage() {
                 </Button>
               )}
 
-              <p className="text-[0.65rem] text-muted-foreground/50">
+              <p className="text-[0.65rem] text-text-muted/50">
                 Custom rules override default risk assessments. Rules are stored locally and sent with tool confirmation requests.
               </p>
             </div>
@@ -768,7 +768,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <MessageSquare className="size-4 text-terminal-cyan" />
+              <MessageSquare className="size-4 text-accent-cyan" />
               <CardTitle>Session</CardTitle>
             </div>
             <CardDescription>
@@ -779,7 +779,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="auto-title">Auto-generate titles</Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-text-muted">
                   Automatically generate session titles from the first message.
                 </p>
               </div>
@@ -796,7 +796,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Info className="size-4 text-terminal-cyan" />
+              <Info className="size-4 text-accent-cyan" />
               <CardTitle>About</CardTitle>
             </div>
             <CardDescription>
@@ -804,10 +804,10 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 font-mono text-xs text-muted-foreground">
+            <div className="space-y-2 font-mono text-xs text-text-muted">
               <div className="flex justify-between">
                 <span>Version</span>
-                <span className="text-foreground">0.1.0</span>
+                <span className="text-text-primary">0.1.0</span>
               </div>
               <Separator />
               <div className="flex justify-between">
@@ -816,7 +816,7 @@ export default function SettingsPage() {
                   href="https://github.com/user/free-code"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-terminal-cyan hover:underline"
+                  className="text-accent-cyan hover:underline"
                 >
                   GitHub
                 </a>
@@ -824,7 +824,7 @@ export default function SettingsPage() {
               <Separator />
               <div className="flex justify-between">
                 <span>License</span>
-                <span className="text-foreground">MIT</span>
+                <span className="text-text-primary">MIT</span>
               </div>
             </div>
           </CardContent>

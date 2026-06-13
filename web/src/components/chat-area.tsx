@@ -15,8 +15,8 @@ export function ChatArea({ messages, isStreaming }: ChatAreaProps) {
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="max-w-md text-center space-y-3">
           <BrandHeader size="lg" subtitle="Start a conversation" />
-          <p className="text-sm text-muted-foreground">
-            Type a message or use <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-xs">/</kbd> for commands
+          <p className="text-sm text-text-muted">
+            Type a message or use <kbd className="rounded-md border border-border-subtle bg-overlay px-1.5 py-0.5 font-mono text-xs">/</kbd> for commands
           </p>
         </div>
       </div>

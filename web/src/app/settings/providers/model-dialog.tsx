@@ -114,8 +114,8 @@ export function ModelDialog({
         <div className="grid gap-3 py-2">
           {/* 模型ID */}
           <div className="grid gap-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">
-              模型ID <span className="text-terminal-red">*</span>
+            <Label className="text-xs font-medium text-text-muted">
+              模型ID <span className="text-accent-red">*</span>
             </Label>
             <Input
               value={modelId}
@@ -127,8 +127,8 @@ export function ModelDialog({
 
           {/* 显示名 */}
           <div className="grid gap-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">
-              显示名 <span className="text-muted-foreground/50">(可选)</span>
+            <Label className="text-xs font-medium text-text-muted">
+              显示名 <span className="text-text-muted/50">(可选)</span>
             </Label>
             <Input
               value={displayName}
@@ -140,7 +140,7 @@ export function ModelDialog({
 
           {/* 模型类型 */}
           <div className="grid gap-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">模型类型</Label>
+            <Label className="text-xs font-medium text-text-muted">模型类型</Label>
             <Select value={type} onValueChange={(v) => setType(v as ModelFormData["type"])}>
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -155,7 +155,7 @@ export function ModelDialog({
 
           {/* 能力复选框 */}
           <div className="grid gap-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">能力</Label>
+            <Label className="text-xs font-medium text-text-muted">能力</Label>
             <div className="flex gap-3">
               {["vision", "reasoning", "tool_use"].map((cap) => (
                 <button
@@ -164,14 +164,14 @@ export function ModelDialog({
                   onClick={() => handleCapabilityToggle(cap)}
                   className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors ${
                     capabilities.includes(cap)
-                      ? "border-terminal-cyan/50 bg-terminal-cyan/10 text-terminal-cyan"
-                      : "border-border bg-background text-muted-foreground hover:bg-muted"
+                      ? "border-accent-cyan/50 bg-accent-cyan/10 text-accent-cyan"
+                      : "border-border-subtle bg-base text-text-muted hover:bg-overlay"
                   }`}
                 >
                   <span
                     className={`flex size-3.5 items-center justify-center rounded border ${
                       capabilities.includes(cap)
-                        ? "border-terminal-cyan bg-terminal-cyan text-background"
+                        ? "border-accent-cyan bg-accent-cyan text-background"
                         : "border-muted-foreground/40"
                     }`}
                   >
@@ -186,7 +186,7 @@ export function ModelDialog({
           {/* 上下文窗口 & 最大输出Token */}
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">上下文窗口</Label>
+              <Label className="text-xs font-medium text-text-muted">上下文窗口</Label>
               <Input
                 type="number"
                 value={contextWindow}
@@ -196,7 +196,7 @@ export function ModelDialog({
               />
             </div>
             <div className="grid gap-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">最大输出Token</Label>
+              <Label className="text-xs font-medium text-text-muted">最大输出Token</Label>
               <Input
                 type="number"
                 value={maxOutputTokens}
@@ -212,8 +212,8 @@ export function ModelDialog({
             <div
               className={`rounded-md border px-3 py-2 text-xs ${
                 testResult.success
-                  ? "border-terminal-green/30 bg-terminal-green/5 text-terminal-green"
-                  : "border-terminal-red/30 bg-terminal-red/5 text-terminal-red"
+                  ? "border-accent-green/30 bg-accent-green/5 text-accent-green"
+                  : "border-accent-red/30 bg-accent-red/5 text-accent-red"
               }`}
             >
               {testResult.success ? "✓ 模型测试成功" : `✗ ${testResult.error || "测试失败"}`}

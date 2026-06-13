@@ -93,7 +93,7 @@ export function AddServerDialog({
         <div className="grid gap-3 py-2">
           {/* Name */}
           <div className="grid gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">
+            <label className="text-xs font-medium text-text-muted">
               Name
             </label>
             <input
@@ -101,13 +101,13 @@ export function AddServerDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My MCP Server"
-              className="rounded-md border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+              className="rounded-md border border-border-subtle bg-base px-3 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20"
             />
           </div>
 
           {/* Type */}
           <div className="grid gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">
+            <label className="text-xs font-medium text-text-muted">
               Transport Type
             </label>
             <div className="flex gap-2">
@@ -134,7 +134,7 @@ export function AddServerDialog({
           {type === "stdio" && (
             <>
               <div className="grid gap-1.5">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="text-xs font-medium text-text-muted">
                   Command
                 </label>
                 <input
@@ -142,19 +142,19 @@ export function AddServerDialog({
                   value={command}
                   onChange={(e) => setCommand(e.target.value)}
                   placeholder="npx @modelcontextprotocol/server-filesystem /path"
-                  className="rounded-md border border-border bg-background px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                  className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20"
                 />
               </div>
               <div className="grid gap-1.5">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Arguments <span className="text-muted-foreground/50">(space-separated)</span>
+                <label className="text-xs font-medium text-text-muted">
+                  Arguments <span className="text-text-muted/50">(space-separated)</span>
                 </label>
                 <input
                   type="text"
                   value={argsText}
                   onChange={(e) => setArgsText(e.target.value)}
                   placeholder="/path/to/dir --option value"
-                  className="rounded-md border border-border bg-background px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                  className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20"
                 />
               </div>
             </>
@@ -163,7 +163,7 @@ export function AddServerDialog({
           {/* SSE fields */}
           {type === "sse" && (
             <div className="grid gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
+              <label className="text-xs font-medium text-text-muted">
                 Server URL
               </label>
               <input
@@ -171,22 +171,22 @@ export function AddServerDialog({
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="http://localhost:3001"
-                className="rounded-md border border-border bg-background px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20"
               />
             </div>
           )}
 
           {/* Environment variables */}
           <div className="grid gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">
-              Environment Variables <span className="text-muted-foreground/50">(KEY=VALUE per line)</span>
+            <label className="text-xs font-medium text-text-muted">
+              Environment Variables <span className="text-text-muted/50">(KEY=VALUE per line)</span>
             </label>
             <textarea
               value={envText}
               onChange={(e) => setEnvText(e.target.value)}
               placeholder={"API_KEY=abc123\nDEBUG=true"}
               rows={3}
-              className="rounded-md border border-border bg-background px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 resize-none"
+              className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20 resize-none"
             />
           </div>
         </div>

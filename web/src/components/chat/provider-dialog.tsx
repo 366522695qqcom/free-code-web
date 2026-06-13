@@ -368,7 +368,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
       <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Server className="size-4 text-terminal-cyan" />
+            <Server className="size-4 text-accent-cyan" />
             模型提供商
           </DialogTitle>
           <DialogDescription>
@@ -378,10 +378,10 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="font-mono text-sm text-terminal-green">$</span>
+            <div className="flex items-center gap-2 text-text-muted">
+              <span className="font-mono text-sm text-accent-green">$</span>
               <span className="font-mono text-sm">Loading...</span>
-              <span className="inline-block size-2 animate-cursor-blink bg-terminal-green" />
+              <span className="inline-block size-2 animate-cursor-blink bg-accent-green" />
             </div>
           </div>
         ) : (
@@ -391,7 +391,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Server className="size-4 text-terminal-cyan" />
+                    <Server className="size-4 text-accent-cyan" />
                     <CardTitle>已添加服务商</CardTitle>
                   </div>
                   <Button size="sm" variant="outline" onClick={handleAddProvider}>
@@ -405,10 +405,10 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
               </CardHeader>
               <CardContent>
                 {providers.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center py-8 text-text-muted">
                     <Server className="mb-2 size-8 opacity-30" />
                     <p className="text-sm">暂无提供商</p>
-                    <p className="text-xs text-muted-foreground/60">
+                    <p className="text-xs text-text-muted/60">
                       点击上方按钮添加第一个模型提供商
                     </p>
                   </div>
@@ -419,8 +419,8 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                         key={provider.id}
                         className={`flex items-center justify-between rounded-lg border px-4 py-3 transition-colors cursor-pointer ${
                           selectedProviderId === provider.id && !isAdding
-                            ? "border-terminal-cyan/30 bg-terminal-cyan/5"
-                            : "border-border hover:bg-muted/50"
+                            ? "border-accent-cyan/30 bg-accent-cyan/5"
+                            : "border-border-subtle hover:bg-overlay/50"
                         }`}
                         onClick={() => {
                           if (!isAdding) {
@@ -436,11 +436,11 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm">{provider.name}</span>
-                            <span className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan">
+                            <span className="rounded bg-accent-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-accent-cyan">
                               {provider.models.length} 模型
                             </span>
                           </div>
-                          <p className="truncate text-xs text-muted-foreground font-mono">
+                          <p className="truncate text-xs text-text-muted font-mono">
                             {provider.baseUrl}
                           </p>
                         </div>
@@ -464,7 +464,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                               handleDeleteProvider(provider.id);
                             }}
                             title="删除"
-                            className="text-muted-foreground hover:text-destructive"
+                            className="text-text-muted hover:text-accent-red"
                           >
                             <Trash2 className="size-3.5" />
                           </Button>
@@ -481,7 +481,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Server className="size-4 text-terminal-cyan" />
+                    <Server className="size-4 text-accent-cyan" />
                     <CardTitle>
                       {isAdding ? "添加提供商" : isEditing ? "编辑提供商" : selectedProvider?.name || "提供商配置"}
                     </CardTitle>
@@ -492,7 +492,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                     {/* Name */}
                     {(isAdding || isEditing) && (
                       <div className="grid gap-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground">名称</Label>
+                        <Label className="text-xs font-medium text-text-muted">名称</Label>
                         <Input
                           value={formName}
                           onChange={(e) => setFormName(e.target.value)}
@@ -503,7 +503,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
 
                     {/* BaseURL */}
                     <div className="grid gap-1.5">
-                      <Label className="text-xs font-medium text-muted-foreground">BaseURL</Label>
+                      <Label className="text-xs font-medium text-text-muted">BaseURL</Label>
                       <Input
                         value={isAdding || isEditing ? formBaseUrl : (selectedProvider?.baseUrl || "")}
                         onChange={(e) => setFormBaseUrl(e.target.value)}
@@ -515,7 +515,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
 
                     {/* API Key */}
                     <div className="grid gap-1.5">
-                      <Label className="text-xs font-medium text-muted-foreground">API Key</Label>
+                      <Label className="text-xs font-medium text-text-muted">API Key</Label>
                       <div className="relative">
                         <Input
                           type={showApiKey ? "text" : "password"}
@@ -539,7 +539,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
 
                     {/* API Path */}
                     <div className="grid gap-1.5">
-                      <Label className="text-xs font-medium text-muted-foreground">API路径</Label>
+                      <Label className="text-xs font-medium text-text-muted">API路径</Label>
                       <Input
                         value={isAdding || isEditing ? formApiPath : (selectedProvider?.apiPath || "")}
                         onChange={(e) => setFormApiPath(e.target.value)}
@@ -554,10 +554,10 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                       <div
                         className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs ${
                           connectionStatus === "testing"
-                            ? "border-terminal-amber/30 bg-terminal-amber/5 text-terminal-amber"
+                            ? "border-accent-orange/30 bg-accent-orange/5 text-accent-orange"
                             : connectionStatus === "connected"
-                              ? "border-terminal-green/30 bg-terminal-green/5 text-terminal-green"
-                              : "border-terminal-red/30 bg-terminal-red/5 text-terminal-red"
+                              ? "border-accent-green/30 bg-accent-green/5 text-accent-green"
+                              : "border-accent-red/30 bg-accent-red/5 text-accent-red"
                         }`}
                       >
                         {connectionStatus === "testing" && <Loader2 className="size-3.5 animate-spin" />}
@@ -640,7 +640,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <RefreshCw className="size-4 text-terminal-cyan" />
+                    <RefreshCw className="size-4 text-accent-cyan" />
                     <CardTitle>可用模型</CardTitle>
                   </div>
                   <CardDescription>
@@ -658,10 +658,10 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                           key={model.id}
                           className={`flex items-center gap-3 rounded-md border px-3 py-2 transition-colors ${
                             alreadyAdded
-                              ? "border-border/50 bg-muted/30 opacity-60"
+                              ? "border-border-subtle/50 bg-overlay/30 opacity-60"
                               : selectedFetchedModels.has(model.id)
-                                ? "border-terminal-cyan/30 bg-terminal-cyan/5"
-                                : "border-border hover:bg-muted/50"
+                                ? "border-accent-cyan/30 bg-accent-cyan/5"
+                                : "border-border-subtle hover:bg-overlay/50"
                           }`}
                         >
                           <button
@@ -670,9 +670,9 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                             onClick={() => handleToggleFetchedModel(model.id)}
                             className={`flex size-4 items-center justify-center rounded border transition-colors ${
                               alreadyAdded
-                                ? "border-terminal-green bg-terminal-green text-background"
+                                ? "border-accent-green bg-accent-green text-background"
                                 : selectedFetchedModels.has(model.id)
-                                  ? "border-terminal-cyan bg-terminal-cyan text-background"
+                                  ? "border-accent-cyan bg-accent-cyan text-background"
                                   : "border-muted-foreground/40 hover:border-muted-foreground"
                             }`}
                           >
@@ -683,13 +683,13 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                           <div className="min-w-0 flex-1">
                             <span className="font-mono text-sm">{model.id}</span>
                             {model.owned_by && (
-                              <span className="ml-2 text-xs text-muted-foreground">
+                              <span className="ml-2 text-xs text-text-muted">
                                 ({model.owned_by})
                               </span>
                             )}
                           </div>
                           {alreadyAdded && (
-                            <span className="text-[0.6rem] text-terminal-green">已添加</span>
+                            <span className="text-[0.6rem] text-accent-green">已添加</span>
                           )}
                         </div>
                       );
@@ -697,7 +697,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                   </div>
                   {selectedFetchedModels.size > 0 && (
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-text-muted">
                         已选择 {selectedFetchedModels.size} 个模型
                       </span>
                       <Button size="sm" onClick={handleAddSelectedModels}>
@@ -712,7 +712,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
 
             {/* Fetch error */}
             {fetchError && (
-              <div className="rounded-lg border border-terminal-red/30 bg-terminal-red/5 px-4 py-3 text-sm text-terminal-red">
+              <div className="rounded-lg border border-accent-red/30 bg-accent-red/5 px-4 py-3 text-sm text-accent-red">
                 {fetchError}
               </div>
             )}
@@ -722,7 +722,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Cpu className="size-4 text-terminal-cyan" />
+                    <Cpu className="size-4 text-accent-cyan" />
                     <CardTitle>已添加模型</CardTitle>
                   </div>
                   <CardDescription>
@@ -734,30 +734,30 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                     {selectedProvider.models.map((model) => (
                       <div
                         key={model.id}
-                        className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                        className="flex items-center justify-between rounded-md border border-border-subtle px-3 py-2"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-mono text-sm">{model.modelId}</span>
                             {model.displayName && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs text-text-muted">
                                 ({model.displayName})
                               </span>
                             )}
-                            <span className="rounded bg-muted px-1.5 py-0.5 text-[0.6rem] text-muted-foreground">
+                            <span className="rounded bg-overlay px-1.5 py-0.5 text-[0.6rem] text-text-muted">
                               {model.type === "chat" ? "聊天" : model.type === "embedding" ? "嵌入" : "图像"}
                             </span>
                             {model.capabilities.map((cap) => (
                               <span
                                 key={cap}
-                                className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan"
+                                className="rounded bg-accent-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-accent-cyan"
                               >
                                 {cap === "vision" ? "视觉" : cap === "reasoning" ? "推理" : "工具使用"}
                               </span>
                             ))}
                           </div>
                           {(model.contextWindow || model.maxOutputTokens) && (
-                            <div className="mt-0.5 flex gap-3 text-[0.65rem] text-muted-foreground">
+                            <div className="mt-0.5 flex gap-3 text-[0.65rem] text-text-muted">
                               {model.contextWindow && <span>上下文: {model.contextWindow.toLocaleString()}</span>}
                               {model.maxOutputTokens && <span>最大输出: {model.maxOutputTokens.toLocaleString()}</span>}
                             </div>
@@ -768,7 +768,7 @@ export function ProviderDialog({ open, onOpenChange, onProvidersChange }: Provid
                           size="icon-xs"
                           onClick={() => handleDeleteModel(model.id)}
                           title="删除模型"
-                          className="shrink-0 text-muted-foreground hover:text-destructive"
+                          className="shrink-0 text-text-muted hover:text-accent-red"
                         >
                           <Trash2 className="size-3.5" />
                         </Button>

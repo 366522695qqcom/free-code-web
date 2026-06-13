@@ -21,21 +21,21 @@ export function AutoApproveToast({ toolName, reason, onClose }: AutoApproveToast
   return (
     <div
       className={cn(
-        "flex items-start gap-2 rounded-lg border border-terminal-green/20 bg-terminal-green/5 px-3 py-2",
+        "flex items-start gap-2 rounded-lg border border-accent-green/20 bg-accent-green/5 px-3 py-2",
         "animate-message-in"
       )}
     >
-      <CheckCircle className="mt-0.5 size-3.5 shrink-0 text-terminal-green" />
+      <CheckCircle className="mt-0.5 size-3.5 shrink-0 text-accent-green" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-xs text-terminal-green">
+          <span className="font-mono text-xs text-accent-green">
             Auto-approved: {toolName}
           </span>
           {reason && (
             <button
               type="button"
               onClick={() => setExpanded(!expanded)}
-              className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+              className="shrink-0 text-text-muted hover:text-text-primary transition-colors"
             >
               <ChevronDown
                 className={cn(
@@ -47,7 +47,7 @@ export function AutoApproveToast({ toolName, reason, onClose }: AutoApproveToast
           )}
         </div>
         {expanded && reason && (
-          <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+          <p className="mt-1 font-mono text-[11px] text-text-muted">
             {reason}
           </p>
         )}

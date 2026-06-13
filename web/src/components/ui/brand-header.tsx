@@ -30,7 +30,7 @@ export function BrandHeader({
         </h1>
       </div>
       {subtitle && (
-        <p className="text-xs text-muted-foreground pl-6">{subtitle}</p>
+        <p className="text-xs text-text-muted pl-6">{subtitle}</p>
       )}
     </div>
   );

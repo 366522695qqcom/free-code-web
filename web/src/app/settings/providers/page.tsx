@@ -365,22 +365,22 @@ export default function ProvidersPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <span className="font-mono text-sm text-terminal-green">$</span>
+      <div className="flex min-h-screen items-center justify-center bg-base">
+        <div className="flex items-center gap-2 text-text-muted">
+          <span className="font-mono text-sm text-accent-green">$</span>
           <span className="font-mono text-sm">Loading...</span>
-          <span className="inline-block size-2 animate-cursor-blink bg-terminal-green" />
+          <span className="inline-block size-2 animate-cursor-blink bg-accent-green" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-base">
       {/* Left Sidebar */}
-      <div className="flex w-52 shrink-0 flex-col border-r border-border bg-background">
+      <div className="flex w-52 shrink-0 flex-col border-r border-border-subtle bg-base">
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+        <div className="flex items-center gap-3 border-b border-border-subtle px-4 py-3">
           <Button
             variant="ghost"
             size="icon-xs"
@@ -401,7 +401,7 @@ export default function ProvidersPage() {
               className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
                 item.active
                   ? "bg-brand/10 text-brand"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  : "text-text-muted hover:bg-overlay hover:text-text-primary"
               }`}
             >
               <item.icon className="size-4" />
@@ -416,7 +416,7 @@ export default function ProvidersPage() {
         <div className="mx-auto max-w-3xl space-y-6 p-6">
           {/* Header */}
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-terminal-green">$</span>
+            <span className="font-mono text-sm text-accent-green">$</span>
             <span className="font-mono text-sm text-brand mr-1">▌</span>
             <h2 className="text-lg font-medium">模型提供商</h2>
           </div>
@@ -440,10 +440,10 @@ export default function ProvidersPage() {
             </CardHeader>
             <CardContent>
               {providers.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                <div className="flex flex-col items-center justify-center py-8 text-text-muted">
                   <Server className="mb-2 size-8 opacity-30" />
                   <p className="text-sm">暂无提供商</p>
-                  <p className="text-xs text-muted-foreground/60">
+                  <p className="text-xs text-text-muted/60">
                     点击上方按钮添加第一个模型提供商
                   </p>
                 </div>
@@ -455,10 +455,10 @@ export default function ProvidersPage() {
                       <div
                         key={provider.id}
                         className={cn(
-                          "group relative cursor-pointer overflow-hidden rounded-xl border bg-card p-4 transition-all duration-150 hover:-translate-y-0.5",
+                          "group relative cursor-pointer overflow-hidden rounded-xl border bg-elevated p-4 transition-all duration-150 hover:-translate-y-0.5",
                           isActive
                             ? "border-brand/50 bg-brand-soft shadow-sm"
-                            : "border-border hover:border-brand/30 hover:shadow-card-hover"
+                            : "border-border-subtle hover:border-brand/30 hover:shadow-card-hover"
                         )}
                         onClick={() => {
                           if (!isAdding) {
@@ -479,7 +479,7 @@ export default function ProvidersPage() {
                             {provider.models.length} {provider.models.length === 1 ? "model" : "models"}
                           </span>
                         </div>
-                        <p className="truncate font-mono text-[11px] text-muted-foreground">
+                        <p className="truncate font-mono text-[11px] text-text-muted">
                           {provider.baseUrl}
                         </p>
                         {isActive && (
@@ -505,7 +505,7 @@ export default function ProvidersPage() {
                               handleDeleteProvider(provider.id);
                             }}
                             title="删除"
-                            className="text-muted-foreground hover:text-destructive"
+                            className="text-text-muted hover:text-accent-red"
                           >
                             <Trash2 className="size-3.5" />
                           </Button>
@@ -534,7 +534,7 @@ export default function ProvidersPage() {
                   {/* Name */}
                   {(isAdding || isEditing) && (
                     <div className="grid gap-1.5">
-                      <Label className="text-xs font-medium text-muted-foreground">名称</Label>
+                      <Label className="text-xs font-medium text-text-muted">名称</Label>
                       <Input
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
@@ -545,7 +545,7 @@ export default function ProvidersPage() {
 
                   {/* BaseURL */}
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">BaseURL</Label>
+                    <Label className="text-xs font-medium text-text-muted">BaseURL</Label>
                     <Input
                       value={isAdding || isEditing ? formBaseUrl : (selectedProvider?.baseUrl || "")}
                       onChange={(e) => setFormBaseUrl(e.target.value)}
@@ -557,7 +557,7 @@ export default function ProvidersPage() {
 
                   {/* API Key */}
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">API Key</Label>
+                    <Label className="text-xs font-medium text-text-muted">API Key</Label>
                     <div className="relative">
                       <Input
                         type={showApiKey ? "text" : "password"}
@@ -581,7 +581,7 @@ export default function ProvidersPage() {
 
                   {/* API Path */}
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">API路径</Label>
+                    <Label className="text-xs font-medium text-text-muted">API路径</Label>
                     <Input
                       value={isAdding || isEditing ? formApiPath : (selectedProvider?.apiPath || "")}
                       onChange={(e) => setFormApiPath(e.target.value)}
@@ -596,10 +596,10 @@ export default function ProvidersPage() {
                     <div
                       className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs ${
                         connectionStatus === "testing"
-                          ? "border-terminal-amber/30 bg-terminal-amber/5 text-terminal-amber"
+                          ? "border-accent-orange/30 bg-accent-orange/5 text-accent-orange"
                           : connectionStatus === "connected"
-                            ? "border-terminal-green/30 bg-terminal-green/5 text-terminal-green"
-                            : "border-terminal-red/30 bg-terminal-red/5 text-terminal-red"
+                            ? "border-accent-green/30 bg-accent-green/5 text-accent-green"
+                            : "border-accent-red/30 bg-accent-red/5 text-accent-red"
                       }`}
                     >
                       {connectionStatus === "testing" && <Loader2 className="size-3.5 animate-spin" />}
@@ -700,10 +700,10 @@ export default function ProvidersPage() {
                         key={model.id}
                         className={`flex items-center gap-3 rounded-md border px-3 py-2 transition-colors ${
                           alreadyAdded
-                            ? "border-border/50 bg-muted/30 opacity-60"
+                            ? "border-border-subtle/50 bg-overlay/30 opacity-60"
                             : selectedFetchedModels.has(model.id)
-                              ? "border-terminal-cyan/30 bg-terminal-cyan/5"
-                              : "border-border hover:bg-muted/50"
+                              ? "border-accent-cyan/30 bg-accent-cyan/5"
+                              : "border-border-subtle hover:bg-overlay/50"
                         }`}
                       >
                         <button
@@ -712,7 +712,7 @@ export default function ProvidersPage() {
                           onClick={() => handleToggleFetchedModel(model.id)}
                           className={`flex size-4 items-center justify-center rounded border transition-colors ${
                             alreadyAdded
-                              ? "border-terminal-green bg-terminal-green text-background"
+                              ? "border-accent-green bg-accent-green text-background"
                               : selectedFetchedModels.has(model.id)
                                 ? "border-brand bg-brand text-white"
                                 : "border-muted-foreground/40 hover:border-muted-foreground"
@@ -725,13 +725,13 @@ export default function ProvidersPage() {
                         <div className="min-w-0 flex-1">
                           <span className="font-mono text-sm">{model.id}</span>
                           {model.owned_by && (
-                            <span className="ml-2 text-xs text-muted-foreground">
+                            <span className="ml-2 text-xs text-text-muted">
                               ({model.owned_by})
                             </span>
                           )}
                         </div>
                         {alreadyAdded && (
-                          <span className="text-[0.6rem] text-terminal-green">已添加</span>
+                          <span className="text-[0.6rem] text-accent-green">已添加</span>
                         )}
                       </div>
                     );
@@ -739,7 +739,7 @@ export default function ProvidersPage() {
                 </div>
                 {selectedFetchedModels.size > 0 && (
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-text-muted">
                       已选择 {selectedFetchedModels.size} 个模型
                     </span>
                     <Button size="sm" className="bg-brand text-white hover:bg-brand/90" onClick={handleAddSelectedModels}>
@@ -754,7 +754,7 @@ export default function ProvidersPage() {
 
           {/* Fetch error */}
           {fetchError && (
-            <div className="rounded-lg border border-terminal-red/30 bg-terminal-red/5 px-4 py-3 text-sm text-terminal-red">
+            <div className="rounded-lg border border-accent-red/30 bg-accent-red/5 px-4 py-3 text-sm text-accent-red">
               {fetchError}
             </div>
           )}
@@ -776,30 +776,30 @@ export default function ProvidersPage() {
                   {selectedProvider.models.map((model) => (
                     <div
                       key={model.id}
-                      className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                      className="flex items-center justify-between rounded-md border border-border-subtle px-3 py-2"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-sm">{model.modelId}</span>
                           {model.displayName && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-text-muted">
                               ({model.displayName})
                             </span>
                           )}
-                          <span className="rounded bg-muted px-1.5 py-0.5 text-[0.6rem] text-muted-foreground">
+                          <span className="rounded bg-overlay px-1.5 py-0.5 text-[0.6rem] text-text-muted">
                             {model.type === "chat" ? "对话" : model.type === "embedding" ? "向量" : "图像"}
                           </span>
                           {model.capabilities.map((cap) => (
                             <span
                               key={cap}
-                              className="rounded bg-terminal-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-terminal-cyan"
+                              className="rounded bg-accent-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-accent-cyan"
                             >
                               {cap === "vision" ? "视觉" : cap === "reasoning" ? "推理" : "工具使用"}
                             </span>
                           ))}
                         </div>
                         {(model.contextWindow || model.maxOutputTokens) && (
-                          <div className="mt-0.5 flex gap-3 text-[0.65rem] text-muted-foreground">
+                          <div className="mt-0.5 flex gap-3 text-[0.65rem] text-text-muted">
                             {model.contextWindow && <span>上下文: {model.contextWindow.toLocaleString()}</span>}
                             {model.maxOutputTokens && <span>最大输出: {model.maxOutputTokens.toLocaleString()}</span>}
                           </div>
@@ -810,7 +810,7 @@ export default function ProvidersPage() {
                         size="icon-xs"
                         onClick={() => handleDeleteModel(model.id)}
                         title="删除模型"
-                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                        className="shrink-0 text-text-muted hover:text-accent-red"
                       >
                         <Trash2 className="size-3.5" />
                       </Button>
@@ -824,7 +824,7 @@ export default function ProvidersPage() {
                   const total = (selectedProvider.models || []).length;
                   if (textCount < total) {
                     return (
-                      <p className="mt-2 text-[10px] text-muted-foreground">
+                      <p className="mt-2 text-[10px] text-text-muted">
                         其中 {textCount} 个为文字模型，可在 chat 中使用
                       </p>
                     );

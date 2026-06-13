@@ -33,11 +33,11 @@ export default function MCPPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <span className="font-mono text-sm text-terminal-green">$</span>
+      <div className="flex min-h-screen items-center justify-center bg-base">
+        <div className="flex items-center gap-2 text-text-muted">
+          <span className="font-mono text-sm text-accent-green">$</span>
           <span className="font-mono text-sm">Loading...</span>
-          <span className="inline-block size-2 animate-cursor-blink bg-terminal-green" />
+          <span className="inline-block size-2 animate-cursor-blink bg-accent-green" />
         </div>
       </div>
     );

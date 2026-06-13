@@ -80,7 +80,7 @@ function ElapsedTimer() {
   const mins = Math.floor(elapsed / 60);
   const secs = elapsed % 60;
   return (
-    <span className="font-mono text-xs text-muted-foreground/50">
+    <span className="font-mono text-xs text-text-muted/50">
       {mins > 0 ? `${mins}m ` : ""}
       {secs}s
     </span>
@@ -95,8 +95,8 @@ function StatusMarker({ status }: { status: "running" | "done" | "error" }) {
         status === "running"
           ? "bg-brand animate-pulse"
           : status === "error"
-            ? "bg-terminal-red"
-            : "bg-terminal-green"
+            ? "bg-accent-red"
+            : "bg-accent-green"
       )}
       aria-label={status}
     />
@@ -137,11 +137,11 @@ export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
       >
         <span className="shrink-0">{isExpanded ? "▼" : "⏺"}</span>
         <StatusMarker status={status} />
-        <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span className="shrink-0 text-[10px] uppercase tracking-wider text-text-muted">
           {displayName}
         </span>
         {!isExpanded && (
-          <span className="truncate text-muted-foreground">{collapsedPreview}</span>
+          <span className="truncate text-text-muted">{collapsedPreview}</span>
         )}
         {status === "running" && <ElapsedTimer />}
       </button>
@@ -150,21 +150,21 @@ export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
         <div className="animate-collapse-in pl-4 pt-1">
           {/* File path for file edits */}
           {isFileEdit && filePath && (
-            <div className="font-mono text-xs text-terminal-cyan mb-1">
+            <div className="font-mono text-xs text-accent-cyan mb-1">
               {filePath}
             </div>
           )}
 
           {/* Full input */}
-          <div className="terminal-output text-muted-foreground">
-            {isBash && <span className="text-terminal-green">$ </span>}
+          <div className="terminal-output text-text-muted">
+            {isBash && <span className="text-accent-green">$ </span>}
             {inputPreview}
           </div>
 
           {/* Output if available */}
           {status !== "running" && output && (
-            <div className="mt-1.5 rounded border border-border/30 bg-black/40 p-2 max-h-60 overflow-y-auto">
-              <div className="terminal-output text-muted-foreground">
+            <div className="mt-1.5 rounded border border-border-subtle/30 bg-black/40 p-2 max-h-60 overflow-y-auto">
+              <div className="terminal-output text-text-muted">
                 {output}
               </div>
             </div>

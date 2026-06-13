@@ -85,7 +85,7 @@ export function Topbar({
   };
 
   return (
-    <div className="flex h-11 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm">
+    <div className="flex h-11 items-center justify-between border-b border-border-subtle bg-base/80 px-4 backdrop-blur-sm">
       <div className="flex items-center gap-3">
         {/* Model selector */}
         <DropdownMenu>
@@ -93,12 +93,12 @@ export function Topbar({
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 text-sm font-normal text-muted-foreground hover:text-foreground"
+              className="gap-1.5 text-sm font-normal text-text-muted hover:text-text-primary"
             >
               <Cpu className="size-3.5" />
               <span>{selectedModel?.name || currentModel}</span>
               {selectedModel?.capabilities?.length ? (
-                <span className="rounded bg-terminal-cyan/10 px-1 py-0.5 text-[0.6rem] text-terminal-cyan">
+                <span className="rounded bg-accent-cyan/10 px-1 py-0.5 text-[0.6rem] text-accent-cyan">
                   {selectedModel.capabilities[0]}
                 </span>
               ) : null}
@@ -107,28 +107,28 @@ export function Topbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
             {customModels.length === 0 && (
-              <div className="px-3 py-4 text-center text-[10px] text-muted-foreground">
+              <div className="px-3 py-4 text-center text-[10px] text-text-muted">
                 还没有文字模型
               </div>
             )}
             {Object.entries(modelGroups).map(([provider, models], groupIdx) => (
               <div key={provider}>
                 {groupIdx > 0 && <DropdownMenuSeparator />}
-                <div className="px-2 py-1.5 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground/60">
+                <div className="px-2 py-1.5 text-[0.65rem] font-medium uppercase tracking-wider text-text-muted/60">
                   {provider}
                 </div>
                 {models.map((model) => (
                   <DropdownMenuItem
                     key={model.id}
                     onClick={() => onModelChange(model.id)}
-                    className={currentModel === model.id ? "bg-accent" : ""}
+                    className={currentModel === model.id ? "bg-overlay" : ""}
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{model.name}</span>
                       {model.capabilities?.map((cap) => (
                         <span
                           key={cap}
-                          className="rounded bg-terminal-cyan/10 px-1 py-0.5 text-[0.6rem] text-terminal-cyan"
+                          className="rounded bg-accent-cyan/10 px-1 py-0.5 text-[0.6rem] text-accent-cyan"
                         >
                           {cap}
                         </span>
@@ -142,8 +142,8 @@ export function Topbar({
         </DropdownMenu>
 
         {isStreaming && (
-          <span className="flex items-center gap-1.5 text-xs text-terminal-cyan">
-            <span className="inline-block size-1.5 animate-pulse rounded-full bg-terminal-cyan" />
+          <span className="flex items-center gap-1.5 text-xs text-accent-cyan">
+            <span className="inline-block size-1.5 animate-pulse rounded-full bg-accent-cyan" />
             Streaming
           </span>
         )}
@@ -151,7 +151,7 @@ export function Topbar({
 
       <div className="flex items-center gap-2">
         {username && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-text-muted">
             {username}
           </span>
         )}

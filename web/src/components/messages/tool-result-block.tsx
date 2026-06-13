@@ -63,7 +63,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
   const languageLabel = getLanguageLabel(filePath ?? undefined);
 
   return (
-    <div className="border-l-2 border-brand/40 pl-3 bg-card/30 rounded-r-lg py-0.5">
+    <div className="border-l-2 border-brand/40 pl-3 bg-elevated/30 rounded-r-lg py-0.5">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center gap-1.5 font-mono text-sm text-left"
@@ -72,25 +72,25 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
           <span
             className={cn(
               detectedExitCode === 0
-                ? "text-terminal-green"
-                : "text-terminal-red"
+                ? "text-accent-green"
+                : "text-accent-red"
             )}
           >
             ✓ exit {detectedExitCode}
           </span>
         ) : (
-          <span className={cn(isError ? "text-terminal-red" : "text-terminal-green")}>
+          <span className={cn(isError ? "text-accent-red" : "text-accent-green")}>
             {isError ? "✗ error" : "✓ done"}
           </span>
         )}
         {/* Language badge */}
         {languageLabel && (
-          <span className="inline-flex items-center rounded px-1 py-0.5 text-[0.6rem] font-semibold leading-none bg-terminal-cyan/15 text-terminal-cyan border border-terminal-cyan/30">
+          <span className="inline-flex items-center rounded px-1 py-0.5 text-[0.6rem] font-semibold leading-none bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30">
             {languageLabel}
           </span>
         )}
         {!isExpanded && (
-          <span className="text-muted-foreground/50 text-xs">(click to expand)</span>
+          <span className="text-text-muted/50 text-xs">(click to expand)</span>
         )}
       </button>
 
@@ -98,7 +98,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
         <div className="animate-collapse-in mt-1">
           {/* File path link */}
           {filePath && (
-            <div className="font-mono text-xs text-terminal-cyan mb-1">
+            <div className="font-mono text-xs text-accent-cyan mb-1">
               {filePath}
             </div>
           )}
@@ -115,11 +115,11 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
           {/* Output box */}
           {output && !shouldShowDiff && (
             <div className="relative group">
-              <div className="rounded border border-border/30 bg-black/40 p-2 max-h-80 overflow-y-auto">
+              <div className="rounded border border-border-subtle/30 bg-black/40 p-2 max-h-80 overflow-y-auto">
                 {isBashTool ? (
                   <AnsiRenderer content={output} />
                 ) : (
-                  <div className="terminal-output text-muted-foreground">
+                  <div className="terminal-output text-text-muted">
                     {isError ? `Error: ${output}` : output || "(no output)"}
                   </div>
                 )}
@@ -127,11 +127,11 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
               {/* Copy button */}
               <button
                 onClick={handleCopy}
-                className="absolute top-1.5 right-1.5 rounded p-1 text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted/30 hover:text-foreground"
+                className="absolute top-1.5 right-1.5 rounded p-1 text-text-muted/40 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-overlay/30 hover:text-text-primary"
                 title="Copy output"
               >
                 {copied ? (
-                  <span className="text-terminal-green text-xs">✓</span>
+                  <span className="text-accent-green text-xs">✓</span>
                 ) : (
                   <span className="text-xs">⎘</span>
                 )}
@@ -140,7 +140,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
           )}
 
           {!output && !shouldShowDiff && (
-            <div className="terminal-output text-muted-foreground/40 text-xs">
+            <div className="terminal-output text-text-muted/40 text-xs">
               (no output)
             </div>
           )}

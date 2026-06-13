@@ -615,10 +615,10 @@ export function ChatInput({
   const warningState = calculateTokenWarningState(totalInputTokens, currentModelId ?? "claude-sonnet-4-20250514");
   const ctxPct = contextPercentage ?? 0;
   const ctxColor = warningState.isAboveErrorThreshold
-    ? "text-destructive"
+    ? "text-accent-red"
     : warningState.isAboveWarningThreshold
       ? "text-yellow-500"
-      : "text-muted-foreground/50";
+      : "text-text-muted/50";
 
   return (
     <div className="relative">
@@ -626,18 +626,18 @@ export function ChatInput({
       {showFileMenu && fileResults.length > 0 && (
         <div
           ref={fileMenuRef}
-          className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
+          className="absolute bottom-full left-0 right-0 mb-1 border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
         >
-          <div className="border-b border-border bg-muted/20 px-3 py-1 flex items-center justify-between">
-            <span className="text-[0.65rem] text-muted-foreground/60">Files</span>
-            <div className="flex items-center gap-2 text-[0.6rem] text-muted-foreground/40">
-              <kbd className="border border-border px-1">↑↓</kbd>
+          <div className="border-b border-border-subtle bg-overlay/20 px-3 py-1 flex items-center justify-between">
+            <span className="text-[0.65rem] text-text-muted/60">Files</span>
+            <div className="flex items-center gap-2 text-[0.6rem] text-text-muted/40">
+              <kbd className="border border-border-subtle px-1">↑↓</kbd>
               <span>navigate</span>
               <span>·</span>
-              <kbd className="border border-border px-1">Tab</kbd>
+              <kbd className="border border-border-subtle px-1">Tab</kbd>
               <span>select</span>
               <span>·</span>
-              <kbd className="border border-border px-1">Esc</kbd>
+              <kbd className="border border-border-subtle px-1">Esc</kbd>
               <span>close</span>
             </div>
           </div>
@@ -648,23 +648,23 @@ export function ChatInput({
               onClick={() => handleSelectFile(file)}
               onMouseEnter={() => setFileSelectedIndex(idx)}
               className={cn(
-                "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border last:border-b-0",
+                "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border-subtle last:border-b-0",
                 idx === fileSelectedIndex
-                  ? "bg-accent text-accent-foreground"
-                  : "hover:bg-accent/30"
+                  ? "bg-overlay text-text-primary"
+                  : "hover:bg-overlay/30"
               )}
             >
               <span
                 className={cn(
                   "font-mono text-xs shrink-0",
-                  file.type === "dir" ? "text-terminal-cyan" : "text-muted-foreground/60"
+                  file.type === "dir" ? "text-accent-cyan" : "text-text-muted/60"
                 )}
               >
                 {file.type === "dir" ? "📁" : "📄"}
               </span>
               <span className="font-mono text-xs truncate">{file.path}</span>
               {file.type === "dir" && (
-                <span className="ml-auto text-[0.6rem] text-muted-foreground/40 shrink-0">/</span>
+                <span className="ml-auto text-[0.6rem] text-text-muted/40 shrink-0">/</span>
               )}
             </button>
           ))}
@@ -675,10 +675,10 @@ export function ChatInput({
       {showCommandMenu && !showPermissionSubmenu && !showModelSubmenu && (
         <div
           ref={menuRef}
-          className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50"
+          className="absolute bottom-full left-0 right-0 mb-1 border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50"
         >
           {filteredCommands.length === 0 ? (
-            <div className="px-3 py-2 font-mono text-xs text-muted-foreground/60">
+            <div className="px-3 py-2 font-mono text-xs text-text-muted/60">
               No matches
             </div>
           ) : (
@@ -691,13 +691,13 @@ export function ChatInput({
                 className={cn(
                   "flex w-full items-center px-3 py-1.5 text-left transition-colors",
                   idx === selectedIndex
-                    ? "bg-accent text-accent-foreground"
-                    : "hover:bg-accent/30"
+                    ? "bg-overlay text-text-primary"
+                    : "hover:bg-overlay/30"
                 )}
               >
                 <span className="font-mono text-sm">{cmd.name}</span>
                 {cmd.hasSubmenu && (
-                  <span className="ml-auto text-[0.6rem] text-muted-foreground/40">▶</span>
+                  <span className="ml-auto text-[0.6rem] text-text-muted/40">▶</span>
                 )}
               </button>
             ))
@@ -709,7 +709,7 @@ export function ChatInput({
       {showPermissionSubmenu && (
         <div
           ref={menuRef}
-          className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50"
+          className="absolute bottom-full left-0 right-0 mb-1 border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50"
         >
           {MODE_OPTIONS.map((mode, idx) => (
             <button
@@ -720,14 +720,14 @@ export function ChatInput({
               className={cn(
                 "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors",
                 idx === selectedIndex
-                  ? "bg-accent text-accent-foreground"
-                  : "hover:bg-accent/30"
+                  ? "bg-overlay text-text-primary"
+                  : "hover:bg-overlay/30"
               )}
             >
               {mode.icon}
               <span className="font-mono text-sm">{mode.label}</span>
               {permissionMode === mode.value && (
-                <span className="ml-auto text-[0.6rem] text-muted-foreground/60">*</span>
+                <span className="ml-auto text-[0.6rem] text-text-muted/60">*</span>
               )}
             </button>
           ))}
@@ -738,10 +738,10 @@ export function ChatInput({
       {showModelSubmenu && (
         <div
           ref={menuRef}
-          className="absolute bottom-full left-0 right-0 mb-1 border border-border bg-popover shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
+          className="absolute bottom-full left-0 right-0 mb-1 border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
         >
           {models.length === 0 ? (
-            <div className="px-3 py-2 font-mono text-xs text-muted-foreground/60">
+            <div className="px-3 py-2 font-mono text-xs text-text-muted/60">
               No models available
             </div>
           ) : (
@@ -752,14 +752,14 @@ export function ChatInput({
                 onClick={() => handleSelectModel(model.id)}
                 onMouseEnter={() => setSelectedIndex(idx)}
                 className={cn(
-                  "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border last:border-b-0",
+                  "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border-subtle last:border-b-0",
                   idx === selectedIndex
-                    ? "bg-accent text-accent-foreground"
-                    : "hover:bg-accent/30"
+                    ? "bg-overlay text-text-primary"
+                    : "hover:bg-overlay/30"
                 )}
               >
                 <span className="font-mono text-sm truncate">{model.name}</span>
-                <span className="ml-auto text-[0.6rem] text-muted-foreground/40 shrink-0">{model.provider}</span>
+                <span className="ml-auto text-[0.6rem] text-text-muted/40 shrink-0">{model.provider}</span>
               </button>
             ))
           )}
@@ -768,7 +768,7 @@ export function ChatInput({
 
       {/* Terminal prompt input */}
       <div className="flex items-start px-4 py-2">
-        <span className="font-mono text-sm text-terminal-cyan shrink-0 pt-2 select-none">
+        <span className="font-mono text-sm text-accent-cyan shrink-0 pt-2 select-none">
           &gt;&nbsp;
         </span>
         <div className="relative min-w-0 flex-1">
@@ -786,8 +786,8 @@ export function ChatInput({
             rows={1}
             className={cn(
               "w-full resize-none border-0 bg-transparent px-0 py-2",
-              "font-mono text-sm leading-relaxed text-foreground",
-              "placeholder:text-muted-foreground/40",
+              "font-mono text-sm leading-relaxed text-text-primary",
+              "placeholder:text-text-muted/40",
               "outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50",
               "max-h-[200px]"
@@ -799,7 +799,7 @@ export function ChatInput({
           <button
             onClick={onStop}
             title="Stop generating (Ctrl+C)"
-            className="shrink-0 mt-2 ml-2 font-mono text-sm text-muted-foreground hover:text-destructive transition-colors"
+            className="shrink-0 mt-2 ml-2 font-mono text-sm text-text-muted hover:text-accent-red transition-colors"
           >
             ■
           </button>
@@ -807,14 +807,14 @@ export function ChatInput({
       </div>
 
       {/* Terminal-style status bar */}
-      <div className="flex items-center justify-between px-4 py-1 border-t border-border/50">
-        <span className="font-mono text-[0.65rem] text-muted-foreground/50 flex items-center gap-1.5">
-          <span className="text-terminal-cyan/70">{currentModeLabel}</span>
-          <span className="text-muted-foreground/30">│</span>
+      <div className="flex items-center justify-between px-4 py-1 border-t border-border-subtle/50">
+        <span className="font-mono text-[0.65rem] text-text-muted/50 flex items-center gap-1.5">
+          <span className="text-accent-cyan/70">{currentModeLabel}</span>
+          <span className="text-text-muted/30">│</span>
           <span>{currentModelName}</span>
-          <span className="text-muted-foreground/30">│</span>
+          <span className="text-text-muted/30">│</span>
           <span>{formatCost(cost)}</span>
-          <span className="text-muted-foreground/30">│</span>
+          <span className="text-text-muted/30">│</span>
           <span className={ctxColor}>
             {warningState.isAboveAutoCompactThreshold
               ? `${warningState.percentLeft}% until auto-compact`
@@ -822,12 +822,12 @@ export function ChatInput({
           </span>
           {historyIndicator && (
             <>
-              <span className="text-muted-foreground/30">│</span>
+              <span className="text-text-muted/30">│</span>
               <span>{historyIndicator}</span>
             </>
           )}
         </span>
-        <span className="font-mono text-[0.6rem] text-muted-foreground/30">
+        <span className="font-mono text-[0.6rem] text-text-muted/30">
           Enter↵ send · Shift+Enter newline · / commands · @ file · Ctrl+C stop
         </span>
       </div>

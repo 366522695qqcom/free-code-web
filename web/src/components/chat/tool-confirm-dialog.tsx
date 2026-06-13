@@ -84,62 +84,62 @@ export function ToolConfirmDialog({
     <div ref={containerRef} className="py-1 font-mono text-sm">
       {/* Tool info line */}
       <div className="flex items-center gap-2">
-        <span className={isOutsideSandbox ? "text-terminal-red" : "text-terminal-amber"}>
+        <span className={isOutsideSandbox ? "text-accent-red" : "text-accent-orange"}>
           {isOutsideSandbox ? "▲" : "●"}
         </span>
-        <span className="text-terminal-amber">
+        <span className="text-accent-orange">
           {confirmation.toolName}
         </span>
-        <span className="text-muted-foreground truncate">
+        <span className="text-text-muted truncate">
           {formatToolInput(confirmation.toolInput)}
         </span>
       </div>
 
       {/* Warning for outside-sandbox */}
       {isOutsideSandbox && (
-        <div className="pl-4 text-terminal-red text-xs">
+        <div className="pl-4 text-accent-red text-xs">
           ⚠ Runs on host, not in sandbox
         </div>
       )}
 
       {/* Reason for high risk */}
       {isHighRisk && confirmation.reason && (
-        <div className="pl-4 text-terminal-amber/70 text-xs">
+        <div className="pl-4 text-accent-orange/70 text-xs">
           {confirmation.reason}
         </div>
       )}
 
       {/* Prompt line */}
       <div className="pl-4 flex items-center gap-1">
-        <span className="text-muted-foreground">Allow?</span>
-        <span className="text-muted-foreground/60">[</span>
+        <span className="text-text-muted">Allow?</span>
+        <span className="text-text-muted/60">[</span>
         <button
           onClick={() => onAllow(confirmation.toolCallId)}
-          className="text-terminal-green hover:underline focus:outline-none focus:underline"
+          className="text-accent-green hover:underline focus:outline-none focus:underline"
         >
           Y
         </button>
-        <span className="text-muted-foreground/60">/</span>
+        <span className="text-text-muted/60">/</span>
         <button
           onClick={() => onDeny(confirmation.toolCallId)}
-          className="text-terminal-red hover:underline focus:outline-none focus:underline"
+          className="text-accent-red hover:underline focus:outline-none focus:underline"
         >
           n
         </button>
         {isHighRisk && (
           <>
-            <span className="text-muted-foreground/60">/</span>
+            <span className="text-text-muted/60">/</span>
             <button
               onClick={() => onAllow(confirmation.toolCallId, true)}
-              className="text-terminal-amber hover:underline focus:outline-none focus:underline"
+              className="text-accent-orange hover:underline focus:outline-none focus:underline"
             >
               a
             </button>
-            <span className="text-muted-foreground/50 text-xs">(always)</span>
+            <span className="text-text-muted/50 text-xs">(always)</span>
           </>
         )}
-        <span className="text-muted-foreground/60">]</span>
-        <span className="text-muted-foreground/40">:</span>
+        <span className="text-text-muted/60">]</span>
+        <span className="text-text-muted/40">:</span>
       </div>
     </div>
   );

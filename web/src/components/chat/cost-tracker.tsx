@@ -33,10 +33,10 @@ export function CostTracker({ usage }: CostTrackerProps) {
 
   return (
     <Tooltip>
-      <TooltipTrigger className="flex items-center gap-2 font-mono text-xs text-muted-foreground/60 select-none cursor-default">
-        <span className="text-terminal-cyan/60">↑{formatTokens(inputTokens)}</span>
-        <span className="text-terminal-green/60">↓{formatTokens(outputTokens)}</span>
-        <span className="text-terminal-amber/60">{formatCost(cost)}</span>
+      <TooltipTrigger className="flex items-center gap-2 font-mono text-xs text-text-muted/60 select-none cursor-default">
+        <span className="text-accent-cyan/60">↑{formatTokens(inputTokens)}</span>
+        <span className="text-accent-green/60">↓{formatTokens(outputTokens)}</span>
+        <span className="text-accent-orange/60">{formatCost(cost)}</span>
       </TooltipTrigger>
       <TooltipContent side="top">
         <div className="font-mono text-xs space-y-0.5">

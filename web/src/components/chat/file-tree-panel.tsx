@@ -14,8 +14,8 @@ function StatusDot({ status }: { status?: "added" | "modified" | "read" }) {
 
   const colorClass =
     status === "added"
-      ? "text-terminal-green"
-      : "text-terminal-amber";
+      ? "text-accent-green"
+      : "text-accent-orange";
 
   return <span className={`${colorClass} text-[0.5rem] leading-none`}>●</span>;
 }
@@ -46,7 +46,7 @@ function TreeNode({
       <div>
         <button
           onClick={handleClick}
-          className="flex w-full items-center gap-1 py-0.5 text-left font-mono text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="flex w-full items-center gap-1 py-0.5 text-left font-mono text-xs text-text-muted hover:text-text-primary transition-colors"
           style={{ paddingLeft: indent }}
         >
           {isExpanded ? (
@@ -54,7 +54,7 @@ function TreeNode({
           ) : (
             <ChevronRight className="size-3 shrink-0" />
           )}
-          <Folder className="size-3 shrink-0 text-muted-foreground/60" />
+          <Folder className="size-3 shrink-0 text-text-muted/60" />
           <span className="truncate">{node.name}/</span>
         </button>
         {isExpanded && (
@@ -76,15 +76,15 @@ function TreeNode({
   return (
     <button
       onClick={handleClick}
-      className="flex w-full items-center gap-1 py-0.5 text-left font-mono text-xs hover:text-foreground transition-colors"
+      className="flex w-full items-center gap-1 py-0.5 text-left font-mono text-xs hover:text-text-primary transition-colors"
       style={{ paddingLeft: indent + 12 }}
     >
-      <File className="size-3 shrink-0 text-muted-foreground/40" />
+      <File className="size-3 shrink-0 text-text-muted/40" />
       <span
         className={`truncate ${
           node.status === "read"
-            ? "text-muted-foreground/40"
-            : "text-muted-foreground"
+            ? "text-text-muted/40"
+            : "text-text-muted"
         }`}
       >
         {node.name}
@@ -100,15 +100,15 @@ export function FileTreePanel({ tree, onFileClick }: FileTreePanelProps) {
   if (tree.length === 0) return null;
 
   return (
-    <div className="flex h-full flex-col border-r border-border bg-sidebar w-[200px] shrink-0">
+    <div className="flex h-full flex-col border-r border-border-subtle bg-sidebar w-[200px] shrink-0">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-2 py-1.5">
-        <span className="font-mono text-[0.65rem] font-medium text-muted-foreground/60 uppercase tracking-wider">
+      <div className="flex items-center justify-between border-b border-border-subtle px-2 py-1.5">
+        <span className="font-mono text-[0.65rem] font-medium text-text-muted/60 uppercase tracking-wider">
           Files
         </span>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-muted-foreground/40 hover:text-foreground transition-colors"
+          className="text-text-muted/40 hover:text-text-primary transition-colors"
           title={isCollapsed ? "Expand file tree" : "Collapse file tree"}
         >
           {isCollapsed ? (

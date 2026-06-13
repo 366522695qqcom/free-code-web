@@ -136,16 +136,16 @@ export function MCPPanel({ onBack }: MCPPanelProps) {
   const selectedServer = servers.find((s) => s.id === selectedId) || null;
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col bg-base">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+      <div className="flex items-center gap-3 border-b border-border-subtle px-4 py-3">
         {onBack && (
           <Button variant="ghost" size="icon-xs" onClick={onBack}>
             <ArrowLeft className="size-4" />
           </Button>
         )}
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm text-terminal-green">$</span>
+          <span className="font-mono text-sm text-accent-green">$</span>
           <h1 className="text-sm font-medium">MCP Server Management</h1>
         </div>
       </div>
@@ -153,7 +153,7 @@ export function MCPPanel({ onBack }: MCPPanelProps) {
       {/* Main content */}
       <div className="flex min-h-0 flex-1">
         {/* Sidebar — server list */}
-        <div className="w-64 shrink-0 border-r border-border">
+        <div className="w-64 shrink-0 border-r border-border-subtle">
           <ServerList
             servers={servers}
             selectedId={selectedId}
