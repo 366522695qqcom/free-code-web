@@ -314,6 +314,42 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
     }
   }, [autoCompactEnabled, currentModel, setMessages, resetUsage]);
 
+  // Persist the current messages array to the backend so that switching
+  // back to this session later will show the conversation history.
+  const persistMessages = useCallback(
+    (sid: string | null) => {
+      if (!sid) return;
+      // Read the latest messages from the ref to avoid stale closures
+      const currentMsgs = messagesRef.current;
+      if (currentMsgs.length === 0) return;
+      const payload = currentMsgs.map((m) => ({
+        role: m.role,
+        content: m.contentBlocks
+          ? m.contentBlocks
+              .filter((b) => b.type === "text" || b.type === "tool_use" || b.type === "tool_result")
+              .map((b) => {
+                if (b.type === "text") return { type: "text", text: b.text || "" };
+                if (b.type === "tool_use" && b.toolUse)
+                  return { type: "tool_use", id: b.toolUse.id, name: b.toolUse.name, input: b.toolUse.input };
+                if (b.type === "tool_result" && b.toolResult)
+                  return { type: "tool_result", tool_use_id: b.toolResult.toolUseId, content: b.toolResult.output, is_error: b.toolResult.isError };
+                return { type: "text", text: "" };
+              })
+          : [{ type: "text", text: m.content }],
+        timestamp: new Date(m.timestamp).toISOString(),
+      }));
+      // Fire-and-forget — don't block the UI
+      fetch(`/api/sessions/${sid}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: payload, tokenUsage: usageRef.current }),
+      }).catch((err) => {
+        console.error("Failed to persist messages", err);
+      });
+    },
+    []
+  );
+
   const sendMessage = useCallback(
     async (content: string, model?: string, customProvider?: { baseUrl: string; apiKey: string; apiPath: string } | null) => {
       if (!sessionId || !content.trim()) return;
@@ -608,9 +644,12 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
         abortControllerRef.current = null;
         // Auto-compact if context usage exceeds threshold
         await autoCompactIfNeeded();
+        // Persist messages to the backend so they survive page reload
+        // and can be loaded when switching back to this session.
+        persistMessages(sessionId);
       }
     },
-    [sessionId, messages, autoApprovedTools, permissionMode, autoCompactIfNeeded]
+    [sessionId, messages, autoApprovedTools, permissionMode, autoCompactIfNeeded, persistMessages]
   );
 
   const clearMessages = useCallback(() => {
