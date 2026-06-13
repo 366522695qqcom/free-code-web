@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
 import {
   ArrowLeft,
   Cpu,
-  Palette,
   Shield,
   MessageSquare,
   Info,
@@ -99,7 +97,6 @@ function setStoredValue<T>(key: string, value: T): void {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [defaultModel, setDefaultModel] = useState("");
   const [providerModels, setProviderModels] = useState<Array<{ id: string; name: string; provider: string }>>([]);
@@ -168,10 +165,6 @@ export default function SettingsPage() {
       setDefaultModel(modelId);
       setStoredValue("free-code-default-model", modelId);
     }
-  };
-
-  const handleThemeChange = (value: string | null) => {
-    if (value) setTheme(value);
   };
 
   const handleAutoTitleChange = (checked: boolean) => {
@@ -369,37 +362,6 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Theme */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Palette className="size-4 text-accent-cyan" />
-              <CardTitle>Theme</CardTitle>
-            </div>
-            <CardDescription>
-              Customize the appearance of the application.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="theme-select">Color Theme</Label>
-              <Select
-                value={theme || "dark"}
-                onValueChange={handleThemeChange}
-              >
-                <SelectTrigger id="theme-select" className="w-56">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dark">Dark</SelectItem>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="system">System</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </CardContent>
         </Card>
