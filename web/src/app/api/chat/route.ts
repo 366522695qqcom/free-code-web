@@ -31,11 +31,12 @@ export async function POST(request: NextRequest) {
     let resolvedBaseUrl = body.customBaseUrl;
     if (body.customBaseUrl && (!resolvedApiKey || resolvedApiKey.startsWith("***"))) {
       const providers = await listProvidersWithModels();
+      const customUrl = body.customBaseUrl;
       // Match by baseUrl prefix (user may store full URL including path)
       const match = providers.find((p) =>
-        p.baseUrl === body.customBaseUrl ||
-        body.customBaseUrl.startsWith(p.baseUrl) ||
-        p.baseUrl.startsWith(body.customBaseUrl)
+        p.baseUrl === customUrl ||
+        customUrl.startsWith(p.baseUrl) ||
+        p.baseUrl.startsWith(customUrl)
       );
       if (match?.apiKey) {
         resolvedApiKey = match.apiKey;
