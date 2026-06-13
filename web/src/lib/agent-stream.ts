@@ -101,7 +101,7 @@ async function runAnthropicLoop(
   options: AgenticStreamOptions,
   emit: EmitFn
 ): Promise<void> {
-  const apiKey = process.env.ANTHROPIC_API_KEY || "";
+  const apiKey = options.customApiKey || process.env.ANTHROPIC_API_KEY || "";
 
   if (!apiKey) {
     emit("error", { error: "ANTHROPIC_API_KEY is not configured. Please set it in your environment variables or use a custom model provider." });
