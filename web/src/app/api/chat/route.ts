@@ -28,11 +28,22 @@ export async function POST(request: NextRequest) {
     // Resolve the real API key: the frontend receives masked keys from
     // GET /api/providers (***xxxx), so we must look up the original from DB.
     let resolvedApiKey = body.customApiKey;
+    let resolvedBaseUrl = body.customBaseUrl;
     if (body.customBaseUrl && (!resolvedApiKey || resolvedApiKey.startsWith("***"))) {
       const providers = await listProvidersWithModels();
-      const match = providers.find((p) => p.baseUrl === body.customBaseUrl);
+      // Match by baseUrl prefix (user may store full URL including path)
+      const match = providers.find((p) =>
+        p.baseUrl === body.customBaseUrl ||
+        body.customBaseUrl.startsWith(p.baseUrl) ||
+        p.baseUrl.startsWith(body.customBaseUrl)
+      );
       if (match?.apiKey) {
         resolvedApiKey = match.apiKey;
+        // If the provider's baseUrl already includes the path (e.g. /v1/chat/completions),
+        // use it as the full URL and clear customApiPath to avoid double-path.
+        if (match.baseUrl.includes("/chat/completions") && !body.customApiPath) {
+          resolvedBaseUrl = match.baseUrl.replace(/\/chat\/completions$/, "");
+        }
       }
     }
 
@@ -40,7 +51,7 @@ export async function POST(request: NextRequest) {
       model: body.model,
       sessionId: body.sessionId,
       permissionMode: body.permissionMode,
-      customBaseUrl: body.customBaseUrl,
+      customBaseUrl: resolvedBaseUrl,
       customApiKey: resolvedApiKey,
       customApiPath: body.customApiPath,
     });
