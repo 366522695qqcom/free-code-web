@@ -104,6 +104,7 @@ export function ChatLayout() {
     stopStreaming,
     clearMessages,
     setMessages,
+    setUsage,
     pendingConfirmation,
     confirmTool,
     usage,
@@ -124,13 +125,36 @@ export function ChatLayout() {
     }
   }, []);
 
+  // Token used to prevent race conditions when the user clicks multiple
+  // sessions in quick succession. Only the most recent fetch is allowed
+  // to write to state.
+  const sessionLoadTokenRef = useRef(0);
+
   const handleSelectSession = useCallback(
     (id: string) => {
+      // Same session — nothing to do
+      if (id === currentSessionId) return;
+
+      // 1. Flip the id so the useChat sync effect clears the old state
       setCurrentSessionId(id);
+      // 2. Belt-and-suspenders: also clear here so the UI does not flash
+      //    the previous session's messages before the fetch resolves.
+      clearMessages();
+      // 3. Abort any in-flight stream from the previous session
+      stopStreaming();
+
+      // 4. Load the new session's messages (guarded by token)
+      const token = ++sessionLoadTokenRef.current;
       fetch(`/api/sessions/${id}`)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`Failed to load session: ${res.status}`);
+          }
+          return res.json();
+        })
         .then((data) => {
-          if (data.messages) {
+          if (token !== sessionLoadTokenRef.current) return; // superseded
+          if (data.messages && Array.isArray(data.messages)) {
             const enhancedMsgs = data.messages.map(
               (msg: Record<string, unknown>, idx: number) => ({
                 id: `msg-${idx}`,
@@ -174,12 +198,37 @@ export function ChatLayout() {
             );
             setMessages(enhancedMsgs);
           }
+          // Restore token usage from the loaded session
+          if (data.tokenUsage) {
+            const tu = data.tokenUsage as Record<string, unknown>;
+            setUsage({
+              inputTokens: Number(tu.inputTokens) || 0,
+              outputTokens: Number(tu.outputTokens) || 0,
+              cacheCreationInputTokens: Number(tu.cacheCreationInputTokens) || 0,
+              cacheReadInputTokens: Number(tu.cacheReadInputTokens) || 0,
+              cost: Number(tu.cost) || 0,
+            });
+          } else {
+            resetUsage();
+          }
         })
-        .catch(() => {
-          // Ignore load errors
+        .catch((err) => {
+          if (token !== sessionLoadTokenRef.current) return;
+          console.error("Failed to load session", err);
+          setSystemMessage("无法加载会话消息");
+          setTimeout(() => setSystemMessage(null), 5000);
         });
     },
-    [setCurrentSessionId, setMessages]
+    [
+      currentSessionId,
+      setCurrentSessionId,
+      clearMessages,
+      stopStreaming,
+      setMessages,
+      setUsage,
+      resetUsage,
+      setSystemMessage,
+    ]
   );
 
   const handleCreateSession = useCallback(async () => {

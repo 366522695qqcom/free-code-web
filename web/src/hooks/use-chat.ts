@@ -85,6 +85,7 @@ interface UseChatReturn {
   stopStreaming: () => void;
   clearMessages: () => void;
   setMessages: (messages: EnhancedMessage[]) => void;
+  setUsage: (usage: Usage) => void;
   pendingConfirmation: ToolConfirmation | null;
   autoApprovedTools: Set<string>;
   confirmTool: (toolCallId: string, approved: boolean, alwaysAllow?: boolean) => void;
@@ -236,6 +237,29 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
   const resetUsage = useCallback(() => {
     setUsage({ inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0, cost: 0 });
   }, []);
+
+  const setUsageDirect = useCallback((u: Usage) => setUsage(u), []);
+
+  // Sync internal state when sessionId prop changes
+  // Without this effect, switching to a previous conversation would leave
+  // the old session's messages/usage/streaming callbacks in place, making
+  // it look like the click did nothing.
+  const lastSessionIdRef = useRef<string | null>(sessionId);
+  useEffect(() => {
+    if (lastSessionIdRef.current === sessionId) return;
+    lastSessionIdRef.current = sessionId;
+    // Abort any in-flight stream from the previous session
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    confirmationResolverRef.current = null;
+    // Reset transient state — messages will be repopulated by the parent
+    setMessages([]);
+    setUsage({ inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0, cost: 0 });
+    setPendingConfirmation(null);
+    setAutoApproveToasts([]);
+    setIsStreaming(false);
+    setError(null);
+  }, [sessionId]);
 
   const autoCompactIfNeeded = useCallback(async () => {
     if (!autoCompactEnabled) return;
@@ -602,6 +626,7 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
     stopStreaming,
     clearMessages,
     setMessages,
+    setUsage: setUsageDirect,
     pendingConfirmation,
     autoApprovedTools,
     confirmTool,
