@@ -1,27 +1,21 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Plus,
   Trash2,
-  PanelLeft,
   Search,
   Pencil,
   Settings,
-  Bot,
-  Wrench,
-  FileText,
-  Cog,
-  Shield,
-  Info,
-  ChevronDown,
+  MessageSquare,
+  Cpu,
+  ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { BrandHeader } from "@/components/ui/brand-header";
 import { cn } from "@/lib/utils";
 import type { ChatConversation } from "@/types";
 
@@ -39,24 +33,6 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
-function formatRelativeTime(ts: number): string {
-  const now = Date.now();
-  const diffMs = now - ts;
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSeconds < 60) return "just now";
-  if (diffMinutes < 60) return `${diffMinutes}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  if (diffDays === 1) return "1d";
-  if (diffDays < 7) return `${diffDays}d`;
-
-  const date = new Date(ts);
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
-}
-
 interface ContextMenuState {
   visible: boolean;
   x: number;
@@ -64,14 +40,26 @@ interface ContextMenuState {
   sessionId: string | null;
 }
 
-const QUICK_LINKS = [
-  { href: "/settings/providers", icon: Bot, label: "Models" },
-  { href: "/settings/permissions", icon: Shield, label: "Permissions" },
-  { href: "/settings/tools", icon: Wrench, label: "Tools" },
-  { href: "/settings/sessions", icon: FileText, label: "Sessions" },
-  { href: "/mcp", icon: Cog, label: "MCP" },
-  { href: "/settings", icon: Info, label: "About" },
-];
+function groupSessionsByTime(
+  sessions: ChatConversation[]
+): { label: string; sessions: ChatConversation[] }[] {
+  const today = new Date().setHours(0, 0, 0, 0);
+  const yesterday = today - 86400000;
+
+  const groups: { label: string; sessions: ChatConversation[] }[] = [
+    { label: "今天", sessions: [] },
+    { label: "昨天", sessions: [] },
+    { label: "更早", sessions: [] },
+  ];
+
+  for (const session of sessions) {
+    if (session.updatedAt >= today) groups[0].sessions.push(session);
+    else if (session.updatedAt >= yesterday) groups[1].sessions.push(session);
+    else groups[2].sessions.push(session);
+  }
+
+  return groups.filter((g) => g.sessions.length > 0);
+}
 
 export function Sidebar({
   sessions,
@@ -83,7 +71,10 @@ export function Sidebar({
   onDeleteSession,
   onRenameSession,
   onToggleCollapse,
+  onSettingsClick,
+  onLogout,
 }: SidebarProps) {
+  const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,10 +84,8 @@ export function Sidebar({
     y: 0,
     sessionId: null,
   });
-  const [quickOpen, setQuickOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
 
   useEffect(() => {
     if (editingId && inputRef.current) {
@@ -107,7 +96,8 @@ export function Sidebar({
 
   // Close context menu on click outside
   useEffect(() => {
-    const handleClick = () => setContextMenu((prev) => ({ ...prev, visible: false }));
+    const handleClick = () =>
+      setContextMenu((prev) => ({ ...prev, visible: false }));
     if (contextMenu.visible) {
       document.addEventListener("click", handleClick);
       return () => document.removeEventListener("click", handleClick);
@@ -170,169 +160,207 @@ export function Sidebar({
       )
     : sessions;
 
-  if (isCollapsed) {
-    return (
-      <div className="flex h-full w-12 flex-col items-center border-r border-border-subtle bg-elevated/40 py-3 gap-2">
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={onToggleCollapse}
-          title="Expand sidebar"
-        >
-          <PanelLeft className="size-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={onCreateSession}
-          title="New Chat"
-        >
-          <Plus className="size-4" />
-        </Button>
-      </div>
-    );
-  }
+  const sessionGroups = groupSessionsByTime(filteredSessions);
+
+  // Determine active page for Activity Bar highlighting
+  const isChatActive = true; // Chat is always the primary view
+  const isSettingsActive = false;
+  const isMcpActive = false;
 
   return (
-    <aside className="flex w-72 flex-col border-r border-border-subtle bg-elevated/40">
-      {/* Brand header + new chat */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <BrandHeader size="sm" />
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={onCreateSession}
-          aria-label="New session"
-          title="New Chat"
-          className="size-8 rounded-lg text-text-muted hover:bg-brand-soft hover:text-brand transition-colors duration-150"
-        >
-          <Plus className="size-4" />
-        </Button>
-      </div>
-
-      {/* Search */}
-      <div className="px-3 pb-2">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-muted pointer-events-none" />
-          <Input
-            type="search"
-            placeholder="Search sessions..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 rounded-lg pl-8 text-xs focus-visible:ring-1 focus-visible:ring-brand"
-          />
-        </div>
-      </div>
-
-      {/* Quick Settings card (折叠) */}
-      <div className="px-3 pb-2">
+    <div className="flex h-full">
+      {/* Panel 1: Activity Bar (always visible, 56px) */}
+      <div className="flex w-14 shrink-0 flex-col items-center border-r border-border-subtle bg-elevated py-3 gap-1">
+        {/* Top icons */}
         <button
           type="button"
-          onClick={() => setQuickOpen((v) => !v)}
-          className="flex w-full items-center justify-between rounded-lg border border-border-subtle bg-elevated/50 px-3 py-2 text-xs text-text-muted transition-colors hover:bg-elevated hover:text-text-primary"
+          onClick={() => {
+            /* Already on chat page */
+          }}
+          className={cn(
+            "size-9 rounded-lg flex items-center justify-center transition-colors duration-150",
+            isChatActive
+              ? "text-brand bg-brand/10"
+              : "text-text-muted hover:text-text-primary hover:bg-overlay"
+          )}
+          title="Chat"
         >
-          <span className="flex items-center gap-2">
-            <Settings className="size-3.5" />
-            Quick Settings
-          </span>
-          {quickOpen ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+          <MessageSquare className="size-4" />
         </button>
-        {quickOpen && (
-          <div className="mt-1 flex flex-col gap-0.5 rounded-lg border border-border-subtle bg-elevated/50 p-1 animate-collapse-in">
-            {QUICK_LINKS.map((link) => {
-              const Icon = link.icon;
-              const active = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                      "flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors duration-150",
-                      active
-                        ? "border-l-2 border-accent-cyan bg-accent-cyan/10 text-accent-cyan font-medium"
-                        : "text-text-muted hover:bg-overlay hover:text-text-primary"
-                    )}
+
+        <button
+          type="button"
+          onClick={onSettingsClick}
+          className={cn(
+            "size-9 rounded-lg flex items-center justify-center transition-colors duration-150",
+            isSettingsActive
+              ? "text-brand bg-brand/10"
+              : "text-text-muted hover:text-text-primary hover:bg-overlay"
+          )}
+          title="Settings"
+        >
+          <Settings className="size-4" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => router.push("/mcp")}
+          className={cn(
+            "size-9 rounded-lg flex items-center justify-center transition-colors duration-150",
+            isMcpActive
+              ? "text-brand bg-brand/10"
+              : "text-text-muted hover:text-text-primary hover:bg-overlay"
+          )}
+          title="MCP"
+        >
+          <Cpu className="size-4" />
+        </button>
+
+        {/* Collapse/Expand toggle */}
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className={cn(
+            "size-9 rounded-lg flex items-center justify-center transition-colors duration-150",
+            "text-text-muted hover:text-text-primary hover:bg-overlay"
+          )}
+          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="size-4" />
+          ) : (
+            <ChevronLeft className="size-4" />
+          )}
+        </button>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Bottom: User avatar */}
+        <button
+          type="button"
+          onClick={onLogout}
+          className="size-9 rounded-lg flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-overlay transition-colors duration-150"
+          title="Logout"
+        >
+          <div className="size-6 rounded-full bg-brand/20 text-brand flex items-center justify-center text-xs font-semibold">
+            U
+          </div>
+        </button>
+      </div>
+
+      {/* Panel 2: Session Panel (collapsible, 224px) */}
+      <AnimatePresence initial={false}>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 224, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <aside className="flex h-full w-56 flex-col bg-base">
+              {/* Header: Chats label + Plus button */}
+              <div className="flex items-center justify-between px-3 py-3">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-text-subtle">
+                  Chats
+                </span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={onCreateSession}
+                  aria-label="New session"
+                  title="New Chat"
+                  className="size-7 rounded-lg text-brand hover:bg-brand/10 transition-colors duration-150"
                 >
-                  <Icon className="size-3.5" />
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                  <Plus className="size-4" />
+                </Button>
+              </div>
 
-      {/* Sessions label */}
-      <div className="flex items-center justify-between px-4 pt-1 pb-1">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Chats</span>
-        <span className="text-[10px] text-text-muted font-mono">{filteredSessions.length}</span>
-      </div>
+              {/* Search */}
+              <div className="px-3 pb-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-muted pointer-events-none" />
+                  <Input
+                    type="search"
+                    placeholder="Search sessions..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-8 rounded-lg pl-8 text-xs focus-visible:ring-1 focus-visible:ring-brand"
+                  />
+                </div>
+              </div>
 
-      {/* Session list */}
-      <nav className="flex-1 overflow-y-auto px-2 pb-3">
-        {isLoading && sessions.length === 0 ? (
-          <div className="px-3 py-4 font-mono text-xs text-text-muted">
-            Loading...
-          </div>
-        ) : filteredSessions.length === 0 ? (
-          <div className="px-3 py-6 text-center text-xs text-text-muted font-mono">
-            {searchQuery ? "No matching chats" : "No sessions yet"}
-          </div>
-        ) : (
-          <ul className="flex flex-col gap-0.5">
-            {filteredSessions.map((session) => {
-              const isActive = currentSessionId === session.id;
-              return (
-                <li key={session.id}>
-                  <button
-                    type="button"
-                    onClick={() => onSelectSession(session.id)}
-                    onDoubleClick={() => handleDoubleClick(session)}
-                    onContextMenu={(e) => handleContextMenu(e, session.id)}
-                    className={cn(
-                      "group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150",
-                      isActive
-                        ? "border-l-2 border-accent-cyan bg-accent-cyan/10 text-accent-cyan"
-                        : "text-text-primary/80 hover:bg-overlay hover:text-text-primary"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "shrink-0 font-mono text-xs leading-none transition-colors",
-                        isActive ? "text-accent-cyan" : "text-text-muted/40"
-                      )}
-                    >
-                      {isActive ? "▌" : " "}
-                    </span>
-                    {editingId === session.id ? (
-                      <input
-                        ref={inputRef}
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        onBlur={handleRenameSubmit}
-                        onKeyDown={handleRenameKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex-1 border-0 border-b border-brand/50 bg-transparent px-0 py-0 font-mono text-xs outline-none"
-                      />
-                    ) : (
-                      <span className="flex-1 truncate font-sans">{session.title}</span>
-                    )}
-                    <span className="shrink-0 text-[10px] text-text-muted/40 font-mono">
-                      {formatRelativeTime(session.updatedAt)}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+              {/* Session list grouped by time */}
+              <nav className="flex-1 overflow-y-auto px-2 pb-3">
+                {isLoading && sessions.length === 0 ? (
+                  <div className="px-3 py-4 font-mono text-xs text-text-muted">
+                    Loading...
+                  </div>
+                ) : filteredSessions.length === 0 ? (
+                  <div className="px-3 py-6 text-center text-xs text-text-muted font-mono">
+                    {searchQuery ? "No matching chats" : "No sessions yet"}
+                  </div>
+                ) : (
+                  <ul className="flex flex-col gap-0.5">
+                    {sessionGroups.map((group) => (
+                      <li key={group.label}>
+                        {/* Group header */}
+                        <div className="text-[10px] font-medium uppercase tracking-wider text-text-subtle px-3 py-1">
+                          {group.label}
+                        </div>
+                        {/* Group sessions */}
+                        {group.sessions.map((session) => {
+                          const isActive = currentSessionId === session.id;
+                          return (
+                            <button
+                              key={session.id}
+                              type="button"
+                              onClick={() => onSelectSession(session.id)}
+                              onDoubleClick={() => handleDoubleClick(session)}
+                              onContextMenu={(e) =>
+                                handleContextMenu(e, session.id)
+                              }
+                              className={cn(
+                                "group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150",
+                                isActive
+                                  ? "bg-brand/10 text-brand border-l-2 border-brand"
+                                  : "text-text-primary/80 hover:bg-overlay/50 hover:text-text-primary"
+                              )}
+                            >
+                              {editingId === session.id ? (
+                                <input
+                                  ref={inputRef}
+                                  value={editTitle}
+                                  onChange={(e) => setEditTitle(e.target.value)}
+                                  onBlur={handleRenameSubmit}
+                                  onKeyDown={handleRenameKeyDown}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-1 border-0 border-b border-brand/50 bg-transparent px-0 py-0 font-mono text-xs outline-none"
+                                />
+                              ) : (
+                                <span className="flex-1 truncate font-sans">
+                                  {session.title}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </nav>
+            </aside>
+          </motion.div>
         )}
-      </nav>
+      </AnimatePresence>
 
       {/* Context menu */}
       {contextMenu.visible && (
         <div
           ref={contextMenuRef}
-          className="fixed z-50 min-w-[120px] border border-border-subtle bg-elevated p-0.5 shadow-lg"
+          className="fixed z-50 min-w-[120px] border border-border-subtle bg-elevated p-0.5 shadow-lg animate-scale-in"
           style={{
             left: contextMenu.x,
             top: contextMenu.y,
@@ -354,6 +382,6 @@ export function Sidebar({
           </button>
         </div>
       )}
-    </aside>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { ServerList } from "./server-list";
 import { AddServerDialog } from "./add-server-dialog";
 import { ServerDetail } from "./server-detail";
@@ -136,7 +137,7 @@ export function MCPPanel({ onBack }: MCPPanelProps) {
   const selectedServer = servers.find((s) => s.id === selectedId) || null;
 
   return (
-    <div className="flex h-full flex-col bg-base">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="flex h-full flex-col bg-base">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border-subtle px-4 py-3">
         {onBack && (
@@ -145,7 +146,7 @@ export function MCPPanel({ onBack }: MCPPanelProps) {
           </Button>
         )}
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm text-accent-green">$</span>
+          <span className="font-mono text-sm text-brand">$</span>
           <h1 className="text-sm font-medium">MCP Server Management</h1>
         </div>
       </div>
@@ -180,6 +181,6 @@ export function MCPPanel({ onBack }: MCPPanelProps) {
         onOpenChange={setAddDialogOpen}
         onAdd={handleAdd}
       />
-    </div>
+    </motion.div>
   );
 }

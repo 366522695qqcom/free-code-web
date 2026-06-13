@@ -164,14 +164,14 @@ export function ModelDialog({
                   onClick={() => handleCapabilityToggle(cap)}
                   className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors ${
                     capabilities.includes(cap)
-                      ? "border-accent-cyan/50 bg-accent-cyan/10 text-accent-cyan"
+                      ? "border-brand/50 bg-brand/10 text-brand"
                       : "border-border-subtle bg-base text-text-muted hover:bg-overlay"
                   }`}
                 >
                   <span
                     className={`flex size-3.5 items-center justify-center rounded border ${
                       capabilities.includes(cap)
-                        ? "border-accent-cyan bg-accent-cyan text-background"
+                        ? "border-brand bg-brand text-background"
                         : "border-muted-foreground/40"
                     }`}
                   >
@@ -230,6 +230,7 @@ export function ModelDialog({
               variant="outline"
               onClick={handleTest}
               disabled={testing || !modelId.trim()}
+              className="border-brand/30 text-brand hover:bg-brand/10 hover:text-brand"
             >
               {testing ? (
                 <Loader2 className="mr-1 size-3.5 animate-spin" />

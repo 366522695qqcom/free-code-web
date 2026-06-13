@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
@@ -41,15 +40,31 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-brand-soft p-4">
-      <Card className="w-full max-w-[360px] border-border-subtle/60 shadow-card-hover">
-        <div className="p-8">
-          <div className="mb-6 flex flex-col items-center gap-2">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-[#0F172A] via-[#1E293B] to-[#0F172A] p-4 overflow-hidden">
+      {/* Animated grid overlay */}
+      <div
+        className="login-grid pointer-events-none absolute inset-0"
+        aria-hidden="true"
+      />
+
+      {/* Glassmorphism login card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-[400px] rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl shadow-brand/10"
+      >
+        <div className="p-10">
+          {/* Brand header */}
+          <div className="mb-8 flex flex-col items-center gap-3">
             <BrandHeader size="lg" subtitle="Self-hosted Claude Code" />
           </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-xs font-medium text-text-muted">Username</Label>
+              <Label htmlFor="username" className="text-xs font-medium text-text-subtle">
+                Username
+              </Label>
               <Input
                 id="username"
                 type="text"
@@ -58,11 +73,13 @@ export default function LoginPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
                 required
-                className="rounded-lg focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand transition-all duration-150"
+                className="bg-white/5 border-white/10 rounded-xl text-text-subtle placeholder:text-text-subtle focus:border-brand/50 focus:ring-2 focus:ring-brand/20 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)] transition-all duration-200"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-medium text-text-muted">Password</Label>
+              <Label htmlFor="password" className="text-xs font-medium text-text-subtle">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -71,34 +88,52 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
-                className="rounded-lg focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand transition-all duration-150"
+                className="bg-white/5 border-white/10 rounded-xl text-text-subtle placeholder:text-text-subtle focus:border-brand/50 focus:ring-2 focus:ring-brand/20 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)] transition-all duration-200"
               />
             </div>
+
             {error && (
-              <div className="rounded-lg border border-destructive/30 bg-accent-red/15/5 px-3 py-2 text-xs text-accent-red">
+              <div className="rounded-xl border border-accent-red/20 bg-accent-red/10 px-3 py-2 text-xs text-accent-red">
                 {error}
               </div>
             )}
-            <Button
+
+            <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-brand text-white hover:bg-brand/90 transition-all duration-150"
+              className="w-full rounded-xl bg-gradient-to-r from-brand to-emerald-400 py-2.5 text-sm font-medium text-white hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none"
             >
               {loading ? (
-                <>
+                <span className="inline-flex items-center gap-2">
                   <Loader2 className="size-4 animate-spin" />
                   Signing in...
-                </>
+                </span>
               ) : (
                 "Sign in"
               )}
-            </Button>
+            </button>
           </form>
-          <p className="mt-6 text-center text-[10px] text-text-muted font-mono">
+
+          <p className="mt-8 text-center text-[10px] text-text-subtle font-mono">
             Free Code · {new Date().getFullYear()}
           </p>
         </div>
-      </Card>
+      </motion.div>
+
+      {/* Grid animation styles */}
+      <style jsx>{`
+        .login-grid {
+          background-image:
+            linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px);
+          background-size: 40px 40px;
+          animation: grid-move 20s linear infinite;
+        }
+        @keyframes grid-move {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(40px, 40px); }
+        }
+      `}</style>
     </div>
   );
 }

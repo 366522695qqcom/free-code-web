@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ToolUseBlockProps {
@@ -87,19 +88,26 @@ function ElapsedTimer() {
   );
 }
 
-function StatusMarker({ status }: { status: "running" | "done" | "error" }) {
+function StatusIndicator({ status }: { status: "running" | "done" | "error" }) {
+  if (status === "running") {
+    return (
+      <span className="relative flex size-2">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-75" />
+        <span className="relative inline-flex size-2 rounded-full bg-brand" />
+      </span>
+    );
+  }
+  if (status === "done") {
+    return (
+      <span className="inline-flex size-4 items-center justify-center rounded-full bg-brand/15 text-brand text-[10px]">
+        ✓
+      </span>
+    );
+  }
   return (
-    <span
-      className={cn(
-        "inline-block size-1.5 rounded-full",
-        status === "running"
-          ? "bg-brand animate-pulse"
-          : status === "error"
-            ? "bg-accent-red"
-            : "bg-accent-green"
-      )}
-      aria-label={status}
-    />
+    <span className="inline-flex size-4 items-center justify-center rounded-full bg-accent-red/15 text-accent-red text-[10px]">
+      ✕
+    </span>
   );
 }
 
@@ -130,13 +138,19 @@ export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
     : undefined;
 
   return (
-    <div id={domId} className="py-0.5">
+    <div id={domId} className="rounded-xl border border-border-subtle/50 bg-overlay/20">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center gap-2 text-left font-mono text-sm leading-relaxed"
+        className="flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-sm leading-relaxed transition-colors hover:bg-overlay/20"
       >
-        <span className="shrink-0">{isExpanded ? "▼" : "⏺"}</span>
-        <StatusMarker status={status} />
+        <motion.span
+          animate={{ rotate: isExpanded ? 90 : 0 }}
+          transition={{ duration: 0.15 }}
+          className="shrink-0 text-text-muted/60"
+        >
+          ▶
+        </motion.span>
+        <StatusIndicator status={status} />
         <span className="shrink-0 text-[10px] uppercase tracking-wider text-text-muted">
           {displayName}
         </span>
@@ -146,31 +160,41 @@ export function ToolUseBlock({ toolUse, status, output }: ToolUseBlockProps) {
         {status === "running" && <ElapsedTimer />}
       </button>
 
-      {isExpanded && (
-        <div className="animate-collapse-in pl-4 pt-1">
-          {/* File path for file edits */}
-          {isFileEdit && filePath && (
-            <div className="font-mono text-xs text-accent-cyan mb-1">
-              {filePath}
-            </div>
-          )}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-border-subtle/30 px-3 py-2">
+              {/* File path for file edits */}
+              {isFileEdit && filePath && (
+                <div className="font-mono text-xs text-accent-cyan mb-1">
+                  {filePath}
+                </div>
+              )}
 
-          {/* Full input */}
-          <div className="terminal-output text-text-muted">
-            {isBash && <span className="text-accent-green">$ </span>}
-            {inputPreview}
-          </div>
-
-          {/* Output if available */}
-          {status !== "running" && output && (
-            <div className="mt-1.5 rounded border border-border-subtle/30 bg-black/40 p-2 max-h-60 overflow-y-auto">
+              {/* Full input */}
               <div className="terminal-output text-text-muted">
-                {output}
+                {isBash && <span className="text-accent-green">$ </span>}
+                {inputPreview}
               </div>
+
+              {/* Output if available */}
+              {status !== "running" && output && (
+                <div className="mt-1.5 rounded border border-border-subtle/30 bg-black/40 p-2 max-h-60 overflow-y-auto">
+                  <div className="terminal-output text-text-muted">
+                    {output}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

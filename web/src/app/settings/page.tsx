@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Cpu,
@@ -267,6 +268,7 @@ export default function SettingsPage() {
   }
 
   return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
     <div className="min-h-screen bg-base">
       {/* Header */}
       <div className="border-b border-border-subtle bg-base/80 backdrop-blur-sm">
@@ -290,10 +292,11 @@ export default function SettingsPage() {
           className="mb-6"
         />
         {/* Model Providers */}
-        <Card>
+        <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+        <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Server className="size-4 text-accent-cyan" />
+              <Server className="size-4 text-brand" />
               <CardTitle>模型提供商</CardTitle>
             </div>
             <CardDescription>
@@ -311,12 +314,14 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Model Selection */}
-        <Card>
+        <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+        <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Cpu className="size-4 text-accent-cyan" />
+              <Cpu className="size-4 text-brand" />
               <CardTitle>Model</CardTitle>
             </div>
             <CardDescription>
@@ -365,12 +370,14 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Sandbox Configuration */}
-        <Card>
+        <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+        <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Box className="size-4 text-accent-cyan" />
+              <Box className="size-4 text-brand" />
               <CardTitle>Sandbox</CardTitle>
             </div>
             <CardDescription>
@@ -513,12 +520,14 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Tool Permissions */}
-        <Card>
+        <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+        <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Shield className="size-4 text-accent-cyan" />
+              <Shield className="size-4 text-brand" />
               <CardTitle>Tool Permissions</CardTitle>
             </div>
             <CardDescription>
@@ -553,12 +562,14 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Custom Permission Rules */}
-        <Card>
+        <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+        <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Shield className="size-4 text-accent-cyan" />
+              <Shield className="size-4 text-brand" />
               <CardTitle>Custom Permission Rules</CardTitle>
             </div>
             <CardDescription>
@@ -725,12 +736,14 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Session Settings */}
-        <Card>
+        <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+        <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <MessageSquare className="size-4 text-accent-cyan" />
+              <MessageSquare className="size-4 text-brand" />
               <CardTitle>Session</CardTitle>
             </div>
             <CardDescription>
@@ -753,12 +766,14 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* About */}
-        <Card>
+        <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+        <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Info className="size-4 text-accent-cyan" />
+              <Info className="size-4 text-brand" />
               <CardTitle>About</CardTitle>
             </div>
             <CardDescription>
@@ -778,7 +793,7 @@ export default function SettingsPage() {
                   href="https://github.com/user/free-code"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-accent-cyan hover:underline"
+                  className="text-brand hover:underline"
                 >
                   GitHub
                 </a>
@@ -791,7 +806,9 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
       </div>
     </div>
+    </motion.div>
   );
 }

@@ -36,6 +36,18 @@ export function ChatLayout() {
   } = useSessions();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // 小屏自动折叠侧边栏
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && !sidebarCollapsed) {
+        setSidebarCollapsed(true);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [sidebarCollapsed]);
   const [showFileTree, setShowFileTree] = useState(true);
   const [currentModel, setCurrentModel] = useState("");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>("default");

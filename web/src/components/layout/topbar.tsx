@@ -5,13 +5,7 @@ import {
   LogOut,
   ChevronDown,
   Cpu,
-  Sun,
-  Moon,
-  Monitor,
-  Server,
 } from "lucide-react";
-import { useTheme } from "next-themes";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import type { ModelOption } from "@/types";
 
 interface TopbarProps {
@@ -37,36 +30,19 @@ interface EnhancedModelOption extends ModelOption {
   capabilities?: string[];
 }
 
-function ThemeIcon({ theme }: { theme: string | undefined }) {
-  switch (theme) {
-    case "light":
-      return <Sun className="size-4" />;
-    case "dark":
-      return <Moon className="size-4" />;
-    default:
-      return <Monitor className="size-4" />;
-  }
-}
-
 export function Topbar({
   currentModel,
   onModelChange,
   onSettingsClick,
   onLogout,
-  username,
   isStreaming,
   customModels = [],
 }: TopbarProps) {
-  const { theme, setTheme } = useTheme();
-  const router = useRouter();
-
-  // Models come exclusively from configured providers
   const allModels: EnhancedModelOption[] = customModels.map((m) => ({
     ...m,
     capabilities: (m as EnhancedModelOption).capabilities || [],
   }));
 
-  // Group models by provider
   const modelGroups = allModels.reduce<Record<string, EnhancedModelOption[]>>(
     (acc, model) => {
       if (!acc[model.provider]) acc[model.provider] = [];
@@ -78,30 +54,19 @@ export function Topbar({
 
   const selectedModel = allModels.find((m) => m.id === currentModel);
 
-  const cycleTheme = () => {
-    if (theme === "dark") setTheme("light");
-    else if (theme === "light") setTheme("system");
-    else setTheme("dark");
-  };
-
   return (
     <div className="flex h-11 items-center justify-between border-b border-border-subtle bg-base/80 px-4 backdrop-blur-sm">
-      <div className="flex items-center gap-3">
-        {/* Model selector */}
+      {/* Left: Model selector */}
+      <div className="flex items-center">
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 text-sm font-normal text-text-muted hover:text-text-primary"
+              className="gap-1.5 text-sm font-normal text-text-muted transition-colors duration-150 hover:text-brand"
             >
-              <Cpu className="size-3.5" />
+              <Cpu className="size-3.5 text-brand" />
               <span>{selectedModel?.name || currentModel}</span>
-              {selectedModel?.capabilities?.length ? (
-                <span className="rounded bg-accent-cyan/10 px-1 py-0.5 text-[0.6rem] text-accent-cyan">
-                  {selectedModel.capabilities[0]}
-                </span>
-              ) : null}
               <ChevronDown className="size-3 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
@@ -121,14 +86,14 @@ export function Topbar({
                   <DropdownMenuItem
                     key={model.id}
                     onClick={() => onModelChange(model.id)}
-                    className={currentModel === model.id ? "bg-overlay" : ""}
+                    className={currentModel === model.id ? "bg-brand/10 text-brand" : ""}
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{model.name}</span>
                       {model.capabilities?.map((cap) => (
                         <span
                           key={cap}
-                          className="rounded bg-accent-cyan/10 px-1 py-0.5 text-[0.6rem] text-accent-cyan"
+                          className="rounded bg-brand/10 px-1 py-0.5 text-[0.6rem] text-brand"
                         >
                           {cap}
                         </span>
@@ -140,52 +105,35 @@ export function Topbar({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
 
+      {/* Center: Streaming indicator */}
+      <div className="flex items-center">
         {isStreaming && (
-          <span className="flex items-center gap-1.5 text-xs text-accent-cyan">
-            <span className="inline-block size-1.5 animate-pulse rounded-full bg-accent-cyan" />
-            Streaming
+          <span className="flex items-center gap-1.5 text-xs">
+            <span className="inline-block size-1.5 animate-pulse rounded-full bg-brand" />
+            <span className="text-brand/70">Streaming</span>
           </span>
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        {username && (
-          <span className="text-xs text-text-muted">
-            {username}
-          </span>
-        )}
-        <Separator orientation="vertical" className="h-4" />
-        {/* Theme toggle */}
+      {/* Right: Settings + Logout */}
+      <div className="flex items-center gap-1">
         <Button
           variant="ghost"
-          size="icon-xs"
-          onClick={cycleTheme}
-          title={`Theme: ${theme || "system"} (click to cycle)`}
-        >
-          <ThemeIcon theme={theme} />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={() => router.push("/mcp")}
-          title="MCP Servers"
-        >
-          <Server className="size-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-xs"
+          size="icon"
           onClick={onSettingsClick}
           title="Settings"
+          className="size-8 rounded-lg text-text-muted transition-colors hover:bg-overlay/50 hover:text-text-primary"
         >
           <Settings className="size-4" />
         </Button>
         <Button
           variant="ghost"
-          size="icon-xs"
+          size="icon"
           onClick={onLogout}
           title="Sign out"
+          className="size-8 rounded-lg text-text-muted transition-colors hover:bg-overlay/50 hover:text-text-primary"
         >
           <LogOut className="size-4" />
         </Button>

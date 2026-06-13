@@ -65,7 +65,7 @@ function ToolCard({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <Wrench className="size-3 shrink-0 text-accent-cyan" />
+            <Wrench className="size-3 shrink-0 text-brand" />
             <span className="truncate font-mono text-sm font-medium">
               {tool.name}
             </span>

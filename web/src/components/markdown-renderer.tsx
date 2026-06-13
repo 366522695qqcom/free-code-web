@@ -6,54 +6,99 @@ import remarkGfm from "remark-gfm";
 import { useState, useCallback, type ComponentPropsWithoutRef } from "react";
 import { Check, Copy } from "lucide-react";
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="flex items-center gap-1 text-xs text-text-muted hover:text-brand transition-colors duration-150"
+    >
+      {copied ? (
+        <>
+          <Check className="size-3" />
+          <span>Copied!</span>
+        </>
+      ) : (
+        <>
+          <Copy className="size-3" />
+          <span>Copy</span>
+        </>
+      )}
+    </button>
+  );
+}
+
 function CodeBlock({
   className,
   children,
   ...props
 }: ComponentPropsWithoutRef<"code">) {
-  const [copied, setCopied] = useState(false);
   const match = /language-(\w+)/.exec(className || "");
   const isInline = !match;
-
-  const handleCopy = useCallback(() => {
-    const text = String(children).replace(/\n$/, "");
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [children]);
+  const language = match ? match[1] : null;
 
   if (isInline) {
     return (
-      <code className={className} {...props}>
+      <code
+        className="bg-brand/10 text-brand px-1.5 py-0.5 rounded-md text-[0.85em] font-mono"
+        {...props}
+      >
         {children}
       </code>
     );
   }
 
   return (
-    <div className="group/code relative">
-      <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity group-hover/code:opacity-100">
-        {match && (
-          <span className="rounded bg-overlay/50 px-1.5 py-0.5 font-mono text-[0.65rem] text-text-muted">
-            {match[1]}
-          </span>
-        )}
-        <button
-          onClick={handleCopy}
-          className="rounded p-1 text-text-muted transition-colors hover:bg-overlay hover:text-text-primary"
-          title="Copy code"
-        >
-          {copied ? (
-            <Check className="size-3.5 text-accent-green" />
-          ) : (
-            <Copy className="size-3.5" />
-          )}
-        </button>
+    <FencedCodeBlock className={className} language={language} {...props}>
+      {children}
+    </FencedCodeBlock>
+  );
+}
+
+function FencedCodeBlock({
+  className,
+  language,
+  children,
+  ...props
+}: ComponentPropsWithoutRef<"code"> & { language: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  const codeText = String(children).replace(/\n$/, "");
+  const lineCount = codeText.split("\n").length;
+  const isLong = lineCount > 20;
+  const displayCode =
+    isLong && !expanded
+      ? codeText.split("\n").slice(0, 20).join("\n") + "\n..."
+      : codeText;
+
+  return (
+    <div className="my-3 rounded-xl border border-border-subtle overflow-hidden shadow-sm">
+      {/* Header bar */}
+      <div className="flex items-center justify-between bg-overlay/50 px-4 py-2 border-b border-border-subtle">
+        <span className="text-xs font-mono text-text-subtle">
+          {language || "code"}
+        </span>
+        <CopyButton text={codeText} />
       </div>
-      <code className={className} {...props}>
-        {children}
-      </code>
+      {/* Code content */}
+      <pre className="!m-0 !rounded-none !border-0 bg-elevated !p-4">
+        <code className={className} {...props}>
+          {displayCode}
+        </code>
+      </pre>
+      {/* Expand/collapse button */}
+      {isLong && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full py-2 text-xs text-brand hover:text-brand/80 transition-colors border-t border-border-subtle"
+        >
+          {expanded ? "收起" : `展开全部 ${lineCount} 行`}
+        </button>
+      )}
     </div>
   );
 }

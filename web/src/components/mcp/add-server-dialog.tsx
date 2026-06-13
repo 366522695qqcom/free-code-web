@@ -82,7 +82,7 @@ export function AddServerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-elevated border-border-subtle rounded-2xl">
         <DialogHeader>
           <DialogTitle>Add MCP Server</DialogTitle>
           <DialogDescription>
@@ -101,7 +101,7 @@ export function AddServerDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My MCP Server"
-              className="rounded-md border border-border-subtle bg-base px-3 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20"
+              className="rounded-md border border-border-subtle bg-base px-3 py-1.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
           </div>
 
@@ -142,7 +142,7 @@ export function AddServerDialog({
                   value={command}
                   onChange={(e) => setCommand(e.target.value)}
                   placeholder="npx @modelcontextprotocol/server-filesystem /path"
-                  className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20"
+                  className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                 />
               </div>
               <div className="grid gap-1.5">
@@ -154,7 +154,7 @@ export function AddServerDialog({
                   value={argsText}
                   onChange={(e) => setArgsText(e.target.value)}
                   placeholder="/path/to/dir --option value"
-                  className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20"
+                  className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                 />
               </div>
             </>
@@ -171,7 +171,7 @@ export function AddServerDialog({
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="http://localhost:3001"
-                className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20"
+                className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
               />
             </div>
           )}
@@ -186,7 +186,7 @@ export function AddServerDialog({
               onChange={(e) => setEnvText(e.target.value)}
               placeholder={"API_KEY=abc123\nDEBUG=true"}
               rows={3}
-              className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-ring focus:ring-2 focus:ring-accent-cyan/20 resize-none"
+              className="rounded-md border border-border-subtle bg-base px-3 py-1.5 font-mono text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 resize-none"
             />
           </div>
         </div>

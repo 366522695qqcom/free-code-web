@@ -75,42 +75,42 @@
 }
 
 /* ============================================================
- * 统一深色主题 (基于 /workspace/assets/screenshot.png 像素分析)
+ * Trae 深蓝灰色系 — Intelligent Green 品牌色
  * :root 与 .dark 指向同一组值，全站强制暗色
  * ============================================================ */
 :root,
 .dark {
-  /* 背景三阶 */
-  --bg-base: #1e1e1e;          /* 主背景 */
-  --bg-elevated: #252525;      /* 卡片/弹窗/输入框 */
-  --bg-overlay: #2d2d2d;       /* 浮层/侧边栏 */
+  /* 背景三阶 — Trae 深蓝灰色系 */
+  --bg-base: #0F172A;
+  --bg-elevated: #1E293B;
+  --bg-overlay: #334155;
 
   /* 文字三阶 */
-  --text-primary: #e0e0e0;     /* 主体文字 */
-  --text-muted: #8a8a8a;       /* 次要文字 */
-  --text-subtle: #5a5a5a;      /* 占位/禁用 */
+  --text-primary: #F1F5F9;
+  --text-muted: #94A3B8;
+  --text-subtle: #475569;
 
   /* 边框 */
-  --border-subtle: #2f2f2f;
-  --border-strong: #3a3a3a;
+  --border-subtle: #1E293B;
+  --border-strong: #334155;
 
-  /* 5 个 accent 色 */
-  --accent-yellow: #c0c0a0;
-  --accent-cyan: #c0e0e0;
-  --accent-green: #60c040;
-  --accent-orange: #e0a040;
-  --accent-red: #e06040;
-  --accent-purple: #6040e0;
+  /* 强调色 — Trae Intelligent Green 品牌色 */
+  --accent-yellow: #FBBF24;
+  --accent-cyan: #22D3EE;
+  --accent-green: #10B981;
+  --accent-orange: #FB923C;
+  --accent-red: #F87171;
+  --accent-purple: #A78BFA;
 
-  /* shadcn 兼容：全部指向暗色值 */
+  /* shadcn 兼容 */
   --background: var(--bg-base);
   --foreground: var(--text-primary);
   --card: var(--bg-elevated);
   --card-foreground: var(--text-primary);
   --popover: var(--bg-elevated);
   --popover-foreground: var(--text-primary);
-  --primary: var(--accent-cyan);
-  --primary-foreground: var(--bg-base);
+  --primary: var(--brand);
+  --primary-foreground: #FFFFFF;
   --secondary: var(--bg-overlay);
   --secondary-foreground: var(--text-primary);
   --muted: var(--bg-overlay);
@@ -120,36 +120,87 @@
   --destructive: var(--accent-red);
   --border: var(--border-subtle);
   --input: var(--border-strong);
-  --ring: var(--accent-cyan);
-  --chart-1: var(--accent-cyan);
-  --chart-2: var(--accent-green);
+  --ring: var(--brand);
+  --chart-1: var(--brand);
+  --chart-2: var(--accent-cyan);
   --chart-3: var(--accent-orange);
   --chart-4: var(--accent-red);
   --chart-5: var(--accent-purple);
-  --radius: 0.5rem;
-  --sidebar: var(--bg-overlay);
+  --radius: 0.625rem;
+  --sidebar: var(--bg-elevated);
   --sidebar-foreground: var(--text-primary);
-  --sidebar-primary: var(--accent-cyan);
-  --sidebar-primary-foreground: var(--bg-base);
-  --sidebar-accent: var(--bg-elevated);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: var(--bg-overlay);
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border-subtle);
-  --sidebar-ring: var(--accent-cyan);
+  --sidebar-ring: var(--brand);
 
-  /* 终端/品牌色（保留并统一为截图色板） */
+  /* 品牌 */
   --terminal-green: var(--accent-green);
   --terminal-cyan: var(--accent-cyan);
   --terminal-amber: var(--accent-orange);
   --terminal-red: var(--accent-red);
-  --brand: var(--accent-orange);
-  --brand-soft: color-mix(in oklab, var(--accent-orange) 8%, transparent);
-  --brand-glow: color-mix(in oklab, var(--accent-orange) 18%, transparent);
+  --brand: #10B981;
+  --brand-soft: rgba(16,185,129,0.08);
+  --brand-glow: rgba(16,185,129,0.18);
 }
 
 :root {
   /* 兜底：shadcn/tailwind 可能引用 :root 选择器；与上一块完全等价 */
+  --bg-base: #0F172A;
+  --bg-elevated: #1E293B;
+  --bg-overlay: #334155;
+  --text-primary: #F1F5F9;
+  --text-muted: #94A3B8;
+  --text-subtle: #475569;
+  --border-subtle: #1E293B;
+  --border-strong: #334155;
+  --accent-yellow: #FBBF24;
+  --accent-cyan: #22D3EE;
+  --accent-green: #10B981;
+  --accent-orange: #FB923C;
+  --accent-red: #F87171;
+  --accent-purple: #A78BFA;
+  --brand: #10B981;
+  --brand-soft: rgba(16,185,129,0.08);
+  --brand-glow: rgba(16,185,129,0.18);
   --background: var(--bg-base);
   --foreground: var(--text-primary);
+  --card: var(--bg-elevated);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-elevated);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--bg-overlay);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-overlay);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--bg-overlay);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--accent-red);
+  --border: var(--border-subtle);
+  --input: var(--border-strong);
+  --ring: var(--brand);
+  --chart-1: var(--brand);
+  --chart-2: var(--accent-cyan);
+  --chart-3: var(--accent-orange);
+  --chart-4: var(--accent-red);
+  --chart-5: var(--accent-purple);
+  --radius: 0.625rem;
+  --sidebar: var(--bg-elevated);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: var(--bg-overlay);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: var(--border-subtle);
+  --sidebar-ring: var(--brand);
+  --terminal-green: var(--accent-green);
+  --terminal-cyan: var(--accent-cyan);
+  --terminal-amber: var(--accent-orange);
+  --terminal-red: var(--accent-red);
 }
 
 @layer base {
@@ -173,17 +224,17 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.35 0 0);
+  background: var(--text-subtle);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.5 0 0);
+  background: var(--text-muted);
 }
 
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: oklch(0.35 0 0) transparent;
+  scrollbar-color: var(--text-subtle) transparent;
 }
 
 /* Message fade-in animation */
@@ -246,7 +297,7 @@ code:not(pre code) {
   color: var(--accent-cyan);
 }
 
-/* Highlight.js theme — 截图色板版 (统一深色主题) */
+/* Highlight.js theme — Trae 深蓝灰色系 */
 .hljs {
   background: var(--bg-elevated) !important;
   color: var(--text-primary) !important;
@@ -282,7 +333,7 @@ code:not(pre code) {
 
 .hljs-type,
 .hljs-class .hljs-title {
-  color: var(--accent-orange) !important;
+  color: var(--accent-yellow) !important;
 }
 
 .hljs-variable,
@@ -324,6 +375,61 @@ code:not(pre code) {
   animation: cursor-blink 1s step-end infinite;
 }
 
+/* Trae-style animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--brand-glow); }
+  50% { box-shadow: 0 0 12px 2px var(--brand-glow); }
+}
+
+@keyframes typing-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.15s ease-out;
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-out {
+  animation: fade-out 0.1s ease-in;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-typing-cursor {
+  animation: typing-cursor 1s step-end infinite;
+}
+
 /* Pulse glow for active tool */
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 0 0 var(--brand-glow); }
@@ -354,5 +460,5 @@ code:not(pre code) {
 
 /* Brand gradient text (用于 login 页 hero) */
 .bg-brand-gradient {
-  background: linear-gradient(135deg, var(--brand) 0%, oklch(0.75 0.12 30) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent-orange) 100%);
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Server,
@@ -376,7 +377,7 @@ export default function ProvidersPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-base">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="flex min-h-screen bg-base">
       {/* Left Sidebar */}
       <div className="flex w-52 shrink-0 flex-col border-r border-border-subtle bg-base">
         {/* Header */}
@@ -422,7 +423,8 @@ export default function ProvidersPage() {
           </div>
 
           {/* Provider List Section */}
-          <Card>
+          <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+          <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -517,10 +519,12 @@ export default function ProvidersPage() {
               )}
             </CardContent>
           </Card>
+          </motion.div>
 
           {/* Provider Configuration Section */}
           {showConfigPanel && (
-            <Card>
+            <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+            <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Server className="size-4 text-brand" />
@@ -642,6 +646,7 @@ export default function ProvidersPage() {
                           size="sm"
                           onClick={handleTestConnection}
                           disabled={connectionStatus === "testing"}
+                          className="border-brand/30 text-brand hover:bg-brand/10 hover:text-brand"
                         >
                           {connectionStatus === "testing" ? (
                             <Loader2 className="mr-1 size-3.5 animate-spin" />
@@ -675,11 +680,13 @@ export default function ProvidersPage() {
                 </div>
               </CardContent>
             </Card>
+            </motion.div>
           )}
 
           {/* Fetched Models Section */}
           {fetchedModels.length > 0 && (
-            <Card>
+            <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+            <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <RefreshCw className="size-4 text-brand" />
@@ -702,8 +709,8 @@ export default function ProvidersPage() {
                           alreadyAdded
                             ? "border-border-subtle/50 bg-overlay/30 opacity-60"
                             : selectedFetchedModels.has(model.id)
-                              ? "border-accent-cyan/30 bg-accent-cyan/5"
-                              : "border-border-subtle hover:bg-overlay/50"
+                              ? "border-brand/30 bg-brand/5"
+                            : "border-border-subtle hover:bg-overlay/50"
                         }`}
                       >
                         <button
@@ -750,6 +757,7 @@ export default function ProvidersPage() {
                 )}
               </CardContent>
             </Card>
+            </motion.div>
           )}
 
           {/* Fetch error */}
@@ -761,7 +769,8 @@ export default function ProvidersPage() {
 
           {/* Existing Models for selected provider */}
           {selectedProvider && selectedProvider.models.length > 0 && !isAdding && !isEditing && (
-            <Card>
+            <motion.div whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(16,185,129,0.08)" }} transition={{ duration: 0.15 }}>
+            <Card className="border-border-subtle hover:border-brand/20 transition-colors duration-150">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Cpu className="size-4 text-brand" />
@@ -792,7 +801,7 @@ export default function ProvidersPage() {
                           {model.capabilities.map((cap) => (
                             <span
                               key={cap}
-                              className="rounded bg-accent-cyan/10 px-1.5 py-0.5 text-[0.6rem] text-accent-cyan"
+                              className="rounded bg-brand/10 px-1.5 py-0.5 text-[0.6rem] text-brand"
                             >
                               {cap === "vision" ? "视觉" : cap === "reasoning" ? "推理" : "工具使用"}
                             </span>
@@ -833,6 +842,7 @@ export default function ProvidersPage() {
                 })()}
               </CardContent>
             </Card>
+            </motion.div>
           )}
         </div>
       </div>
@@ -845,6 +855,6 @@ export default function ProvidersPage() {
         onSave={handleSaveModel}
         onTest={selectedProviderId ? handleTestModel : undefined}
       />
-    </div>
+    </motion.div>
   );
 }

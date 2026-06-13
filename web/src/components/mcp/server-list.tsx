@@ -35,14 +35,14 @@ function StatusIndicator({ status }: { status: MCPServerInfo["status"] }) {
   switch (status) {
     case "connected":
       return (
-        <span className="flex items-center gap-1.5 text-xs text-accent-green">
-          <span className="inline-block size-2 rounded-full bg-accent-green" />
+        <span className="flex items-center gap-1.5 text-xs text-brand">
+          <span className="inline-block size-2 rounded-full bg-brand" />
           Connected
         </span>
       );
     case "connecting":
       return (
-        <span className="flex items-center gap-1.5 text-xs text-accent-cyan">
+        <span className="flex items-center gap-1.5 text-xs text-brand">
           <Loader2 className="size-3 animate-spin" />
           Connecting
         </span>
@@ -98,9 +98,9 @@ export function ServerList({
               <div
                 key={server.id}
                 className={cn(
-                  "group flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors cursor-pointer",
+                  "group flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150 cursor-pointer",
                   selectedId === server.id
-                    ? "bg-overlay text-text-primary"
+                    ? "border-l-2 border-brand bg-brand/5 text-text-primary"
                     : "text-text-primary/70 hover:bg-overlay/50 hover:text-text-primary"
                 )}
                 onClick={() => onSelect(server.id)}
@@ -128,7 +128,7 @@ export function ServerList({
                     }
                   >
                     {server.status === "connected" ? (
-                      <PlugZap className="size-3 text-accent-green" />
+                      <PlugZap className="size-3 text-brand" />
                     ) : (
                       <Plug className="size-3 text-text-muted" />
                     )}

@@ -7,7 +7,8 @@ import {
   useEffect,
   type KeyboardEvent,
 } from "react";
-import { Shield, ShieldCheck, ShieldAlert, ShieldOff } from "lucide-react";
+import { Shield, ShieldCheck, ShieldAlert, ShieldOff, Send, Paperclip, FileText } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { calculateTokenWarningState } from "@/lib/context";
 import type { Usage } from "@/types";
@@ -100,6 +101,14 @@ interface ChatInputProps {
   /** 模型选择回调 */
   onModelSelect?: (modelId: string) => void;
 }
+
+/** framer-motion 菜单弹出动画参数 */
+const menuVariants = {
+  initial: { opacity: 0, y: 8, scale: 0.95 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: 8, scale: 0.95 },
+};
+const menuTransition = { duration: 0.15, ease: "easeOut" as const };
 
 export function ChatInput({
   onSend,
@@ -620,158 +629,220 @@ export function ChatInput({
       ? "text-yellow-500"
       : "text-text-muted/50";
 
+  const hasValue = value.trim().length > 0;
+
+  /** 点击 📄 触发 @ 文件引用 */
+  const handleFileRefClick = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const prev = value;
+    const insert = prev.length > 0 && !prev.endsWith(" ") ? " @" : "@";
+    const newValue = prev + insert;
+    setValue(newValue);
+    requestAnimationFrame(() => {
+      const pos = newValue.length;
+      textarea.focus();
+      textarea.setSelectionRange(pos, pos);
+    });
+  }, [value]);
+
   return (
     <div className="relative">
       {/* File Autocomplete Menu */}
-      {showFileMenu && fileResults.length > 0 && (
-        <div
-          ref={fileMenuRef}
-          className="absolute bottom-full left-0 right-0 mb-1 border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
-        >
-          <div className="border-b border-border-subtle bg-overlay/20 px-3 py-1 flex items-center justify-between">
-            <span className="text-[0.65rem] text-text-muted/60">Files</span>
-            <div className="flex items-center gap-2 text-[0.6rem] text-text-muted/40">
-              <kbd className="border border-border-subtle px-1">↑↓</kbd>
-              <span>navigate</span>
-              <span>·</span>
-              <kbd className="border border-border-subtle px-1">Tab</kbd>
-              <span>select</span>
-              <span>·</span>
-              <kbd className="border border-border-subtle px-1">Esc</kbd>
-              <span>close</span>
+      <AnimatePresence>
+        {showFileMenu && fileResults.length > 0 && (
+          <motion.div
+            ref={fileMenuRef}
+            variants={menuVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={menuTransition}
+            className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
+          >
+            <div className="border-b border-border-subtle bg-overlay/20 px-3 py-1 flex items-center justify-between">
+              <span className="text-[0.65rem] text-text-muted/60">Files</span>
+              <div className="flex items-center gap-2 text-[0.6rem] text-text-muted/40">
+                <kbd className="border border-border-subtle px-1 rounded">↑↓</kbd>
+                <span>navigate</span>
+                <span>·</span>
+                <kbd className="border border-border-subtle px-1 rounded">Tab</kbd>
+                <span>select</span>
+                <span>·</span>
+                <kbd className="border border-border-subtle px-1 rounded">Esc</kbd>
+                <span>close</span>
+              </div>
             </div>
-          </div>
-          {fileResults.map((file, idx) => (
-            <button
-              key={file.path}
-              data-file-index={idx}
-              onClick={() => handleSelectFile(file)}
-              onMouseEnter={() => setFileSelectedIndex(idx)}
-              className={cn(
-                "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border-subtle last:border-b-0",
-                idx === fileSelectedIndex
-                  ? "bg-overlay text-text-primary"
-                  : "hover:bg-overlay/30"
-              )}
-            >
-              <span
-                className={cn(
-                  "font-mono text-xs shrink-0",
-                  file.type === "dir" ? "text-accent-cyan" : "text-text-muted/60"
-                )}
-              >
-                {file.type === "dir" ? "📁" : "📄"}
-              </span>
-              <span className="font-mono text-xs truncate">{file.path}</span>
-              {file.type === "dir" && (
-                <span className="ml-auto text-[0.6rem] text-text-muted/40 shrink-0">/</span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Command Menu (CC 风格极简) */}
-      {showCommandMenu && !showPermissionSubmenu && !showModelSubmenu && (
-        <div
-          ref={menuRef}
-          className="absolute bottom-full left-0 right-0 mb-1 border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50"
-        >
-          {filteredCommands.length === 0 ? (
-            <div className="px-3 py-2 font-mono text-xs text-text-muted/60">
-              No matches
-            </div>
-          ) : (
-            filteredCommands.map((cmd, idx) => (
+            {fileResults.map((file, idx) => (
               <button
-                key={cmd.name}
-                data-cmd-index={idx}
-                onClick={() => handleSelectCommand(cmd)}
-                onMouseEnter={() => setSelectedIndex(idx)}
-                className={cn(
-                  "flex w-full items-center px-3 py-1.5 text-left transition-colors",
-                  idx === selectedIndex
-                    ? "bg-overlay text-text-primary"
-                    : "hover:bg-overlay/30"
-                )}
-              >
-                <span className="font-mono text-sm">{cmd.name}</span>
-                {cmd.hasSubmenu && (
-                  <span className="ml-auto text-[0.6rem] text-text-muted/40">▶</span>
-                )}
-              </button>
-            ))
-          )}
-        </div>
-      )}
-
-      {/* Permission Submenu (极简风格) */}
-      {showPermissionSubmenu && (
-        <div
-          ref={menuRef}
-          className="absolute bottom-full left-0 right-0 mb-1 border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50"
-        >
-          {MODE_OPTIONS.map((mode, idx) => (
-            <button
-              key={mode.value}
-              data-mode-index={idx}
-              onClick={() => handleSelectPermission(mode.value)}
-              onMouseEnter={() => setSelectedIndex(idx)}
-              className={cn(
-                "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors",
-                idx === selectedIndex
-                  ? "bg-overlay text-text-primary"
-                  : "hover:bg-overlay/30"
-              )}
-            >
-              {mode.icon}
-              <span className="font-mono text-sm">{mode.label}</span>
-              {permissionMode === mode.value && (
-                <span className="ml-auto text-[0.6rem] text-text-muted/60">*</span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Model Submenu (极简风格) */}
-      {showModelSubmenu && (
-        <div
-          ref={menuRef}
-          className="absolute bottom-full left-0 right-0 mb-1 border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
-        >
-          {models.length === 0 ? (
-            <div className="px-3 py-2 font-mono text-xs text-text-muted/60">
-              No models available
-            </div>
-          ) : (
-            models.map((model, idx) => (
-              <button
-                key={model.id}
-                data-model-index={idx}
-                onClick={() => handleSelectModel(model.id)}
-                onMouseEnter={() => setSelectedIndex(idx)}
+                key={file.path}
+                data-file-index={idx}
+                onClick={() => handleSelectFile(file)}
+                onMouseEnter={() => setFileSelectedIndex(idx)}
                 className={cn(
                   "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border-subtle last:border-b-0",
+                  idx === fileSelectedIndex
+                    ? "bg-overlay text-text-primary"
+                    : "hover:bg-overlay/30"
+                )}
+              >
+                <span
+                  className={cn(
+                    "font-mono text-xs shrink-0",
+                    file.type === "dir" ? "text-accent-cyan" : "text-text-muted/60"
+                  )}
+                >
+                  {file.type === "dir" ? "📁" : "📄"}
+                </span>
+                <span className="font-mono text-xs truncate">{file.path}</span>
+                {file.type === "dir" && (
+                  <span className="ml-auto text-[0.6rem] text-text-muted/40 shrink-0">/</span>
+                )}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Command Menu (CC 风格极简) */}
+      <AnimatePresence>
+        {showCommandMenu && !showPermissionSubmenu && !showModelSubmenu && (
+          <motion.div
+            ref={menuRef}
+            variants={menuVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={menuTransition}
+            className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50"
+          >
+            {filteredCommands.length === 0 ? (
+              <div className="px-3 py-2 font-mono text-xs text-text-muted/60">
+                No matches
+              </div>
+            ) : (
+              filteredCommands.map((cmd, idx) => (
+                <button
+                  key={cmd.name}
+                  data-cmd-index={idx}
+                  onClick={() => handleSelectCommand(cmd)}
+                  onMouseEnter={() => setSelectedIndex(idx)}
+                  className={cn(
+                    "flex w-full items-center px-3 py-1.5 text-left transition-colors",
+                    idx === selectedIndex
+                      ? "bg-overlay text-text-primary"
+                      : "hover:bg-overlay/30"
+                  )}
+                >
+                  <span className="font-mono text-sm">{cmd.name}</span>
+                  {cmd.hasSubmenu && (
+                    <span className="ml-auto text-[0.6rem] text-text-muted/40">▶</span>
+                  )}
+                </button>
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Permission Submenu (极简风格) */}
+      <AnimatePresence>
+        {showPermissionSubmenu && (
+          <motion.div
+            ref={menuRef}
+            variants={menuVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={menuTransition}
+            className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50"
+          >
+            {MODE_OPTIONS.map((mode, idx) => (
+              <button
+                key={mode.value}
+                data-mode-index={idx}
+                onClick={() => handleSelectPermission(mode.value)}
+                onMouseEnter={() => setSelectedIndex(idx)}
+                className={cn(
+                  "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors",
                   idx === selectedIndex
                     ? "bg-overlay text-text-primary"
                     : "hover:bg-overlay/30"
                 )}
               >
-                <span className="font-mono text-sm truncate">{model.name}</span>
-                <span className="ml-auto text-[0.6rem] text-text-muted/40 shrink-0">{model.provider}</span>
+                {mode.icon}
+                <span className="font-mono text-sm">{mode.label}</span>
+                {permissionMode === mode.value && (
+                  <span className="ml-auto text-[0.6rem] text-text-muted/60">*</span>
+                )}
               </button>
-            ))
-          )}
-        </div>
-      )}
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Terminal prompt input */}
-      <div className="flex items-start px-4 py-2">
-        <span className="font-mono text-sm text-accent-cyan shrink-0 pt-2 select-none">
-          &gt;&nbsp;
-        </span>
-        <div className="relative min-w-0 flex-1">
+      {/* Model Submenu (极简风格) */}
+      <AnimatePresence>
+        {showModelSubmenu && (
+          <motion.div
+            ref={menuRef}
+            variants={menuVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={menuTransition}
+            className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-border-subtle bg-elevated shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto"
+          >
+            {models.length === 0 ? (
+              <div className="px-3 py-2 font-mono text-xs text-text-muted/60">
+                No models available
+              </div>
+            ) : (
+              models.map((model, idx) => (
+                <button
+                  key={model.id}
+                  data-model-index={idx}
+                  onClick={() => handleSelectModel(model.id)}
+                  onMouseEnter={() => setSelectedIndex(idx)}
+                  className={cn(
+                    "flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border-subtle last:border-b-0",
+                    idx === selectedIndex
+                      ? "bg-overlay text-text-primary"
+                      : "hover:bg-overlay/30"
+                  )}
+                >
+                  <span className="font-mono text-sm truncate">{model.name}</span>
+                  <span className="ml-auto text-[0.6rem] text-text-muted/40 shrink-0">{model.provider}</span>
+                </button>
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modern rounded input container */}
+      <div className="mx-4 mb-4 rounded-2xl border border-border-subtle bg-elevated/60 shadow-lg shadow-brand/5 focus-within:border-brand/30 focus-within:shadow-[0_0_12px_rgba(16,185,129,0.1)] transition-all duration-200">
+        {/* Model selector row at top */}
+        <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+          <button
+            onClick={() => {
+              if (models.length > 0) {
+                setShowModelSubmenu((prev) => !prev);
+                setShowCommandMenu(false);
+                setShowPermissionSubmenu(false);
+                setSelectedIndex(0);
+              }
+              onProviderDialogOpen?.();
+            }}
+            className="text-xs text-text-muted hover:text-brand transition-colors flex items-center gap-1"
+          >
+            {currentModelName}
+            <span className="text-[0.6rem]">▾</span>
+          </button>
+        </div>
+
+        {/* Textarea */}
+        <div className="px-4 pb-2">
           <textarea
             ref={textareaRef}
             value={value}
@@ -785,51 +856,76 @@ export function ChatInput({
             disabled={disabled}
             rows={1}
             className={cn(
-              "w-full resize-none border-0 bg-transparent px-0 py-2",
+              "w-full resize-none border-0 bg-transparent px-0 py-1",
               "font-mono text-sm leading-relaxed text-text-primary",
-              "placeholder:text-text-muted/40",
+              "placeholder:text-text-subtle",
               "outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50",
               "max-h-[200px]"
             )}
           />
         </div>
-        {/* Stop button during streaming — small ■ character */}
-        {isStreaming && (
-          <button
-            onClick={onStop}
-            title="Stop generating (Ctrl+C)"
-            className="shrink-0 mt-2 ml-2 font-mono text-sm text-text-muted hover:text-accent-red transition-colors"
-          >
-            ■
-          </button>
-        )}
-      </div>
 
-      {/* Terminal-style status bar */}
-      <div className="flex items-center justify-between px-4 py-1 border-t border-border-subtle/50">
-        <span className="font-mono text-[0.65rem] text-text-muted/50 flex items-center gap-1.5">
-          <span className="text-accent-cyan/70">{currentModeLabel}</span>
-          <span className="text-text-muted/30">│</span>
-          <span>{currentModelName}</span>
-          <span className="text-text-muted/30">│</span>
-          <span>{formatCost(cost)}</span>
-          <span className="text-text-muted/30">│</span>
-          <span className={ctxColor}>
-            {warningState.isAboveAutoCompactThreshold
-              ? `${warningState.percentLeft}% until auto-compact`
-              : `ctx: ${ctxPct.toFixed(0)}%`}
-          </span>
-          {historyIndicator && (
-            <>
-              <span className="text-text-muted/30">│</span>
-              <span>{historyIndicator}</span>
-            </>
-          )}
-        </span>
-        <span className="font-mono text-[0.6rem] text-text-muted/30">
-          Enter↵ send · Shift+Enter newline · / commands · @ file · Ctrl+C stop
-        </span>
+        {/* Bottom toolbar */}
+        <div className="flex items-center justify-between px-4 py-2 border-t border-border-subtle/50">
+          <div className="flex items-center gap-2">
+            {/* Quick action: attachment (visual only) */}
+            <span className="text-xs text-text-muted hover:text-brand cursor-pointer transition-colors flex items-center">
+              <Paperclip className="size-3.5" />
+            </span>
+            {/* Quick action: file reference — triggers @ autocomplete */}
+            <span
+              onClick={handleFileRefClick}
+              className="text-xs text-text-muted hover:text-brand cursor-pointer transition-colors flex items-center"
+            >
+              <FileText className="size-3.5" />
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Status info */}
+            <span className="text-[0.65rem] text-text-subtle flex items-center gap-1">
+              <span className="text-brand/70">{currentModeLabel}</span>
+              <span className="text-text-muted/30">·</span>
+              <span>{formatCost(cost)}</span>
+              <span className="text-text-muted/30">·</span>
+              <span className={ctxColor}>
+                {warningState.isAboveAutoCompactThreshold
+                  ? `${warningState.percentLeft}% until auto-compact`
+                  : `ctx: ${ctxPct.toFixed(0)}%`}
+              </span>
+              {historyIndicator && (
+                <>
+                  <span className="text-text-muted/30">·</span>
+                  <span>{historyIndicator}</span>
+                </>
+              )}
+            </span>
+            {/* Send / Stop button */}
+            {isStreaming ? (
+              <button
+                onClick={onStop}
+                title="Stop generating (Ctrl+C)"
+                className="size-8 rounded-lg bg-accent-red/90 text-white flex items-center justify-center hover:bg-accent-red active:scale-95 transition-all duration-150"
+              >
+                <span className="text-sm font-bold leading-none">■</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleSend}
+                disabled={!hasValue || disabled}
+                title="Send message (Enter)"
+                className={cn(
+                  "size-8 rounded-lg bg-brand text-white flex items-center justify-center",
+                  "hover:bg-brand/90 hover:shadow-[0_0_12px_rgba(16,185,129,0.2)]",
+                  "active:scale-95 transition-all duration-150",
+                  (!hasValue || disabled) && "opacity-40 cursor-not-allowed hover:shadow-none hover:bg-brand"
+                )}
+              >
+                <Send className="size-4" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

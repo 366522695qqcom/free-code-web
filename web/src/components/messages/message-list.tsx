@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import type { EnhancedMessage } from "@/hooks/use-chat";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
@@ -23,20 +24,26 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-4 py-2"
+      className="flex-1 overflow-y-auto px-4 py-4"
     >
-      <div className="mx-auto max-w-4xl space-y-2">
-        {messages.map((message) =>
-          message.role === "user" ? (
-            <UserMessage key={message.id} message={message} />
-          ) : (
-            <AssistantMessage
-              key={message.id}
-              message={message}
-              isStreaming={isStreaming}
-            />
-          )
-        )}
+      <div className="mx-auto max-w-4xl space-y-4">
+        {messages.map((message, index) => (
+          <motion.div
+            key={message.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+          >
+            {message.role === "user" ? (
+              <UserMessage message={message} />
+            ) : (
+              <AssistantMessage
+                message={message}
+                isStreaming={isStreaming}
+              />
+            )}
+          </motion.div>
+        ))}
         <div ref={bottomRef} />
       </div>
     </div>

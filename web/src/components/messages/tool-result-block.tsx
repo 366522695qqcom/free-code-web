@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { AnsiRenderer } from "@/components/chat/ansi-renderer";
 import { DiffView, getLanguageLabel } from "@/components/chat/diff-view";
@@ -63,7 +64,7 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
   const languageLabel = getLanguageLabel(filePath ?? undefined);
 
   return (
-    <div className="border-l-2 border-brand/40 pl-3 bg-elevated/30 rounded-r-lg py-0.5">
+    <div className="bg-overlay/30 border border-border-subtle rounded-xl px-4 py-3">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center gap-1.5 font-mono text-sm text-left"
@@ -94,58 +95,68 @@ export function ToolResultBlock({ toolResult }: ToolResultBlockProps) {
         )}
       </button>
 
-      {isExpanded && (
-        <div className="animate-collapse-in mt-1">
-          {/* File path link */}
-          {filePath && (
-            <div className="font-mono text-xs text-accent-cyan mb-1">
-              {filePath}
-            </div>
-          )}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="mt-2">
+              {/* File path link */}
+              {filePath && (
+                <div className="font-mono text-xs text-accent-cyan mb-1">
+                  {filePath}
+                </div>
+              )}
 
-          {/* Diff view for file edits */}
-          {shouldShowDiff && (
-            <DiffView
-              oldText={oldString}
-              newText={newString}
-              filePath={filePath ?? undefined}
-            />
-          )}
+              {/* Diff view for file edits */}
+              {shouldShowDiff && (
+                <DiffView
+                  oldText={oldString}
+                  newText={newString}
+                  filePath={filePath ?? undefined}
+                />
+              )}
 
-          {/* Output box */}
-          {output && !shouldShowDiff && (
-            <div className="relative group">
-              <div className="rounded border border-border-subtle/30 bg-black/40 p-2 max-h-80 overflow-y-auto">
-                {isBashTool ? (
-                  <AnsiRenderer content={output} />
-                ) : (
-                  <div className="terminal-output text-text-muted">
-                    {isError ? `Error: ${output}` : output || "(no output)"}
+              {/* Output box */}
+              {output && !shouldShowDiff && (
+                <div className="relative group">
+                  <div className="rounded border border-border-subtle/30 bg-black/40 p-2 max-h-80 overflow-y-auto">
+                    {isBashTool ? (
+                      <AnsiRenderer content={output} />
+                    ) : (
+                      <div className="font-mono text-xs text-text-muted">
+                        {isError ? `Error: ${output}` : output || "(no output)"}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {/* Copy button */}
-              <button
-                onClick={handleCopy}
-                className="absolute top-1.5 right-1.5 rounded p-1 text-text-muted/40 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-overlay/30 hover:text-text-primary"
-                title="Copy output"
-              >
-                {copied ? (
-                  <span className="text-accent-green text-xs">✓</span>
-                ) : (
-                  <span className="text-xs">⎘</span>
-                )}
-              </button>
-            </div>
-          )}
+                  {/* Copy button */}
+                  <button
+                    onClick={handleCopy}
+                    className="absolute top-1.5 right-1.5 rounded p-1 text-text-muted/40 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-overlay/30 hover:text-text-primary"
+                    title="Copy output"
+                  >
+                    {copied ? (
+                      <span className="text-accent-green text-xs">✓</span>
+                    ) : (
+                      <span className="text-xs">⎘</span>
+                    )}
+                  </button>
+                </div>
+              )}
 
-          {!output && !shouldShowDiff && (
-            <div className="terminal-output text-text-muted/40 text-xs">
-              (no output)
+              {!output && !shouldShowDiff && (
+                <div className="font-mono text-xs text-text-muted/40">
+                  (no output)
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

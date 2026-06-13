@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { MCPPanel } from "@/components/mcp/mcp-panel";
 import { useRouter } from "next/navigation";
 
@@ -48,8 +49,8 @@ export default function MCPPage() {
   }
 
   return (
-    <div className="h-screen">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="h-screen">
       <MCPPanel onBack={() => router.push("/")} />
-    </div>
+    </motion.div>
   );
 }
