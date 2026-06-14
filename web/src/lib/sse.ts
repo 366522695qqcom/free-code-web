@@ -35,7 +35,9 @@ export function createSSEStream(source: ReadableStream<Uint8Array>): ReadableStr
           return;
         }
         const text = new TextDecoder().decode(value);
-        controller.enqueue(encoder.encode(`data: ${text}\n\n`));
+        // Source stream (agent-stream) already emits fully formatted SSE
+        // (event: ...\ndata: ...\n\n), so pass through directly.
+        controller.enqueue(encoder.encode(text));
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ error: message })}\n\n`));
