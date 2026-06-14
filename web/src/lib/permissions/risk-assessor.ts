@@ -92,7 +92,10 @@ function buildDecision(
 ): PermissionDecision {
   let finalLevel = riskLevel;
 
-  if (sandboxEnabled && sandboxDowngrade) {
+  // On Vercel (serverless), the filesystem is isolated (/tmp only),
+  // so sandboxDowngrade should apply even without explicit sandbox.
+  const isVercel = !!process.env.VERCEL;
+  if ((sandboxEnabled || isVercel) && sandboxDowngrade) {
     finalLevel = sandboxDowngrade;
   }
 

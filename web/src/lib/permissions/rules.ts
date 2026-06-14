@@ -149,10 +149,12 @@ export const defaultPermissionRules: PermissionRule[] = [
   { pattern: '^git\\s+clone\\b', riskLevel: 'high', description: 'Clone repository' },
 
   // File mutations
+  { pattern: '^touch\\b', riskLevel: 'high', description: 'Create empty file', sandboxDowngrade: 'low' },
+  { pattern: '^mkdir\\b', riskLevel: 'high', description: 'Create directory', sandboxDowngrade: 'low' },
   { pattern: '^rm\\b', riskLevel: 'high', description: 'Remove files', sandboxDowngrade: 'low' },
   { pattern: '^rmdir\\b', riskLevel: 'high', description: 'Remove directory', sandboxDowngrade: 'low' },
-  { pattern: '^mv\\b', riskLevel: 'high', description: 'Move/rename files' },
-  { pattern: '^cp\\b', riskLevel: 'high', description: 'Copy files' },
+  { pattern: '^mv\\b', riskLevel: 'high', description: 'Move/rename files', sandboxDowngrade: 'low' },
+  { pattern: '^cp\\b', riskLevel: 'high', description: 'Copy files', sandboxDowngrade: 'low' },
   { pattern: '^chmod\\b', riskLevel: 'high', description: 'Change file permissions' },
   { pattern: '^chown\\b', riskLevel: 'high', description: 'Change file ownership' },
 
@@ -169,8 +171,8 @@ export const defaultPermissionRules: PermissionRule[] = [
  */
 export const toolRiskDefaults: Record<string, PermissionRule> = {
   file_read: { pattern: 'file_read', riskLevel: 'low', description: 'Read file contents' },
-  file_write: { pattern: 'file_write', riskLevel: 'high', description: 'Write file contents' },
-  file_edit: { pattern: 'file_edit', riskLevel: 'high', description: 'Edit file contents' },
+  file_write: { pattern: 'file_write', riskLevel: 'high', description: 'Write file contents', sandboxDowngrade: 'low' },
+  file_edit: { pattern: 'file_edit', riskLevel: 'high', description: 'Edit file contents', sandboxDowngrade: 'low' },
   glob: { pattern: 'glob', riskLevel: 'low', description: 'Search files by pattern' },
   grep: { pattern: 'grep', riskLevel: 'low', description: 'Search file contents' },
   web_fetch: { pattern: 'web_fetch', riskLevel: 'low', description: 'Fetch URL content' },
