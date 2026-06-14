@@ -218,7 +218,7 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
         await fetch("/api/tools/confirm", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ toolUseId: toolCallId, approved }),
+          body: JSON.stringify({ toolCallId, approved }),
         });
       } catch {
         // Confirmation endpoint may not exist yet; resolve locally
@@ -444,7 +444,7 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
                   await fetch("/api/tools/confirm", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ toolUseId: toolCallId, approved: true }),
+                    body: JSON.stringify({ toolCallId, approved: true }),
                   });
                 } catch {
                   // Confirmation endpoint may not exist yet
@@ -459,7 +459,7 @@ export function useChat(sessionId: string | null, permissionMode: PermissionMode
                   await fetch("/api/tools/confirm", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ toolUseId: toolCallId, approved: true }),
+                    body: JSON.stringify({ toolCallId, approved: true }),
                   });
                 } catch {
                   // Confirmation endpoint may not exist yet

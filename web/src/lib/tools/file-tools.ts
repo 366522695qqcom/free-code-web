@@ -13,7 +13,7 @@ import { diffLines } from "diff";
 import type { ToolExecutor, ToolResult } from "./registry";
 import type { Sandbox } from '@vercel/sandbox';
 
-const WORK_DIR = process.env.WORK_DIR || process.cwd();
+const WORK_DIR = process.env.WORK_DIR || (process.env.VERCEL ? '/tmp' : process.cwd());
 
 function resolvePath(filePath: string): string {
   // H-2: reject absolute paths (would allow reading /etc/passwd, etc.)
